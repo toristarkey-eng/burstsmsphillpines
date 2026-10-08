@@ -1,0 +1,11 @@
+{
+  "name": "burst-sms-philippines-design-system",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Burst SMS Philippines design system and marketing lab plugin",
+  "scripts": {
+    "test": "node scripts/validate-design-system.mjs",
+    "validate": "node scripts/validate-design-system.mjs"
+  }
+}
+

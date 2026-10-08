@@ -1,0 +1,20 @@
+{
+  "name": "personal",
+  "interface": {
+    "displayName": "Burst SMS Philippines Team"
+  },
+  "plugins": [
+    {
+      "name": "burst-sms-ph-marketing-lab",
+      "source": {
+        "source": "local",
+        "path": "./plugins/burst-sms-ph-marketing-lab"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "name": "burst-sms-ph-marketing-lab",
+  "version": "0.1.0",
+  "description": "Create and review Burst SMS Philippines marketing work with the approved design system and voice.",
+  "author": {
+    "name": "Kudosity Marketing"
+  },
+  "homepage": "https://github.com/toristarkey-eng/burstsmsphillpines",
+  "repository": "https://github.com/toristarkey-eng/burstsmsphillpines.git",
+  "keywords": ["burst-sms", "philippines", "marketing", "brand", "design-system"],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Burst SMS PH Marketing Lab",
+    "shortDescription": "PH marketing design system",
+    "longDescription": "Create campaign concepts, briefs, copy, and design reviews for Burst SMS Philippines using the shared Burst and Kudosity design system.",
+    "developerName": "Kudosity Marketing",
+    "category": "Productivity",
+    "capabilities": ["Write"],
+    "websiteURL": "https://burstsms.com.ph/",
+    "defaultPrompt": [
+      "Draft a Burst SMS Philippines campaign brief.",
+      "Review this asset against the PH design system.",
+      "Write on-brand Philippines marketing copy."
+    ],
+    "brandColor": "#4C23CC"
+  }
+}

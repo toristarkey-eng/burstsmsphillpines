@@ -1,0 +1,39 @@
+:root {
+  --bsp-color-navy: #002a66;
+  --bsp-color-violet: #4c23cc;
+  --bsp-color-cyan: #00aec4;
+  --bsp-color-blue: #005677;
+  --bsp-color-blush: #ffb3b3;
+  --bsp-color-mint: #0ad17a;
+  --bsp-color-ink: #121217;
+  --bsp-color-slate: #575762;
+  --bsp-color-line: #dadce8;
+  --bsp-color-cloud: #f4f5ff;
+  --bsp-color-canvas: #f7f8fe;
+  --bsp-color-white: #ffffff;
+
+  --bsp-font-sans: "Noto Sans", "Segoe UI", Arial, sans-serif;
+  --bsp-font-legacy: "Helvetica Neue", Arial, sans-serif;
+
+  --bsp-space-1: 0.25rem;
+  --bsp-space-2: 0.5rem;
+  --bsp-space-3: 0.75rem;
+  --bsp-space-4: 1rem;
+  --bsp-space-6: 1.5rem;
+  --bsp-space-8: 2rem;
+  --bsp-space-12: 3rem;
+  --bsp-space-16: 4rem;
+  --bsp-space-24: 6rem;
+
+  --bsp-radius-sm: 0.5rem;
+  --bsp-radius-md: 1rem;
+  --bsp-radius-lg: 1.5rem;
+  --bsp-radius-pill: 999px;
+  --bsp-shadow-soft: 0 16px 42px rgb(0 42 102 / 10%);
+  --bsp-shadow-lifted: 0 22px 60px -12px rgb(18 18 23 / 14%);
+  --bsp-motion-quick: 140ms;
+  --bsp-motion-standard: 240ms;
+  --bsp-motion-slow: 420ms;
+  --bsp-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
