@@ -1,7 +1,7 @@
 {
   "repository": "https://github.com/toristarkey-eng/burstsmsphillpines",
   "rawBase": "https://raw.githubusercontent.com/toristarkey-eng/burstsmsphillpines/main",
-  "pluginVersion": "0.2.0",
+  "pluginVersion": "0.3.0",
   "requiredColours": {
     "navy": "#002A66",
     "violet": "#4C23CC",
@@ -42,6 +42,7 @@
     "design-system/docs/approved-assets.md",
     "design-system/docs/image-library.md",
     "design-system/docs/visual-generation-protocol.md",
-    "design-system/briefs/burst-sms-ph-messaging-library-brief.docx"
+    "design-system/briefs/burst-sms-ph-messaging-library-brief.docx",
+    "plugins/burst-sms-ph-marketing-lab/skills/burst-sms-ph-marketing-lab/references/controlled-creative-service.md"
   ]
 }

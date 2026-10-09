@@ -1,6 +1,6 @@
 {
   "name": "burst-sms-ph-marketing-lab",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Create and review Burst SMS Philippines marketing work with the approved design system and voice.",
   "author": {
     "name": "Tori",
@@ -8,20 +8,28 @@
   },
   "homepage": "https://github.com/toristarkey-eng/burstsmsphillpines",
   "repository": "https://github.com/toristarkey-eng/burstsmsphillpines.git",
-  "keywords": ["burst-sms", "philippines", "marketing", "brand", "design-system"],
+  "keywords": [
+    "burst-sms",
+    "philippines",
+    "marketing",
+    "brand",
+    "design-system"
+  ],
   "skills": "./skills/",
   "interface": {
     "displayName": "Burst SMS PH Marketing Lab",
     "shortDescription": "PH marketing design system",
-        "longDescription": "Create campaigns, copy, and finished social-ad deliveries using live-verified approved Burst SMS Philippines visual assets.",
+    "longDescription": "Create campaigns, copy, and finished social-ad deliveries using live-verified approved Burst SMS Philippines visual assets.",
     "developerName": "Tori",
     "category": "Productivity",
-    "capabilities": ["Write"],
+    "capabilities": [
+      "Write"
+    ],
     "websiteURL": "https://burstsms.com.ph/",
-        "defaultPrompt": [
-          "Create a verified Burst SMS Philippines social ad with final visual creative.",
-          "Review this asset against the PH design system.",
-          "Write on-brand Philippines marketing copy."
+    "defaultPrompt": [
+      "Create a verified Burst SMS Philippines social ad with final visual creative.",
+      "Review this asset against the PH design system.",
+      "Write on-brand Philippines marketing copy."
     ],
     "brandColor": "#4C23CC"
   }

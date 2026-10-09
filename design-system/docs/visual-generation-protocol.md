@@ -12,3 +12,7 @@ Before production, retrieve the current brand files from `https://github.com/tor
 6. Deliver only the passed final. Never show base layers, drafts, failed variants, approximate logos, contact sheets, or rejected concepts.
 
 Generation is allowed only when intermediate output can remain private, actual assets can be composited unchanged, and the final can be inspected before display. If any capability is unavailable or uncertain, return `Hold` instead of generating.
+
+## Deterministic production service
+
+The repository now includes `creative_service/`. This is a non-generative production path: the model supplies copy and registered selections only. The service owns fonts, geometry, palette, logo, crops, CTA and export. Candidates remain private until independent human review; only signed reviewed files are released. See `creative_service/README.md` and the plugin reference `controlled-creative-service.md`. Code being present does not mean the hosted app is connected.

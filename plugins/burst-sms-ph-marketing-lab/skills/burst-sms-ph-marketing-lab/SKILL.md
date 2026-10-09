@@ -1,17 +1,23 @@
 ---
 name: burst-sms-ph-marketing-lab
-description: Create or review Burst SMS Philippines campaigns and finished social-ad deliveries using live-verified approved brand assets. On ChatGPT, never call an image-generation or image-editing tool; deliver exact approved artwork unchanged from the registered commit-pinned URLs. Use whenever work must be on brand for Burst SMS Philippines.
+description: Create or review Burst SMS Philippines campaigns and finished social-ad deliveries using live-verified approved brand assets. On ChatGPT, never call an image-generation or image-editing tool; use the connected controlled renderer or deliver exact approved artwork unchanged. Use whenever work must be on brand for Burst SMS Philippines.
 ---
 
 # Burst SMS Philippines Marketing Lab
 
 Use this skill for Burst SMS Philippines marketing creation and brand review.
 
+## Controlled renderer workflow
+
+The existing plugin now has a renderer implementation in its repository. It becomes available only after its real hosted MCP app is registered and connected. When `list_creative_templates`, `prepare_creative`, and `get_reviewed_creative` are available, follow `references/controlled-creative-service.md`. The AI develops the concept and copy; the service owns every visual brand element. Only a service result with `technical_status: PASSED` and `publication_status: APPROVED` may be delivered. Preparation creates a private candidate, never a deliverable. Human review credentials and approval endpoints are not model tools.
+
+If these tools are unavailable, use the exact-approved-asset fallback below. Do not invent a connected renderer or claim that a GitHub sync deployed it.
+
 ## Critical ChatGPT visual-tool rule
 
 Never call an image-generation or image-editing tool on ChatGPT for Burst SMS Philippines work. ChatGPT image tools can expose an unchecked render and cannot guarantee the real logo bytes, so they fail the pre-delivery gate by design. The presence of an image tool does not make the controlled compositor available.
 
-On ChatGPT, finished artwork must be an exact registered approved file delivered unchanged from its commit-pinned raw URL after the live integrity record is checked. Do not generate a replacement, mock-up, visual concept, alternative, or background. For the generic Facebook-ad acceptance request, use the exact Sender ID artwork and procedure in `No-execution exact-asset delivery path` below. If no registered approved asset fits, return a specific `Hold`; never invoke image generation.
+When the controlled renderer tools are not connected, finished ChatGPT artwork must be an exact registered approved file delivered unchanged from its commit-pinned raw URL after the live integrity record is checked. Do not generate a replacement, mock-up, visual concept, alternative, or background. For the generic Facebook-ad acceptance request, use the exact Sender ID artwork and procedure in `No-execution exact-asset delivery path` below. If no registered approved asset fits, return a specific `Hold`; never invoke image generation.
 
 ## Mandatory GitHub source of truth
 
@@ -19,7 +25,7 @@ The official repository is `https://github.com/toristarkey-eng/burstsmsphillpine
 
 Where command execution is available, run `node scripts/brand-preflight.mjs --output-dir <private-working-directory>` from the plugin root before any creative production. Use only the verified files written to that private directory. In a full repository checkout, also run `node scripts/validate-design-system.mjs` from the repository root. Where command execution is unavailable, use an available web or repository tool to retrieve the same current files and verify the locked logo and token values in `brand-integrity.json`. If live repository access or verification is unavailable, stop. Do not generate or display creative.
 
-For the generic request `Create a high-performing Facebook ad for Burst SMS Philippines` or an equivalent request without a narrower product brief, run `node scripts/prepare-facebook-ad.mjs --output-dir <private-delivery-directory>` where execution is supported. Deliver its finished PNG and recommended copy only when `delivery-validation.json` reports `status: PASSED`. This executable acceptance workflow uses an exact registered approved visual and live-verified tokens; it must not be replaced by a copy-only response or a generic generated image. If execution is unavailable, retrieve the same exact approved visual and perform the equivalent checks before delivery.
+When the controlled renderer tools are unavailable, for the generic request `Create a high-performing Facebook ad for Burst SMS Philippines` or an equivalent request without a narrower product brief, run `node scripts/prepare-facebook-ad.mjs --output-dir <private-delivery-directory>` where execution is supported. Deliver its finished PNG and recommended copy only when `delivery-validation.json` reports `status: PASSED`. This executable acceptance workflow uses an exact registered approved visual and live-verified tokens; it must not be replaced by a copy-only response or a generic generated image. If execution is unavailable, retrieve the same exact approved visual and perform the equivalent checks before delivery.
 
 ### No-execution exact-asset delivery path
 
@@ -29,7 +35,7 @@ On ChatGPT surfaces that cannot execute packaged scripts, the generic Facebook-a
 
 Use Markdown image syntax with that exact URL and the approved alt text from `references/approved-assets.md`. This commit-pinned file is the same registered asset with SHA-256 `4c04464a7900ab7b63a8e625ca50fb197fdc7b18b2ff9cd736830dc4c88d1859`. Do not replace it with a generated preview. Do not respond with creative direction or say that the exact asset is unverified after the live integrity record and commit-pinned URL have been retrieved successfully. Deliver the image, recommended Facebook copy, the CTA `https://burstsms.com.ph/`, and the publication-owner review note together.
 
-Retrieve and read all seven current references below. Packaged copies support discovery and offline review, but they do not replace the mandatory live-repository check for creative generation.
+Retrieve and read all eight current references below. Packaged copies support discovery and offline review, but they do not replace the mandatory live-repository check for creative generation.
 
 - `references/design-system.md` for visual direction, tokens, logo use, and UI patterns.
 - `references/content-voice.md` for voice, spelling, evidence, and calls to action.
@@ -38,6 +44,7 @@ Retrieve and read all seven current references below. Packaged copies support di
 - `references/messaging-library-brief.md` for audiences, capabilities, claims governance, deliverables, and decision precedence.
 - `references/visual-generation-protocol.md` for the only permitted method of creating new visual artwork.
 - `references/image-library.md` for approved Philippine supporting photography and its strict derivative-use conditions.
+- `references/controlled-creative-service.md` for the new private renderer, independent review, and registered-app connection boundary.
 
 Retrieve the current approved logo from `plugins/burst-sms-ph-marketing-lab/assets/burst-sms-logo.png`, the current tokens from `design-system/tokens/tokens.json`, approved examples from `plugins/burst-sms-ph-marketing-lab/assets/approved/`, approved photography from `plugins/burst-sms-ph-marketing-lab/assets/photography/`, and the approved messaging brief. Verify them with `brand-integrity.json`. If any required live or packaged reference cannot be read and verified, stop: provide no concept, production brief, creative direction, or visual, and state exactly what is unavailable.
 
@@ -45,7 +52,7 @@ Retrieve the current approved logo from `plugins/burst-sms-ph-marketing-lab/asse
 
 **No verified brand assets, no creative. No successful compliance checks, no delivery.**
 
-- Never generate, display, or deliver creative that has not passed every applicable approved brand and creative system check.
+- Never generate, display, or deliver creative that has not passed every applicable approved brand and creative system check. A connected deterministic renderer is permitted only through its private-candidate, independent-review and checked-release workflow.
 - This requirement applies to every user and every request, without exception.
 - Complete the brand, content, evidence, accessibility, and local-fit checks before presenting any creative.
 - If creative fails any check, correct it and run the checks again before presenting it.
@@ -56,7 +63,7 @@ Retrieve the current approved logo from `plugins/burst-sms-ph-marketing-lab/asse
 
 New visual production is permitted only in an execution environment that can run `references/visual-generation-protocol.md` and only when every gate below is true before any generation begins:
 
-1. All seven packaged references, the selected registered photography source, and the exact approved logo assets are readable.
+1. All eight packaged references, the selected registered photography source, and the exact approved logo assets are readable.
 2. Generated intermediate output can remain non-user-visible until review is complete.
 3. A deterministic compositor can place the actual supplied logo, Philippines descriptor, approved type, copy, and shapes without asking an image model to reproduce them.
 4. The final composited file can be visually inspected before it is attached or displayed.
@@ -64,7 +71,7 @@ New visual production is permitted only in an execution environment that can run
 
 If any gate is false or uncertain, do not call a visual-generation tool. Return a text-only production brief with `Image: Hold — controlled production capability unavailable`.
 
-- This controlled-production permission never applies to ChatGPT image tools. On ChatGPT, use only exact registered approved files or `Hold`.
+- This controlled-production permission never applies to ChatGPT image tools. On ChatGPT, use only reviewed PNGs returned by the connected controlled creative service, exact registered approved files, or `Hold`.
 - In a qualifying private execution environment, an image model may generate only an unbranded photographic or illustrative base layer. It must not generate logos, lockups, text, letters, numbers, message bubbles, phone UI, offer badges, buttons, URLs, icons, or brand-coloured graphic treatments.
 - Never ask any model to invent, redraw, approximate, typeset, or composite a Burst SMS logo or Philippines lockup.
 - After the base layer is generated privately, use deterministic composition to add the actual approved brand assets and typography. Do not use generative editing after brand elements are applied.

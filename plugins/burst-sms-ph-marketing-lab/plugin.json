@@ -1,7 +1,7 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "burst-sms-ph-marketing-lab",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Create and review Burst SMS Philippines marketing work with the approved design system and voice.",
   "author": {
     "name": "Tori",
@@ -15,7 +15,9 @@
         "longDescription": "Create campaigns, copy, and finished social-ad deliveries using live-verified approved Burst SMS Philippines visual assets.",
         "developerName": "Tori",
         "category": "Productivity",
-        "capabilities": ["Write"],
+        "capabilities": [
+          "Write"
+        ],
         "defaultPrompt": [
           "Create a verified Burst SMS Philippines social ad with final visual creative.",
           "Review this asset against the PH design system.",

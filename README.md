@@ -47,3 +47,13 @@ The plugin package also has its own validator in the bundled Codex plugin-creato
 
 Use the supplied logo artwork without redrawing, recolouring, stretching, or adding effects. Marketing claims must have a current source. Product, pricing, compliance, and performance statements require review by the relevant owner before publication.
 
+
+## Controlled creative renderer
+
+`creative_service/` implements six locked layouts, deterministic PNG production,
+private candidates, signed independent review and three MCP tools. See
+[the service deployment and connection guide](creative_service/README.md).
+
+The service must be hosted and registered as an app before the existing plugin
+can use it. The workspace plugin ID and existing exact-asset fallback are
+preserved. A marketplace sync alone does not deploy a server.

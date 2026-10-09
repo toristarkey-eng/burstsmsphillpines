@@ -2,7 +2,7 @@
 
 This is the only permitted workflow for producing new Burst SMS Philippines visual creative. It is fail-closed: if an intermediate can become user-visible before approval, do not begin generation.
 
-This protocol is not permission to call a ChatGPT image-generation or image-editing tool. On ChatGPT, use exact registered approved artwork unchanged or return `Hold`. The steps below apply only to a private execution environment with a deterministic compositor and private final-file inspection.
+This protocol is not permission to call a ChatGPT image-generation or image-editing tool. On ChatGPT, use independently reviewed PNGs returned by the connected controlled renderer, exact registered approved artwork unchanged, or return `Hold`. The steps below apply only to a private execution environment with a deterministic compositor and private final-file inspection.
 
 ## 0. Pass the live-source gate
 
@@ -66,3 +66,7 @@ Any failure blocks delivery. Correct it privately and repeat the full inspection
 ## 6. Deliver only the passed final
 
 Attach or display only the final file that passed every check. Do not show base layers, drafts, rejected variations, contact sheets, before-and-after comparisons, or failed attempts. Report the asset files used, dimensions, alt text, claim status, and completed checks.
+
+## Deterministic production service
+
+The repository now includes `creative_service/`. This is a non-generative production path: the model supplies copy and registered selections only. The service owns fonts, geometry, palette, logo, crops, CTA and export. Candidates remain private until independent human review; only signed reviewed files are released. See `creative_service/README.md` and the plugin reference `controlled-creative-service.md`. Code being present does not mean the hosted app is connected.
