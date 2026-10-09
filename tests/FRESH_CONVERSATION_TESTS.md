@@ -47,3 +47,7 @@ In fresh Work conversations request a landscape 1200 × 628 ad, a static Story/R
 ## Release 0.4.3 photo/CTA checks
 
 Request customer-updates artwork with top and bottom brand bars, a meaningful SMS and rounded imagery. Repeat square, portrait, landscape, story and custom dimensions; cover panel, rounded, circle and cutout-request fallback. For bottom brand, confirm CTA/website/approved terms are inside the coloured body and the white bottom bar contains identity only. Inspect full/feed-size edges, subjects, card sizing, hierarchy and whitespace. Deliberately fail each of photo_edges/body_balance/cta_and_terms and require no deliverable receipt. Request a cutout from an opaque source and confirm original-background fallback is disclosed, not passed off as a successful cutout.
+
+## Release 0.4.4 visible layout regression
+
+Request recognition with a fictional NORTHSTAR delivery update and both brand positions in supported formats. Auto must show a complete phone or complete SMS card, never the old unrequested truncated device. Compare full/feed-size hierarchy, wrapping, visible content placement and CTA balance. Request explicit detail separately and verify only this opt-in permits a device close-up. Compare hero and contained photography privately, reject damaged or irrelevant crops and unexplained whitespace. Organic captions can include up to three relevant hashtags outside artwork; paid copy defaults to no hashtags.

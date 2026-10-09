@@ -136,7 +136,9 @@ class RendererTests(unittest.TestCase):
                     continue
                 png,report=render(campaign(fmt=fmt).model_copy(update={'phone_view':view,'sender_name':'ACME SHOP','message':'Your order is ready.'}))
                 check=report['phone_check']
-                self.assertAlmostEqual(check['device_dimensions'][0]/check['device_dimensions'][1],0.5,delta=0.003)
+                if check['device_dimensions'] is not None:
+                    self.assertAlmostEqual(check['device_dimensions'][0]/check['device_dimensions'][1],0.5,delta=0.003)
+                if view=='auto': self.assertIn(check['view'],('full','card'))
                 self.assertEqual(check['sender_header'],'ACME SHOP')
                 self.assertTrue(check['message_bubble'] and check['message_fully_visible'])
                 image=Image.open(io.BytesIO(png)).convert('RGB')
@@ -148,6 +150,37 @@ class RendererTests(unittest.TestCase):
                 self.assertIn((244,245,255),pixels)
         for sender in ('YOUR BRAND','OVERLONGSENDER','evil.example','<brand>'):
             with self.assertRaises(Hold): render(campaign().model_copy(update={'sender_name':sender}))
+
+    def test_full_device_default_and_cover_photo_fill(self):
+        for fmt in ('square','portrait','landscape','story'):
+            _,r=render(campaign(fmt=fmt))
+            phone=r['phone_check']
+            if phone['view']=='full':
+                self.assertEqual(phone['visible_frame'][3],phone['device_dimensions'][1])
+            else: self.assertEqual(phone['view'],'card')
+            self.assertFalse(phone['unintended_device_crop'])
+            _,r=render(campaign('people-first',fmt).model_copy(update={'composition':'hero','headline':'Stay connected.','accent':'','supporting':''}))
+            photo=r['photo_checks'][0]
+            self.assertEqual(photo['photo_fit'],'cover')
+            self.assertTrue(photo['additional_crop_inspection_required'])
+            self.assertAlmostEqual(photo['frame'][2],photo['region'][2],delta=3)
+            self.assertAlmostEqual(photo['frame'][3],photo['region'][3],delta=3)
+            self.assertLessEqual(photo['effective_crop'][2],photo['registered_crop'][2])
+            self.assertLessEqual(photo['effective_crop'][3],photo['registered_crop'][3])
+
+    def test_navy_heading_with_photography_has_visible_contrast_and_panel(self):
+        for fmt in ('square','portrait','landscape','story'):
+            for strip in ('top','bottom'):
+                png,r=render(campaign('people-first',fmt).model_copy(update={'heading_style':'navy','composition':'hero',
+                    'brand_strip':strip,'headline':'Keep customers','accent':'in the loop.','supporting':''}))
+                self.assertEqual(r['heading_style'],'navy')
+                self.assertTrue(r['photo_checks'])
+                image=Image.open(io.BytesIO(png)).convert('RGB')
+                x,y,w,h=r['heading_region']
+                self.assertEqual(image.getpixel((image.width-2,y+5)),(0,42,102))
+                heading=r['text_checks'][0];tx,ty,tw,th=heading['box']
+                self.assertIn((255,255,255),set(image.crop((tx,ty,tx+tw,ty+heading['used_height'])).get_flattened_data()))
+                self.assertTrue(r['checks']['text_contrast'])
 
     def test_dynamic_photo_masks_and_source_scene_selection(self):
         for treatment in ('rounded','circle','cutout'):
