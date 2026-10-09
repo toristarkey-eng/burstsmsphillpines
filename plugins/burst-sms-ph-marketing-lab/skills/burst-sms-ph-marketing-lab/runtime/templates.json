@@ -186,6 +186,50 @@
         "customer-updates",
         "people-first"
       ]
+    },
+    "two-shoppers": {
+      "file": "assets/photography/everyday-connections-manila.png",
+      "crop": [
+        385,
+        660,
+        764,
+        1023
+      ],
+      "alt": "Illustrative scene of two shoppers checking a phone together",
+      "templates": [
+        "recognition",
+        "customer-updates",
+        "people-first"
+      ],
+      "protected_subject_regions": [
+        {
+          "label": "left face and hair",
+          "box": [
+            424,
+            677,
+            574,
+            856
+          ]
+        },
+        {
+          "label": "right face and hair",
+          "box": [
+            560,
+            683,
+            734,
+            862
+          ]
+        },
+        {
+          "label": "hands and phone",
+          "box": [
+            492,
+            857,
+            713,
+            951
+          ]
+        }
+      ]
     }
   },
   "custom_dimensions": {
@@ -194,5 +238,30 @@
     "minimum_height_to_width": 0.5,
     "maximum_height_to_width": 2,
     "explicit_request_required": true
+  },
+  "compositions": [
+    "auto",
+    "side-by-side",
+    "text-first",
+    "image-first",
+    "hero",
+    "photo-background"
+  ],
+  "photo_background": {
+    "heading_style": "navy",
+    "brand_strip": "bottom",
+    "photo_fit": "cover",
+    "sms_positions": [
+      "upper-left",
+      "upper-right",
+      "middle-left",
+      "middle-right",
+      "lower-left",
+      "lower-right"
+    ],
+    "photography": "registered",
+    "image_treatment": "panel",
+    "photo_backdrop": "none",
+    "message_required": true
   }
 }
