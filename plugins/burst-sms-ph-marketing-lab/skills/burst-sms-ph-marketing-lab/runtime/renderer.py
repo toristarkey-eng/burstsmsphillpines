@@ -380,7 +380,7 @@ def render(campaign: Campaign) -> tuple[bytes, dict]:
     d = c.draw
     compact = c.compact
     header_height = 100 if compact else 150
-    cta_height = 110 if compact else 180
+    cta_height = (150 if campaign.offer_terms else 110) if compact else 180
     brand_y = 0 if campaign.brand_strip == "top" else height-header_height
     footer = height-cta_height if campaign.brand_strip == "top" else brand_y-cta_height
     # Fixed white header, original logo, separate divider and market descriptor.

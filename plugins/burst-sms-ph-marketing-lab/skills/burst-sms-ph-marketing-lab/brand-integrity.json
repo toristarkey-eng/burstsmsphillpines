@@ -40,7 +40,7 @@
     "runtime/fonts/NotoSans-Regular.ttf": "b85c38ecea8a7cfb39c24e395a4007474fa5a4fc864f6ee33309eb4948d232d5",
     "runtime/fonts/NotoSans-SemiBold.ttf": "87a8b90ece1e89746b544e4e086f85a3710e41485a8078f9be874837dfad45d5",
     "runtime/fonts/OFL.txt": "0dab92d0544f7b233403f14b84a663bdbfa746982eda629e7f4f9ffe1b036feb",
-    "runtime/renderer.py": "394064264f690e113773fe05aed6c2b121131203b49b9cbf1e5ca525d782a4c7",
+    "runtime/renderer.py": "dea818bb0de584396befb23028ad17f3fe92781c23928ac2849868aab4690552",
     "runtime/requirements.txt": "d7cb3d741c7e935e732fb2575914abac575aab7522319eee076c7cfaa0fa854e",
     "runtime/templates.json": "d253403a17d49ac9bf3e0acb4e1b03a243184c56519a3fcdd42275d2de6b828e",
     "scripts/brand_preflight.py": "522ce5e4c82ddb1f1a68d6d9e9293965e14a7849cc00873134e00b19b6f91bf0",
