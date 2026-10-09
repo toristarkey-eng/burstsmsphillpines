@@ -8,24 +8,22 @@ Any edit, crop that changes meaning, copy change, offer update, compositing, or 
 
 | File | Approved use | Recommended alt text | Reuse condition |
 | --- | --- | --- | --- |
-| `../../../assets/approved/approved-coffee-chat-team-with-lockup.png` | Portrait coffee-chat invitation with the Burst SMS Philippines lockup and local team | Three members of the Burst SMS Philippines messaging team with an invitation to book a coffee chat | Reconfirm booking destination and fulfilment before a new campaign flight. |
-| `../../../assets/approved/approved-coffee-chat-team.png` | Portrait coffee-chat invitation using the approved team composition | Three members of the Burst SMS Philippines messaging team with an invitation to book a coffee chat | Approved unchanged as supplied. New edits must apply the current lockup rule. |
-| `../../../assets/approved/approved-grace-briones-country-manager.png` | Square announcement identifying Grace Briones as Country Manager Philippines | Grace Briones announced as Country Manager Philippines | Title is approved in this exact asset. Reconfirm if reused after a role change. |
-| `../../../assets/approved/approved-sender-id-free-offer.png` | Portrait Branded Sender ID limited-time offer | Burst SMS Philippines Branded Sender ID limited-time offer | Reconfirm offer dates, eligibility, terms, and operational availability before a new campaign flight. |
-| `../../../assets/approved/approved-sender-id-great-offer.png` | Portrait Sender ID awareness concept | Branded Sender ID creative asking customers to recognise who an SMS is from | Exact artwork is approved. Confirm current Sender ID route and approval conditions before publishing a new campaign. |
-| `../../../assets/approved/approved-be-recognised-facebook.png` | Portrait Sender ID awareness creative using the approved white brand bar | Burst SMS Philippines creative encouraging businesses to be recognised and remembered | Approved unchanged as supplied. Confirm current Sender ID route and approval conditions before campaign flight. |
-| `../../../assets/approved/approved-keep-customers-in-loop.png` | Portrait customer updates creative using the approved lower white brand bar | Burst SMS Philippines creative encouraging businesses to keep customers informed with promotions, updates and reminders | Approved unchanged as supplied. Confirm the selected use case and product claims before campaign flight. |
+| `../assets/approved/approved-coffee-chat-team-with-lockup.png` | Portrait coffee-chat invitation with the Burst SMS Philippines lockup and local team | Three members of the Burst SMS Philippines messaging team with an invitation to book a coffee chat | Reconfirm booking destination and fulfilment before a new campaign flight. |
+| `../assets/approved/approved-coffee-chat-team.png` | Portrait coffee-chat invitation using the approved team composition | Three members of the Burst SMS Philippines messaging team with an invitation to book a coffee chat | Approved unchanged as supplied. New edits must apply the current lockup rule. |
+| `../assets/approved/approved-grace-briones-country-manager.png` | Square announcement identifying Grace Briones as Country Manager Philippines | Grace Briones announced as Country Manager Philippines | Title is approved in this exact asset. Reconfirm if reused after a role change. |
+| `../assets/approved/approved-sender-id-free-offer.png` | Portrait Branded Sender ID limited-time offer | Burst SMS Philippines Branded Sender ID limited-time offer | Reconfirm offer dates, eligibility, terms, and operational availability before a new campaign flight. |
+| `../assets/approved/approved-sender-id-great-offer.png` | Portrait Sender ID awareness concept | Branded Sender ID creative asking customers to recognise who an SMS is from | Exact artwork is approved. Confirm current Sender ID route and approval conditions before publishing a new campaign. |
+| `../assets/approved/approved-be-recognised-facebook.png` | Portrait Sender ID awareness creative using the approved white brand bar | Burst SMS Philippines creative encouraging businesses to be recognised and remembered | Approved unchanged as supplied. Confirm current Sender ID route and approval conditions before campaign flight. |
+| `../assets/approved/approved-keep-customers-in-loop.png` | Portrait customer updates creative using the approved lower white brand bar | Burst SMS Philippines creative encouraging businesses to keep customers informed with promotions, updates and reminders | Approved unchanged as supplied. Confirm the selected use case and product claims before campaign flight. |
 
-For no-execution ChatGPT delivery, the byte-locked `approved-sender-id-great-offer.png` is available at the commit-pinned URL below. Display it unchanged; do not use it as an image-generation reference:
-
-`https://raw.githubusercontent.com/toristarkey-eng/burstsmsphillpines/c188b54/plugins/burst-sms-ph-marketing-lab/assets/approved/approved-sender-id-great-offer.png`
+These examples are bundled inside the skill for brand reference and their documented reuse scope. Ordinary Chat cannot deliver artwork in this Work-only release. Use the bundled renderer and mandatory checks in Work.
 
 ## Approved supporting material
 
-- `../../../assets/burst-sms-ph-commercial-team.jpg`: approved local team photography. Alt text: `Three members of the Burst SMS Philippines commercial team`.
-- `../../../assets/burst-sms-ph-lockup-light-reference.png`: approved light-background layout reference.
-- `../../../assets/burst-sms-ph-lockup-dark-reference.png`: approved dark-background layout reference.
-- `../../../assets/approved/burst-sms-ph-messaging-library-brief.docx`: approved source brief. Use the searchable companion `messaging-library-brief.md` for plugin reasoning and the DOCX as the retained master.
+- `../assets/burst-sms-ph-commercial-team.jpg`: approved local team photography. Alt text: `Three members of the Burst SMS Philippines commercial team`.
+- `../assets/burst-sms-ph-lockup-light-reference.png`: approved light-background layout reference.
+- `../assets/burst-sms-ph-lockup-dark-reference.png`: approved dark-background layout reference.
+- `../assets/approved/burst-sms-ph-messaging-library-brief.docx`: approved source brief. Use the searchable companion `messaging-library-brief.md` for plugin reasoning and the DOCX as the retained master.
 
 ## Approval boundary
 

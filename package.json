@@ -5,6 +5,7 @@
   "description": "Burst SMS Philippines design system and marketing lab plugin",
   "scripts": {
     "test": "node scripts/validate-design-system.mjs && node --test tests/brand-workflow.test.mjs",
-    "validate": "node scripts/validate-design-system.mjs"
+    "validate": "node scripts/validate-design-system.mjs",
+    "test:creative": "python -m unittest discover -s tests -p 'test_work_renderer.py' -v"
   }
 }

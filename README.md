@@ -47,3 +47,34 @@ The plugin package also has its own validator in the bundled Codex plugin-creato
 
 Use the supplied logo artwork without redrawing, recolouring, stretching, or adding effects. Marketing claims must have a current source. Product, pricing, compliance, and performance statements require review by the relevant owner before publication.
 
+
+## Work-only creative production
+
+The existing plugin now bundles six deterministic templates, square (1080 × 1080)
+and portrait (1080 × 1350) exports, approved assets, Noto Sans fonts and mandatory
+brand checks inside its skill. It runs in Work with Python 3.11+ and the pinned
+local runtime dependencies. No external hosting, MCP connection or authentication
+credentials are required. Ordinary Chat explains that creative production requires Work.
+
+Candidates stay private until technical checks and inspection of the exact image,
+copy, claims, accessibility and local fit pass. This does not publish content or
+replace business approval. See [runtime instructions](plugins/burst-sms-ph-marketing-lab/skills/burst-sms-ph-marketing-lab/references/work-runtime.md)
+and [fresh-conversation acceptance tests](tests/FRESH_CONVERSATION_TESTS.md).
+
+Run the checks:
+
+```sh
+python -m pip install -r plugins/burst-sms-ph-marketing-lab/skills/burst-sms-ph-marketing-lab/runtime/requirements.txt
+npm test
+npm run test:creative
+```
+
+Version 0.4.1 adds measured headline/copy layout, bounded readable heading sizes,
+proportionate photo frames, top/bottom brand strips and image-first/text-first
+composition choices. Recognition accepts optional registered illustrative photos.
+The original logo, approved fonts/palette, safe margins, export sizes and mandatory
+private inspection plus delivery validation remain required.
+
+Owner authorisation for team release was given on 9 October 2026. Release follows
+passing automated, visual and CI checks. The existing Git-synced plugin identity
+remains unchanged; no external hosting or service credentials are needed.

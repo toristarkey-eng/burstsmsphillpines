@@ -1,6 +1,6 @@
 # Burst SMS Philippines messaging library brief
 
-This is the searchable plugin companion to the approved Word master in `../../../assets/approved/burst-sms-ph-messaging-library-brief.docx`. Current explicit Tori instructions take precedence for branding, call-to-action destination, approval status, and shared-platform context.
+This is the searchable plugin companion to the approved Word master in `../assets/approved/burst-sms-ph-messaging-library-brief.docx`. Current explicit Tori instructions take precedence for branding, call-to-action destination, approval status, and shared-platform context.
 
 ## Assignment and audience
 

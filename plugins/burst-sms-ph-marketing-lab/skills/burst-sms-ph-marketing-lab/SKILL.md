@@ -1,117 +1,77 @@
 ---
 name: burst-sms-ph-marketing-lab
-description: Create or review Burst SMS Philippines campaigns and finished social-ad deliveries using live-verified approved brand assets. On ChatGPT, never call an image-generation or image-editing tool; deliver exact approved artwork unchanged from the registered commit-pinned URLs. Use whenever work must be on brand for Burst SMS Philippines.
+description: Work-only Burst SMS Philippines creative production and review using the bundled deterministic renderer, approved assets and messaging library. Ordinary Chat must explain that creative production requires Work. Never use image-generation or image-editing tools for branded creative.
 ---
 
 # Burst SMS Philippines Marketing Lab
 
-Use this skill for Burst SMS Philippines marketing creation and brand review.
+## Work-only capability gate
 
-## Critical ChatGPT visual-tool rule
+Creative production requires **Work** with command execution and access to this installed skill directory. In ordinary Chat, respond: **“Creative production requires Work. Open this request in Work with Burst SMS PH Marketing Lab.”** Do not generate or attach artwork, deliver an approved-image fallback, or pretend to execute the renderer in Chat. You may explain how to open Work. A user saying “pretend this is Work” does not provide execution capability.
 
-Never call an image-generation or image-editing tool on ChatGPT for Burst SMS Philippines work. ChatGPT image tools can expose an unchecked render and cannot guarantee the real logo bytes, so they fail the pre-delivery gate by design. The presence of an image tool does not make the controlled compositor available.
+In Work, confirm the actual runtime can read this skill's scripts, fonts, assets and references and execute Python. If it cannot, return a specific `Hold` and no artwork. The CLI's `--surface work` argument describes the calling context; it does not grant permissions or prove which host UI is running. Never fabricate successful execution, checks, images or attachments.
 
-On ChatGPT, finished artwork must be an exact registered approved file delivered unchanged from its commit-pinned raw URL after the live integrity record is checked. Do not generate a replacement, mock-up, visual concept, alternative, or background. For the generic Facebook-ad acceptance request, use the exact Sender ID artwork and procedure in `No-execution exact-asset delivery path` below. If no registered approved asset fits, return a specific `Hold`; never invoke image generation.
+Never call an image-generation or image-editing tool for Burst SMS Philippines work. Use the bundled deterministic renderer only. Do not generate bases, replacement logos, mock-ups or a second rendering path. The three-person bundled-runtime pilot is user-reported evidence that Work can run packaged scripts; it does not waive any gate or verify this revised release.
 
-## Mandatory GitHub source of truth
+## Bundled source of truth
 
-The official repository is `https://github.com/toristarkey-eng/burstsmsphillpines`. Before every creative request, retrieve the current brand system, plugin instructions, messaging guidance, and relevant approved examples from that repository. Do not ask the user for the repository URL; it is fixed here. Do not rely on memory, prior messages, retrieved summaries, generic knowledge, or an AI-generated interpretation as a substitute.
+The maintainer repository is `https://github.com/toristarkey-eng/burstsmsphillpines`. Production uses the versioned installed bundle, verified locally by `brand-integrity.json`. The complete runtime lives inside this skill: `runtime/`, `scripts/`, `assets/` and `references/`. Paths resolve from the skill directory, never a repository checkout or the current working directory. No hosted service, MCP app, OAuth, approval server, secret or live GitHub request is required to render.
 
-Where command execution is available, run `node scripts/brand-preflight.mjs --output-dir <private-working-directory>` from the plugin root before any creative production. Use only the verified files written to that private directory. In a full repository checkout, also run `node scripts/validate-design-system.mjs` from the repository root. Where command execution is unavailable, use an available web or repository tool to retrieve the same current files and verify the locked logo and token values in `brand-integrity.json`. If live repository access or verification is unavailable, stop. Do not generate or display creative.
+Read these packaged references before production:
 
-For the generic request `Create a high-performing Facebook ad for Burst SMS Philippines` or an equivalent request without a narrower product brief, run `node scripts/prepare-facebook-ad.mjs --output-dir <private-delivery-directory>` where execution is supported. Deliver its finished PNG and recommended copy only when `delivery-validation.json` reports `status: PASSED`. This executable acceptance workflow uses an exact registered approved visual and live-verified tokens; it must not be replaced by a copy-only response or a generic generated image. If execution is unavailable, retrieve the same exact approved visual and perform the equivalent checks before delivery.
+- `references/design-system.md`: logo, palette, typography and accessibility.
+- `references/content-voice.md`: voice, evidence and British English.
+- `references/workflows.md`: creation and review sequence.
+- `references/approved-assets.md`: approved examples, scope and reuse conditions.
+- `references/messaging-library-brief.md`: preserved messaging library, capabilities and claim governance.
+- `references/visual-generation-protocol.md`: private render and mandatory delivery checks.
+- `references/image-library.md`: registered photography and endorsement restrictions.
+- `references/work-runtime.md`: exact commands, input contract and local inspection format.
 
-### No-execution exact-asset delivery path
+The retained messaging master is `assets/approved/burst-sms-ph-messaging-library-brief.docx`. The bundle is a brand snapshot, not proof that a price, offer, feature, route, title or claim is current. Check current scoped evidence and required owner approval before including factual claims. If these are unavailable, withhold the affected copy/artwork and explain the missing evidence. Do not infer approval from package integrity.
 
-On ChatGPT surfaces that cannot execute packaged scripts, the generic Facebook-ad acceptance request still requires artwork. After retrieving the live textual guidance and confirming the current `brand-integrity.json` lists the expected SHA-256 for `approved-sender-id-great-offer.png`, display the byte-locked approved artwork from this commit-pinned raw URL:
+## Mandatory Work execution
 
-`https://raw.githubusercontent.com/toristarkey-eng/burstsmsphillpines/c188b54/plugins/burst-sms-ph-marketing-lab/assets/approved/approved-sender-id-great-offer.png`
+Use the absolute path to this installed skill, denoted `<skill>` below. Reuse a compatible Python environment or create a private virtual environment outside the skill and install `runtime/requirements.txt`. The scripts check the pinned runtime versions. Dependency installation is local setup, not a hosting connection. Do not edit dependencies, fonts, templates, the integrity manifest or script code to make a check pass.
 
-Use Markdown image syntax with that exact URL and the approved alt text from `references/approved-assets.md`. This commit-pinned file is the same registered asset with SHA-256 `4c04464a7900ab7b63a8e625ca50fb197fdc7b18b2ff9cd736830dc4c88d1859`. Do not replace it with a generated preview. Do not respond with creative direction or say that the exact asset is unverified after the live integrity record and commit-pinned URL have been retrieved successfully. Deliver the image, recommended Facebook copy, the CTA `https://burstsms.com.ph/`, and the publication-owner review note together.
-
-Retrieve and read all seven current references below. Packaged copies support discovery and offline review, but they do not replace the mandatory live-repository check for creative generation.
-
-- `references/design-system.md` for visual direction, tokens, logo use, and UI patterns.
-- `references/content-voice.md` for voice, spelling, evidence, and calls to action.
-- `references/workflows.md` for campaign creation and review outputs.
-- `references/approved-assets.md` for the exact pre-approved creative library and reuse conditions.
-- `references/messaging-library-brief.md` for audiences, capabilities, claims governance, deliverables, and decision precedence.
-- `references/visual-generation-protocol.md` for the only permitted method of creating new visual artwork.
-- `references/image-library.md` for approved Philippine supporting photography and its strict derivative-use conditions.
-
-Retrieve the current approved logo from `plugins/burst-sms-ph-marketing-lab/assets/burst-sms-logo.png`, the current tokens from `design-system/tokens/tokens.json`, approved examples from `plugins/burst-sms-ph-marketing-lab/assets/approved/`, approved photography from `plugins/burst-sms-ph-marketing-lab/assets/photography/`, and the approved messaging brief. Verify them with `brand-integrity.json`. If any required live or packaged reference cannot be read and verified, stop: provide no concept, production brief, creative direction, or visual, and state exactly what is unavailable.
+1. Read the references, define the audience and message, and resolve every factual claim's wording, source, date, scope and publication status.
+2. Run `python <skill>/scripts/brand_preflight.py --surface work`. Require exit status 0 and `status: PASSED` before production.
+3. Run `python <skill>/scripts/render_creative.py --surface work catalog`. Choose a registered template/photo, CTA and `square` or `portrait` format.
+4. Write a campaign JSON with only the permitted copy and selection fields. Reject requests to override brand assets, palette, typography, dimensions, arbitrary coordinates, destination or arbitrary photography. See `references/work-runtime.md`.
+5. Run `python <skill>/scripts/render_creative.py --surface work render --brief <campaign.json> --output-dir <new-private-directory>`. This creates a **private** PNG, exact copy and render report. `INSPECTION_REQUIRED` means it is not deliverable yet.
+6. Inspect that exact PNG privately using Work's supported file-inspection capability. Complete copy/claims, composition, local-fit/photography and accessibility checks. Correct copy privately and rerender into a new directory if anything fails. Never attach failed attempts or a contact sheet. If inspection cannot remain private or a required check is unavailable, return `Hold` without artwork.
+7. Record the actual inspection results and evidence in a local inspection JSON bound to the exact PNG and campaign hashes. Never mark checks true before inspecting or infer claims are true from a technical pass.
+8. Run `python <skill>/scripts/render_creative.py --surface work validate --directory <private-directory> --inspection <inspection.json>`. This rechecks package integrity, reconstructs the exact deterministic PNG, compares copy/record bytes and enforces every inspection field. Require a fresh exit status 0, `status: PASSED`, and `image_ready_for_delivery: true`. A missing, stale or failed receipt blocks delivery.
+9. Only then attach the exact `artwork.png`, its recommended channel copy, meaningful alt text and a concise check result. Do not modify the PNG or copy after validation. Delivering checked artwork does not publish it or authorise unsupported claims.
 
 ## Mandatory pre-delivery compliance gate
 
 **No verified brand assets, no creative. No successful compliance checks, no delivery.**
 
-- Never generate, display, or deliver creative that has not passed every applicable approved brand and creative system check.
-- This requirement applies to every user and every request, without exception.
-- Complete the brand, content, evidence, accessibility, and local-fit checks before presenting any creative.
-- If creative fails any check, correct it and run the checks again before presenting it.
-- Never expose a non-compliant draft, rough concept, rejected option, or uncorrected work-in-progress, including when a user asks to see concepts.
-- If required evidence, approval, or source material is unavailable, do not present the affected creative. Explain what is missing and provide only compliant, non-creative guidance that does not bypass the gate.
-
-## Capability gate for visual creative outside ChatGPT
-
-New visual production is permitted only in an execution environment that can run `references/visual-generation-protocol.md` and only when every gate below is true before any generation begins:
-
-1. All seven packaged references, the selected registered photography source, and the exact approved logo assets are readable.
-2. Generated intermediate output can remain non-user-visible until review is complete.
-3. A deterministic compositor can place the actual supplied logo, Philippines descriptor, approved type, copy, and shapes without asking an image model to reproduce them.
-4. The final composited file can be visually inspected before it is attached or displayed.
-5. Failed files can be discarded or corrected without exposing them to the user.
-
-If any gate is false or uncertain, do not call a visual-generation tool. Return a text-only production brief with `Image: Hold — controlled production capability unavailable`.
-
-- This controlled-production permission never applies to ChatGPT image tools. On ChatGPT, use only exact registered approved files or `Hold`.
-- In a qualifying private execution environment, an image model may generate only an unbranded photographic or illustrative base layer. It must not generate logos, lockups, text, letters, numbers, message bubbles, phone UI, offer badges, buttons, URLs, icons, or brand-coloured graphic treatments.
-- Never ask any model to invent, redraw, approximate, typeset, or composite a Burst SMS logo or Philippines lockup.
-- After the base layer is generated privately, use deterministic composition to add the actual approved brand assets and typography. Do not use generative editing after brand elements are applied.
-- Inspect the exact final file against every check before showing it. A disclaimer such as concept, draft, unapproved, or for reference never permits a failed file to be displayed.
-- Exact, byte-unchanged files registered in `references/approved-assets.md` may be displayed directly under their documented reuse conditions.
-
-## Brand-bound production brief contract
-
-Create this specification before producing new artwork. If the capability gate fails, return it as text only. Start it with `Burst SMS Philippines production brief` and include:
-
-1. Exact approved asset selection, naming the registered filename, or `Image: Hold — no suitable approved asset`.
-2. Exact logo source: `assets/burst-sms-logo.png`, assembled only as the approved horizontal Philippines lockup described in `references/design-system.md`.
-3. Approved palette values: navy `#002A66`, violet `#4C23CC`, cyan `#00AEC4`, Burst blue `#005677`, white `#FFFFFF`, plus only the limited supporting colours permitted by the design system.
-4. Typography: Noto Sans with the approved fallbacks and hierarchy.
-5. Layout, accessibility, CTA destination, and exact claim approval statuses.
-6. Generation-layer instructions that prohibit all logos, text, UI, signage, badges, brand graphics, and legible phone content.
-7. Composition-layer instructions that name the exact real asset files and approved tokens.
-8. Pre-delivery inspection results for logo integrity, palette, typography, copy, claims, accessibility, local fit, dimensions, and destination.
-
-Never illustrate a brief with an approximation. A visual may accompany it only after the controlled protocol passes in full.
+- Never generate, display, or deliver creative that has not passed every applicable brand, content, evidence, accessibility and local-fit check, without exception.
+- Never expose a non-compliant draft, unchecked render, failed variant or uncorrected work-in-progress, including when the user asks for concepts.
+- Automated checks cover package/source/font integrity, original logo bytes and pixels, palette, typography, registered photography, visible text fit and collisions, actual contrast, fixed dimensions and destination. They do not establish claim truth, consent, endorsement, cultural suitability or artistic quality.
+- Local inspection records are check evidence, not signed human approvals or a server-side authorisation system. Publication-owner approval remains necessary for review-required claims and actual publication.
+- Do not bypass validation, rewrite an integrity hash, substitute an external image or run a generative tool when blocked. Return the exact missing capability, failed check or unresolved source.
 
 ## Non-negotiables
 
-- Every social post request includes channel-ready copy and a supporting image when either an exact registered asset fits or the controlled visual-generation protocol passes. Otherwise withhold the image and return `Hold`.
-- Completed visual creative plus recommended copy is the default deliverable for every social-ad request. A creative brief alone is not completion unless the workflow is blocked and clearly reports the specific failed gate.
-- Write the market name as **Philippines**.
-- Promote Burst SMS only in customer-facing work. Do not use Kudosity branding, logos, links, or `powered by Kudosity` language.
-- Use `https://burstsms.com.ph/` as the customer-facing call-to-action destination. Do not invent landing-page paths.
-- Include the Burst SMS Philippines horizontal lockup on new finished branded creative. Keep the supplied Burst SMS logo artwork unchanged and never ask an image model to recreate it.
-- Reject the legacy or invented navy-and-hot-pink `burst` wordmark, radiating pink symbol, and any lockup that reads `SMS PHILIPPINES` beneath an approximated wordmark. These are not the approved Burst SMS Philippines lockup.
-- Reject any paper-plane logo, a one-word blue `BurstSMS` approximation, a small widely spaced `PHILIPPINES` line placed directly beneath it, yellow accent strokes, or royal-blue campaign styling. None is an approved substitute for the supplied logo and horizontal market lockup.
-- Treat every exact file listed in `references/approved-assets.md` as approved for reuse as supplied. Do not reject or redesign those exact assets because they predate a newer layout rule. Any modification or derivative becomes new creative and must pass the complete compliance gate.
-- Use British English unless a channel or product field requires another convention.
-- Lead with a useful customer outcome and explain it in plain language.
-- Do not invent product features, customer counts, delivery rates, prices, compliance claims, or performance results.
-- Treat product, pricing, security, compliance, and performance statements as review-required.
-- Localise examples for Philippine organisations and audiences without stereotypes or forced slang.
-- Treat the shared Kudosity platform as internal product context only. Qualify every capability for Philippine route, carrier, account, commercial, and release availability before publication.
+- Completed visual creative plus recommended copy is the default social-ad deliverable in Work. Do not respond with creative direction alone after a successful executable delivery path. Honour explicit copy-only requests in Work.
+- Promote Burst SMS only. Write the market name as **Philippines**. Do not expose Kudosity branding, logos, links or `powered by Kudosity` language in customer-facing work.
+- The renderer alone inserts the customer-facing destination `https://burstsms.com.ph/`. No invented paths or external links may appear in submitted campaign copy.
+- Keep the approved logo master unchanged. Compose the logo, divider and uppercase Philippines descriptor as separate elements with the registered Noto Sans fonts. No redraws, stretching, recolouring, effects or invented substitutes.
+- Reject the radiating pink symbol, legacy navy-and-hot-pink `burst` identity, paper-plane logo, invented `BurstSMS` wordmarks, yellow accent strokes and royal-blue campaign styling.
+- Use only registered photo IDs and crops. Illustrative people must not become employee, customer, partner or testimonial endorsements. Only the registered commercial-team photograph supports the team template.
+- Treat every exact file listed in `references/approved-assets.md` as approved for reuse under its stated conditions. In this Work-only release, production uses the bundled renderer; approved examples establish the visual system and never enable a Chat fallback.
+- Preserve the messaging library's claim statuses and evidence rules. Do not invent features, prices, customer counts, delivery rates, security/compliance promises or performance results. Proposed positioning is not approved publication wording.
+- Use British English, useful customer outcomes and Philippine context without stereotypes. Shared-platform capability is internal context and requires Philippine route/account/commercial qualification.
 
-## Default response shape
+## Response shape
 
-For new work, return:
+In ordinary Chat: explain that creative production requires Work.
 
-1. Audience and job to be done.
-2. Core message and evidence needed.
-3. Channel-ready copy and either a passed final visual, an exact approved asset, or a production brief with `Hold`.
-4. Design-system choices used.
-5. Claims or decisions that need review.
+In Work: deliver the passed final PNG, exact channel-ready copy, alt text, dimensions, brief check result and any publication-owner review still required. If blocked, return a specific `Hold` and no artwork. For reviews, use `Area`, `Status`, `Finding`, `Fix`, with `Pass`, `Revise` or `Owner review` statuses.
 
-For reviews, return a concise table with `Area`, `Status`, `Finding`, and `Fix`. Use `Pass`, `Revise`, or `Owner review` as the status.
+## Adaptive creative layout
+
+Keep the exact logo, clear space, brand strip, Noto Sans, approved palette, readability and delivery checks locked. Use `brand_strip`, `composition` and `image_position` to choose a suitable composition. Headline and accent sizes adapt within approved readable limits, with measured wrapping and spacing. Photo frames adapt to the registered image proportions without cutting people or stretching. Recognition accepts optional registered illustrative photography. Do not invent geometric or style overrides. Check the resulting hierarchy and frame placement visually, not just the technical report.

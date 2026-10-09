@@ -1,32 +1,25 @@
-# Burst SMS Philippines plugin creative-workflow audit
+# Work-only creative workflow review
 
-## Root cause
+Version 0.4.0 preserves the plugin identity and approved messaging while moving
+all creative runtime inputs into the installed skill. The renderer accepts only
+registered templates, two export sizes, approved photography and fixed CTAs.
+Logo pixels, palette, fonts, layout bounds, text fit and contrast are checked.
 
-The earlier plugin depended on written instructions and conversation context to influence a general-purpose image generator. It did not have an executable live-source preflight, cryptographic asset verification, a private intermediate stage, deterministic logo composition, or an automated delivery test. As a result, a model could skip repository retrieval, approximate the logo and palette, expose an unchecked first render, or avoid the risk by returning copy and a brief without artwork.
+Package preflight checks every shipped file. Candidates remain private and carry
+`INSPECTION_REQUIRED`; final delivery requires an inspection bound to the exact
+image and campaign hashes and a fresh deterministic revalidation. Invalid or
+changed candidates invalidate the prior delivery receipt. Ordinary Chat returns
+the Work requirement without importing the renderer or writing artwork.
 
-GitHub storage was not the underlying problem. The missing enforcement between the repository and creative production was the problem: marketplace synchronisation installed the plugin package, but did not itself guarantee that every creative request retrieved and verified the current repository contents.
+There is no hosted MCP service, OAuth, app registration, approval database or
+server credential in this implementation. Local inspection is a delivery check,
+not independent human authorization or publication approval. Package hashes are
+integrity checks, not cryptographic publisher signatures. Work gating also needs
+fresh-conversation acceptance because a skill cannot authenticate its host UI.
 
-## Corrective controls in version 0.1.8
-
-- `brand-integrity.json` locks the canonical repository, plugin version, approved logo, approved examples, messaging brief, colours, typeface and CTA.
-- `scripts/brand-preflight.mjs` retrieves the current GitHub files and fails closed on access, version, hash, token or instruction failure.
-- `scripts/prepare-facebook-ad.mjs` implements the generic Facebook-ad acceptance path. It delivers an exact registered visual, Philippines copy and a machine-readable validation receipt.
-- `references/visual-generation-protocol.md` permits a generated base image only when it remains private and unbranded. The actual logo, type and brand layer must be added deterministically and the exact final must be inspected before display.
-- `tests/brand-workflow.test.mjs` verifies successful retrieval, exact logo integrity, palette tokens, Noto Sans, correct CTA, Philippines localisation, Burst-only copy, finished artwork delivery and fail-closed behaviour for a corrupted logo.
-- The shared skill makes finished artwork plus recommended copy the default for social-ad requests. It prohibits treating a brief-only response as completion unless a named gate failed.
-- A fresh-session v0.1.6 test showed that ChatGPT could retrieve the repository but could not execute the packaged script or attach the packaged binary, so it returned a brief without artwork. Version 0.1.7 adds a commit-pinned raw GitHub delivery URL for the exact hash-locked approved visual. This preserves the approved bytes and makes the default acceptance path work on no-execution ChatGPT surfaces.
-- A v0.1.7 fresh-session retest still invoked ChatGPT image generation instead of the exact asset; the run was stopped before render completion. Version 0.1.8 therefore prohibits ChatGPT image-generation and image-editing tools in the skill description and first execution rule. ChatGPT may deliver only exact registered artwork or `Hold`; controlled new production is limited to private execution environments with the compositor and validator.
-
-## Enforcement boundary
-
-Where code execution is available, the preflight and delivery receipt are technical gates. Where a ChatGPT surface cannot execute packaged scripts, the skill requires equivalent live retrieval and hash checks using an available repository or web tool; if that capability is absent, it must return `Hold` and no artwork. A skill package cannot grant itself network or filesystem permissions, so publication testing must confirm the target workspace surface exposes the required access.
-
-## Release acceptance
-
-The release is eligible for deployment only after:
-
-1. repository validation and automated workflow tests pass;
-2. version 0.1.8 is pushed to the canonical repository;
-3. live GitHub preflight passes against the pushed revision;
-4. the workspace marketplace is resynchronised and reports version 0.1.8 installed for everyone; and
-5. a fresh-session request confirms the plugin returns finished artwork plus copy or a specific fail-closed error.
+Automated checks cover all templates, formats, registered photo combinations,
+CTAs, brand overrides, tampering and execution of a copied skill from an unrelated
+directory. See `tests/FRESH_CONVERSATION_TESTS.md` for the remaining surface tests.
+The reported three-person pilot is user-provided evidence for bundled execution;
+the revised package must still be verified in fresh conversations before release.
+No merge, release or team plugin update is authorized by this PR.

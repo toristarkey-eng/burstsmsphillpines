@@ -1,0 +1,132 @@
+{
+  "schema_version": 1,
+  "templates": {
+    "recognition": {
+      "title": "Be recognised",
+      "layout": "phone",
+      "reference": "approved-be-recognised-facebook.png",
+      "photography": "optional"
+    },
+    "customer-updates": {
+      "title": "Keep customers in the loop",
+      "layout": "conversation",
+      "reference": "approved-keep-customers-in-loop.png",
+      "photography": true
+    },
+    "people-first": {
+      "title": "People and connections",
+      "layout": "split",
+      "reference": "approved-keep-customers-in-loop.png",
+      "photography": true
+    },
+    "team-coffee": {
+      "title": "Meet the Philippines team",
+      "layout": "team",
+      "reference": "approved-coffee-chat-team-with-lockup.png",
+      "photography": true
+    },
+    "bold-statement": {
+      "title": "A clear business outcome",
+      "layout": "statement",
+      "reference": "approved-sender-id-great-offer.png",
+      "photography": false
+    },
+    "offer-focus": {
+      "title": "One proposition, one next step",
+      "layout": "feature",
+      "reference": "approved-sender-id-free-offer.png",
+      "photography": false
+    }
+  },
+  "formats": {
+    "square": [
+      1080,
+      1080
+    ],
+    "portrait": [
+      1080,
+      1350
+    ]
+  },
+  "ctas": [
+    "Talk to our team",
+    "Explore SMS solutions",
+    "Explore branded Sender IDs",
+    "Book a coffee chat"
+  ],
+  "photos": {
+    "commercial-team": {
+      "file": "assets/burst-sms-ph-commercial-team.jpg",
+      "crop": [
+        0,
+        0,
+        960,
+        540
+      ],
+      "alt": "Three members of the Burst SMS Philippines commercial team",
+      "templates": [
+        "team-coffee"
+      ]
+    },
+    "workplace-portrait": {
+      "file": "assets/photography/diverse-collaborative-work-portrait-grid.png",
+      "crop": [
+        6,
+        3,
+        375,
+        330
+      ],
+      "alt": "Illustrative workplace portrait of a person with a laptop",
+      "templates": [
+        "people-first",
+        "customer-updates",
+        "recognition"
+      ]
+    },
+    "collaborating-colleagues": {
+      "file": "assets/photography/diverse-collaborative-work-portrait-grid.png",
+      "crop": [
+        1158,
+        3,
+        1530,
+        330
+      ],
+      "alt": "Illustrative scene of two colleagues working together at a laptop",
+      "templates": [
+        "people-first",
+        "customer-updates",
+        "recognition"
+      ]
+    },
+    "small-business-counter": {
+      "file": "assets/photography/diverse-collaborative-work-portrait-grid.png",
+      "crop": [
+        390,
+        678,
+        763,
+        1018
+      ],
+      "alt": "Illustrative scene of a person at a small business counter",
+      "templates": [
+        "people-first",
+        "customer-updates",
+        "recognition"
+      ]
+    },
+    "retail-messaging": {
+      "file": "assets/photography/everyday-connections-manila.png",
+      "crop": [
+        6,
+        3,
+        371,
+        318
+      ],
+      "alt": "Illustrative retail scene of a person checking a phone",
+      "templates": [
+        "people-first",
+        "customer-updates",
+        "recognition"
+      ]
+    }
+  }
+}

@@ -1,14 +1,18 @@
-# Visual generation protocol
+# Visual production protocol
 
-New Burst SMS Philippines visual creative uses a controlled, fail-closed workflow.
+Creative production requires Work. Use the existing plugin's installed skill,
+its approved assets and its deterministic renderer. Do not invoke image-generation
+or image-editing tools. Ordinary Chat must explain that creative production
+requires Work and must not deliver artwork.
 
-Before production, retrieve the current brand files from `https://github.com/toristarkey-eng/burstsmsphillpines`. Run `plugins/burst-sms-ph-marketing-lab/scripts/brand-preflight.mjs` wherever execution is supported and use only its verified output. If live retrieval, an expected hash, the required plugin version, or a token check fails, stop without generating or displaying artwork.
+1. Verify the complete installed package and pinned runtime locally.
+2. Select a registered template, export format, photo and CTA; validate copy and claims.
+3. Render privately with the unchanged approved logo, locked palette, Noto Sans and fixed geometry.
+4. Inspect the exact final PNG, copy, claims, accessibility and Philippines fit.
+5. Revalidate the candidate and inspection against the same package and hashes.
+6. Attach only the exact passed PNG, recommended copy and alt text.
 
-1. Approve copy and claims before production.
-2. Generate only a private, unbranded photographic or illustrative base. The generation prompt must prohibit logos, words, letters, numbers, readable signage, UI, message bubbles, phone content, badges, CTAs, URLs, icons, watermarks, and brand graphic treatments.
-3. Use deterministic composition to add the actual supplied Burst SMS logo, the approved horizontal Philippines lockup, Noto Sans typography, approved copy, and approved palette values.
-4. Do not use generative editing after brand elements are applied.
-5. Inspect the exact final file for logo integrity, colour, type, copy, claims, accessibility, local fit, dimensions, destination, and generated artefacts.
-6. Deliver only the passed final. Never show base layers, drafts, failed variants, approximate logos, contact sheets, or rejected concepts.
-
-Generation is allowed only when intermediate output can remain private, actual assets can be composited unchanged, and the final can be inspected before display. If any capability is unavailable or uncertain, return `Hold` instead of generating.
+If a gate fails, return Hold with the reason and no artwork. No hosting,
+authentication credentials or approval server is needed. Technical delivery
+validation does not authorize publication. See the plugin's
+`references/work-runtime.md` for commands and inspection requirements.

@@ -1,27 +1,35 @@
 {
   "name": "burst-sms-ph-marketing-lab",
-  "version": "0.2.0",
-  "description": "Create and review Burst SMS Philippines marketing work with the approved design system and voice.",
+  "version": "0.4.1",
+  "description": "Create and review Burst SMS Philippines marketing in Work using the bundled deterministic renderer and approved messaging library.",
   "author": {
     "name": "Tori",
     "email": "tori.starkey@kudosity.com"
   },
   "homepage": "https://github.com/toristarkey-eng/burstsmsphillpines",
   "repository": "https://github.com/toristarkey-eng/burstsmsphillpines.git",
-  "keywords": ["burst-sms", "philippines", "marketing", "brand", "design-system"],
+  "keywords": [
+    "burst-sms",
+    "philippines",
+    "marketing",
+    "brand",
+    "design-system"
+  ],
   "skills": "./skills/",
   "interface": {
     "displayName": "Burst SMS PH Marketing Lab",
-    "shortDescription": "PH marketing design system",
-        "longDescription": "Create campaigns, copy, and finished social-ad deliveries using live-verified approved Burst SMS Philippines visual assets.",
+    "shortDescription": "PH marketing creative in Work",
+    "longDescription": "Work-only creative production with bundled verified assets, locked templates and mandatory brand checks. Ordinary Chat explains how to open Work.",
     "developerName": "Tori",
     "category": "Productivity",
-    "capabilities": ["Write"],
+    "capabilities": [
+      "Write"
+    ],
     "websiteURL": "https://burstsms.com.ph/",
-        "defaultPrompt": [
-          "Create a verified Burst SMS Philippines social ad with final visual creative.",
-          "Review this asset against the PH design system.",
-          "Write on-brand Philippines marketing copy."
+    "defaultPrompt": [
+      "Create a verified Burst SMS Philippines social ad with final visual creative.",
+      "Review this asset against the PH design system.",
+      "Write on-brand Philippines marketing copy."
     ],
     "brandColor": "#4C23CC"
   }
