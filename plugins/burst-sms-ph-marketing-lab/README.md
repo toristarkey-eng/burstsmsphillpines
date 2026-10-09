@@ -8,5 +8,9 @@ The plugin supports campaign briefs, landing-page and lifecycle copy, social con
 
 - `assets/burst-sms-logo.png` is the approved primary Burst SMS logo for light backgrounds.
 - `assets/burst-sms-ph-commercial-team.jpg` is approved local photography for appropriate Philippines marketing layouts.
+- `assets/burst-sms-ph-lockup-*-reference.png` documents the approved horizontal Philippines lockup direction.
+- `assets/approved/` contains five exact approved finished creative assets and the approved messaging-library brief.
 
 Keep the logo artwork unchanged. When the team photograph is meaningful content, use alt text such as `Three members of the Burst SMS Philippines commercial team`; mark it decorative when it does not add information.
+
+The exact files listed in `skills/burst-sms-ph-marketing-lab/references/approved-assets.md` may be reused as supplied. Modifications and derivatives are new creative and must pass the plugin's mandatory pre-delivery compliance gate.

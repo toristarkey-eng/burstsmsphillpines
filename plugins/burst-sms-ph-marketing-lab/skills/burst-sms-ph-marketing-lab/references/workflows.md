@@ -6,7 +6,7 @@
 2. Choose one core promise that the available evidence can support.
 3. Select the channel and adapt the level of detail.
 4. Draft in the Burst SMS Philippines voice.
-5. Apply the design system and use the approved logo asset.
+5. Apply the design system and include the mandatory Burst SMS Philippines horizontal lockup on new creative. Preserve exact pre-approved assets unchanged when reusing them.
 6. List every factual claim and its source or owner.
 7. Run the review checklist below.
 8. Correct every failed check, then repeat the review until all applicable checks pass.
@@ -16,11 +16,13 @@
 
 Check:
 
-- Brand: logo integrity, palette, type, imagery, spacing, and hierarchy.
+- Brand: mandatory Philippines lockup on new creative; actual approved logo intact; correct variant, divider, descriptor, spacing, clear space, readable scale, palette, type, imagery, and hierarchy.
+- Approved-library status: confirm whether the work is an exact registered asset, an unchanged reuse, or new/modified creative. Exact registered assets retain their approval; modifications require a fresh complete review.
 - Content: audience relevance, clarity, British English, active voice, and a specific call to action.
-- Evidence: product accuracy, current numbers, compliance language, and source links.
+- Evidence: product accuracy, current numbers, compliance language, source links, approval status, and market/route/account scope.
 - Accessibility: contrast, heading order, focus, alt text, captions, and readable type.
 - Local fit: Philippines spelling, relevant context, and absence of stereotypes.
+- Destination: customer-facing links use `https://burstsms.com.ph/`; no invented path or customer-facing Kudosity branding appears.
 
 Any failed check blocks presentation and delivery. Correct the issue and repeat the full review before showing the creative. If a required check cannot be completed, withhold the creative and state what evidence, approval, or source material is missing.
 
@@ -32,3 +34,11 @@ Any failed check blocks presentation and delivery. Correct the issue and repeat 
 - Paid social: make the outcome and audience clear immediately; avoid unverified superlatives.
 - SMS examples: identify the sender, keep the action clear, use realistic placeholders, and include opt-out language when required.
 - Video: use clean, typography-led openings; minimise visual clutter; caption speech; keep product recordings free of personal information.
+
+## Social post deliverables
+
+For LinkedIn, Facebook, and other social post requests, create both the finished caption and a supporting branded image by default. A visual direction alone does not complete the request. Honour an explicit copy-only request. Use one core message, check legibility at mobile feed size, include appropriate alt text, and provide a usable image file.
+
+## Claims and approval status
+
+Use these statuses: `Proposed copy`, `Verified capability`, `Approved for publication`, and `Hold`. A verified platform feature is not automatically approved marketing copy. Record the exact wording, source, source date/version, date checked, scope, owner, approval status, approver/date, review date, and superseded wording. Time-sensitive offers in approved artwork must be reconfirmed before a new campaign flight; this does not revoke approval of the archived exact asset.

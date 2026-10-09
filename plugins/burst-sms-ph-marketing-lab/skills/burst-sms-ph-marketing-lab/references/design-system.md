@@ -34,15 +34,29 @@ Use navy, violet, and white as the dominant system. Use cyan to connect the expe
 - Use message bubbles, product UI fragments, and local photography as supporting motifs.
 - Keep card collections sparse. Prefer one strong composition over a dense dashboard.
 
-## Logo
+## Logo and mandatory Philippines lockup
 
-Use the supplied primary logo on white and the supplied dark-background version on navy or black. Maintain clear space equal to the height of the `S` in `SMS`. Never stretch, redraw, rotate, recolour, outline, shadow, or place the logo on a busy image.
+New finished Burst SMS Philippines marketing creative must include a consistent horizontal market lockup. Use it across social creative, presentations, and local marketing materials.
 
-The Philippines market descriptor may sit beside the logo as a separate text element. Do not merge it into or reconstruct the logo artwork.
+### Approved layout direction
+
+- Light-background version: supplied original-colour Burst SMS logo, a thin vertical divider, and **PHILIPPINES** in uppercase with restrained letter spacing, on a clean white or light surface.
+- Dark-background version: supplied original reverse Burst SMS logo, a thin vertical divider, and **PHILIPPINES** in Burst cyan, on a clean navy or dark surface.
+- Keep the logo, divider, and descriptor vertically balanced as one horizontal unit. The divider and descriptor remain separate elements; never merge them into or alter the logo artwork.
+- Maintain outer clear space at least equal to the height of the `S` in `SMS`. Scale proportionally and keep the descriptor readable.
+- Never stretch, redraw, rotate, recolour, outline, shadow, or place the lockup on a busy image.
+
+### Reference examples and production
+
+- `../../../assets/burst-sms-ph-lockup-light-reference.png` shows the approved light-layout direction.
+- `../../../assets/burst-sms-ph-lockup-dark-reference.png` shows the approved dark-layout direction.
+- These files are visual references, not production logo masters. Use the actual approved logo artwork and assemble the divider and descriptor deterministically.
+- Generate backgrounds or illustrations with a clean brand area, then place the actual logo or lockup unchanged. Never ask an image model to render the Burst SMS logo.
+- Exact pre-approved creative listed in `approved-assets.md` may be reused unchanged even where an older composition differs from the current lockup rule. Any edit or derivative must follow the current rule and pass review.
 
 ## Packaged imagery
 
-The plugin includes `assets/burst-sms-ph-commercial-team.jpg` for suitable Philippines marketing compositions. Use it without changing the people or implying an endorsement, role, or result that has not been approved. Recommended alt text is `Three members of the Burst SMS Philippines commercial team` when the image conveys content; use empty alt text when it is decorative.
+The plugin includes the approved commercial-team photograph, five approved finished creative assets, and the approved messaging-library brief. Use `approved-assets.md` as the authoritative inventory, approval scope, reuse conditions, and alt-text source.
 
 ## Accessibility
 

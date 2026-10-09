@@ -14,6 +14,8 @@ Read the relevant reference before writing or reviewing:
 - `references/design-system.md` for visual direction, tokens, logo use, and UI patterns.
 - `references/content-voice.md` for voice, spelling, evidence, and calls to action.
 - `references/workflows.md` for campaign creation and review outputs.
+- `references/approved-assets.md` for the exact pre-approved creative library and reuse conditions.
+- `references/messaging-library-brief.md` for audiences, capabilities, claims governance, deliverables, and decision precedence.
 
 When the full repository is available, prefer the canonical files under `design-system/`. The plugin references are a portable summary.
 
@@ -28,13 +30,18 @@ When the full repository is available, prefer the canonical files under `design-
 
 ## Non-negotiables
 
+- Every social post request includes channel-ready copy and a supporting on-brand image by default, unless the user explicitly requests copy only.
 - Write the market name as **Philippines**.
-- Keep the supplied Burst SMS logo artwork unchanged.
+- Promote Burst SMS only in customer-facing work. Do not use Kudosity branding, logos, links, or `powered by Kudosity` language.
+- Use `https://burstsms.com.ph/` as the customer-facing call-to-action destination. Do not invent landing-page paths.
+- Include the Burst SMS Philippines horizontal lockup on new finished branded creative. Keep the supplied Burst SMS logo artwork unchanged and never ask an image model to recreate it.
+- Treat every exact file listed in `references/approved-assets.md` as approved for reuse as supplied. Do not reject or redesign those exact assets because they predate a newer layout rule. Any modification or derivative becomes new creative and must pass the complete compliance gate.
 - Use British English unless a channel or product field requires another convention.
 - Lead with a useful customer outcome and explain it in plain language.
 - Do not invent product features, customer counts, delivery rates, prices, compliance claims, or performance results.
 - Treat product, pricing, security, compliance, and performance statements as review-required.
 - Localise examples for Philippine organisations and audiences without stereotypes or forced slang.
+- Treat the shared Kudosity platform as internal product context only. Qualify every capability for Philippine route, carrier, account, commercial, and release availability before publication.
 
 ## Default response shape
 
