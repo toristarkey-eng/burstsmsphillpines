@@ -13,7 +13,7 @@
 8. Correct every failed check, then repeat the review until all applicable checks pass.
 9. Present or deliver the creative only after it passes the complete review. Never show failed drafts or non-compliant concepts.
 
-For visual work, first apply the capability gate in `SKILL.md`. Reuse an exact registered approved asset when it fits. Otherwise follow `visual-generation-protocol.md`: create an unbranded base privately, compose the real brand layer deterministically, inspect the exact final file, and expose only the passed final. If the gate fails, place the visual deliverable on `Hold` and provide the brand-bound production brief without artwork.
+For visual work, first apply the capability gate in `SKILL.md`. On ChatGPT, never call image generation: reuse an exact registered approved asset from its commit-pinned URL when it fits, otherwise return `Hold`. Only a private execution environment with the deterministic compositor may follow `visual-generation-protocol.md` to create an unbranded base privately, compose the real brand layer, inspect the exact final file, and expose the passed final.
 
 ## Review an asset
 

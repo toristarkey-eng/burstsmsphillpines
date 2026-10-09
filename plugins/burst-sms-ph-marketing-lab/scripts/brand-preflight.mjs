@@ -29,7 +29,7 @@ async function retrieve(relativePath) {
   try {
     const response = await fetch(`${rawBase}/${relativePath}`, {
       cache: "no-store",
-      headers: { "user-agent": "burst-sms-ph-brand-preflight/0.1.7" },
+      headers: { "user-agent": "burst-sms-ph-brand-preflight/0.1.8" },
       signal: controller.signal
     });
     if (!response.ok) throw new Error(`HTTP ${response.status}`);

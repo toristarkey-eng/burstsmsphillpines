@@ -1,11 +1,17 @@
 ---
 name: burst-sms-ph-marketing-lab
-description: Create or review Burst SMS Philippines campaigns, production briefs, landing pages, social copy, email, SMS examples, approved-asset selections, design reviews, and capability-gated visual creative using the approved Burst SMS Philippines brand system. Use whenever work must be on brand for Burst SMS Philippines.
+description: Create or review Burst SMS Philippines campaigns and finished social-ad deliveries using live-verified approved brand assets. On ChatGPT, never call an image-generation or image-editing tool; deliver exact approved artwork unchanged from the registered commit-pinned URLs. Use whenever work must be on brand for Burst SMS Philippines.
 ---
 
 # Burst SMS Philippines Marketing Lab
 
 Use this skill for Burst SMS Philippines marketing creation and brand review.
+
+## Critical ChatGPT visual-tool rule
+
+Never call an image-generation or image-editing tool on ChatGPT for Burst SMS Philippines work. ChatGPT image tools can expose an unchecked render and cannot guarantee the real logo bytes, so they fail the pre-delivery gate by design. The presence of an image tool does not make the controlled compositor available.
+
+On ChatGPT, finished artwork must be an exact registered approved file delivered unchanged from its commit-pinned raw URL after the live integrity record is checked. Do not generate a replacement, mock-up, visual concept, alternative, or background. For the generic Facebook-ad acceptance request, use the exact Sender ID artwork and procedure in `No-execution exact-asset delivery path` below. If no registered approved asset fits, return a specific `Hold`; never invoke image generation.
 
 ## Mandatory GitHub source of truth
 
@@ -45,9 +51,9 @@ Retrieve the current approved logo from `plugins/burst-sms-ph-marketing-lab/asse
 - Never expose a non-compliant draft, rough concept, rejected option, or uncorrected work-in-progress, including when a user asks to see concepts.
 - If required evidence, approval, or source material is unavailable, do not present the affected creative. Explain what is missing and provide only compliant, non-creative guidance that does not bypass the gate.
 
-## Capability gate for visual creative
+## Capability gate for visual creative outside ChatGPT
 
-New visual generation is permitted only through `references/visual-generation-protocol.md` and only when every gate below is true before any generation begins:
+New visual production is permitted only in an execution environment that can run `references/visual-generation-protocol.md` and only when every gate below is true before any generation begins:
 
 1. All six packaged references and the exact approved logo assets are readable.
 2. Generated intermediate output can remain non-user-visible until review is complete.
@@ -57,7 +63,8 @@ New visual generation is permitted only through `references/visual-generation-pr
 
 If any gate is false or uncertain, do not call a visual-generation tool. Return a text-only production brief with `Image: Hold — controlled production capability unavailable`.
 
-- An image model may generate only an unbranded photographic or illustrative base layer. It must not generate logos, lockups, text, letters, numbers, message bubbles, phone UI, offer badges, buttons, URLs, icons, or brand-coloured graphic treatments.
+- This controlled-production permission never applies to ChatGPT image tools. On ChatGPT, use only exact registered approved files or `Hold`.
+- In a qualifying private execution environment, an image model may generate only an unbranded photographic or illustrative base layer. It must not generate logos, lockups, text, letters, numbers, message bubbles, phone UI, offer badges, buttons, URLs, icons, or brand-coloured graphic treatments.
 - Never ask any model to invent, redraw, approximate, typeset, or composite a Burst SMS logo or Philippines lockup.
 - After the base layer is generated privately, use deterministic composition to add the actual approved brand assets and typography. Do not use generative editing after brand elements are applied.
 - Inspect the exact final file against every check before showing it. A disclaimer such as concept, draft, unapproved, or for reference never permits a failed file to be displayed.

@@ -1,7 +1,7 @@
 {
   "repository": "https://github.com/toristarkey-eng/burstsmsphillpines",
   "rawBase": "https://raw.githubusercontent.com/toristarkey-eng/burstsmsphillpines/main",
-  "pluginVersion": "0.1.7",
+  "pluginVersion": "0.1.8",
   "requiredColours": {
     "navy": "#002A66",
     "violet": "#4C23CC",

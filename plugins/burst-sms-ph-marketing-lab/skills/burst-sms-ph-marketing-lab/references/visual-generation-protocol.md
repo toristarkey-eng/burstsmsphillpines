@@ -2,6 +2,8 @@
 
 This is the only permitted workflow for producing new Burst SMS Philippines visual creative. It is fail-closed: if an intermediate can become user-visible before approval, do not begin generation.
 
+This protocol is not permission to call a ChatGPT image-generation or image-editing tool. On ChatGPT, use exact registered approved artwork unchanged or return `Hold`. The steps below apply only to a private execution environment with a deterministic compositor and private final-file inspection.
+
 ## 0. Pass the live-source gate
 
 Retrieve the current source files from `https://github.com/toristarkey-eng/burstsmsphillpines`. Where execution is supported, run `scripts/brand-preflight.mjs` and use its verified private output directory. The result must be `allowed: true` and `gate: PASSED`. Where execution is unavailable, retrieve and verify the equivalent live files and locked hashes with an available repository or web tool. Packaged copies alone are not sufficient for new creative. Any failure means `Hold`; do not call an image tool or display artwork.

@@ -1,6 +1,6 @@
 {
   "name": "burst-sms-ph-marketing-lab",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "description": "Create and review Burst SMS Philippines marketing work with the approved design system and voice.",
   "author": {
     "name": "Tori",
@@ -13,7 +13,7 @@
   "interface": {
     "displayName": "Burst SMS PH Marketing Lab",
     "shortDescription": "PH marketing design system",
-    "longDescription": "Create campaigns, copy, approved-asset selections, compliant production briefs, and gated visual creative using the Burst SMS Philippines brand system.",
+        "longDescription": "Create campaigns, copy, and finished social-ad deliveries using live-verified approved Burst SMS Philippines visual assets.",
     "developerName": "Tori",
     "category": "Productivity",
     "capabilities": ["Write"],
