@@ -9,7 +9,7 @@ import unicodedata
 from pathlib import Path
 from typing import Literal
 
-from PIL import Image, ImageChops, ImageDraw, ImageFont, ImageOps, ImageFilter
+from PIL import Image, ImageChops, ImageDraw, ImageFont, ImageOps
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -58,6 +58,8 @@ class Campaign(BaseModel):
     image_position: Literal["left", "centre", "right"] = "centre"
     sender_name: str = Field(default="BURST SMS", min_length=1, max_length=11)
     phone_view: Literal["auto", "full", "detail"] = "auto"
+    photo_backdrop: Literal["none", "cyan-ellipse"] = "none"
+    offer_terms: str = Field(default="", max_length=160)
     image_treatment: Literal["panel", "rounded", "circle", "cutout"] = "panel"
     photo_crop: list[int] | None = Field(default=None, min_length=4, max_length=4)
     photo_description: str = Field(default="", max_length=180)
@@ -76,7 +78,7 @@ class Campaign(BaseModel):
                 raise ValueError("Custom artwork supports 600–4096px per side and aspect ratios from 2:1 to 1:2")
         elif self.dimensions is not None:
             raise ValueError("Dimensions are only permitted with explicitly requested custom artwork")
-        for name in ["headline", "accent", "supporting", "primary_text", "message", "photo_description", "sender_name"]:
+        for name in ["headline", "accent", "supporting", "primary_text", "message", "photo_description", "sender_name", "offer_terms"]:
             text = getattr(self, name)
             if text != text.strip():
                 raise ValueError(f"{name}: remove outer whitespace")
@@ -91,7 +93,7 @@ class Campaign(BaseModel):
                 raise ValueError("Use a meaningful fictional SMS example, not placeholder message copy")
             if re.search(r"kudosity|[a-z][a-z0-9+.-]*://|mailto:|tel:|www\.|\b(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z]{2,63}\b|\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b|\b(?:best|number one|guaranteed)\b", text, re.I):
                 raise ValueError(f"{name}: prohibited brand, link or unsupported superiority claim")
-        if "\n" in self.headline or "\n" in self.accent or "\n" in self.supporting or "\n" in self.message:
+        if "\n" in self.headline or "\n" in self.accent or "\n" in self.supporting or "\n" in self.message or "\n" in self.offer_terms:
             raise ValueError("Artwork fields must be single paragraphs; wrapping belongs to the renderer")
         return self
 
@@ -222,68 +224,73 @@ class Canvas:
             occupied = ImageChops.lighter(occupied, visible)
             self.draw.text(position, text, font=face, fill=PALETTE[colour], anchor="lt")
 
-    def photo(self, photo, box, position="centre", treatment="panel"):
-        source = Image.open(PLUGIN / photo["file"]).convert("RGB")
+    def photo(self, photo, box, position="centre", treatment="panel", backdrop="none"):
+        source = Image.open(PLUGIN / photo["file"]).convert("RGBA")
         crop = tuple(photo["crop"])
         if not (0 <= crop[0] < crop[2] <= source.width and 0 <= crop[1] < crop[3] <= source.height):
             raise Hold("Photo crop outside its approved source")
         x, y, w, h = box
         if min(x, y) < 0 or min(w, h) <= 0 or x+w > self.image.width or y+h > self.image.height:
             raise Hold("Photo region is outside the canvas")
-        # The frame adapts to the registered panel rather than distorting or cropping people.
         panel = source.crop(crop)
-        alpha = Image.new("L", panel.size, 255)
-        if treatment == "cutout":
-            if not photo.get("clean_background"):
-                raise Hold("Cutout needs a clean-background source; choose another treatment/source")
-            # Remove only border-connected near-white background. No generative reconstruction.
-            background = Image.new("L", panel.size)
-            background.putdata([255 if min(rgb) >= 245 and max(rgb)-min(rgb) <= 10 else 0
-                                for rgb in panel.get_flattened_data()])
-            for pixel_x in range(panel.width):
-                for pixel_y in (0, panel.height-1):
-                    if background.getpixel((pixel_x,pixel_y)) == 255:
-                        ImageDraw.floodfill(background, (pixel_x,pixel_y), 128)
-            for pixel_y in range(panel.height):
-                for pixel_x in (0, panel.width-1):
-                    if background.getpixel((pixel_x,pixel_y)) == 255:
-                        ImageDraw.floodfill(background, (pixel_x,pixel_y), 128)
-            alpha = background.point(lambda value: 0 if value == 128 else 255)
-            alpha = alpha.filter(ImageFilter.MinFilter(3)).filter(ImageFilter.GaussianBlur(0.4))
-            if not alpha.getbbox() or alpha.getextrema() != (0,255):
-                raise Hold("No usable clean-background cutout; choose another photo treatment")
-        scale = min(w / panel.width, h / panel.height)
-        size = (max(1, round(panel.width * scale)), max(1, round(panel.height * scale)))
-        scaled = panel.resize(size, Image.Resampling.LANCZOS)
-        px = x if position == "left" else x+w-scaled.width if position == "right" else x+(w-scaled.width)//2
-        py = y+h-scaled.height if treatment == "cutout" else y+(h-scaled.height)//2
-        mask = alpha.resize(size, Image.Resampling.LANCZOS)
+        requested_treatment = treatment
+        fallback = None
+        native_alpha = panel.getchannel("A")
+        # Never infer subject/background from brightness: white clothing/equipment and fine hair are foreground.
+        # Use only a registered, professionally prepared straight-alpha source; otherwise retain original RGB.
+        if treatment == "cutout" and not (photo.get("approved_subject_alpha") is True and native_alpha.getextrema() == (0,255)):
+            treatment = "panel"
+            fallback = "No approved subject alpha; retained original photograph background"
+        alpha = native_alpha if treatment == "cutout" else Image.new("L", panel.size, 255)
+        scale = min(w/panel.width, h/panel.height)
+        size = (max(1, round(panel.width*scale)), max(1, round(panel.height*scale)))
+        # Pillow RGBA resampling handles premultiplied colour, preserving soft source alpha without white-key fringes.
+        scaled_rgba = panel.resize(size, Image.Resampling.LANCZOS)
+        scaled = scaled_rgba.convert("RGB")
+        mask = scaled_rgba.getchannel("A") if treatment == "cutout" else alpha.resize(size, Image.Resampling.LANCZOS)
+        px = x if position == "left" else x+w-size[0] if position == "right" else x+(w-size[0])//2
+        py = y+h-size[1]  # Anchor the subject to the visual group, not an arbitrary floating centre.
         if treatment in ("rounded", "circle"):
             shape = Image.new("L", size)
             sd = ImageDraw.Draw(shape)
             if treatment == "circle":
-                # Elliptical masking follows the panel proportions without warping the image.
                 sd.ellipse((0,0,size[0]-1,size[1]-1), fill=255)
             else:
                 sd.rounded_rectangle((0,0,size[0]-1,size[1]-1), min(size)//8, fill=255)
             mask = ImageChops.multiply(mask, shape)
-        if treatment != "panel":
-            self.draw.ellipse((px,py,px+size[0],py+size[1]), fill=PALETTE["cyan"])
-        self.image.paste(scaled, (px, py), mask)
+        # Composite optional backing and image through ONE mask, with exactly the same exclusive bounds.
+        # No separate canvas ellipse can leak beyond the photo frame or around its corners.
+        if backdrop == "cyan-ellipse":
+            backing = Image.new("RGB", size, PALETTE["cyan"])
+            ellipse = Image.new("L", size)
+            ImageDraw.Draw(ellipse).ellipse((0,0,size[0]-1,size[1]-1), fill=255)
+            backing_mask = ImageChops.multiply(ellipse, mask)
+            self.image.paste(backing, (px,py), backing_mask)
+        self.image.paste(scaled, (px,py), mask)
         self.photo_checks.append({"source": photo["file"], "registered_crop": list(crop),
-                                  "region": list(box), "frame": [px, py, *size],
-                                  "frame_filled": True, "complete_panel_preserved": treatment == "panel",
-                                  "image_treatment": treatment, "mask_has_transparency": mask.getextrema()[0] < 255,
-                                  "subject_and_edges_inspection_required": treatment != "panel", "proportional_scale": True})
+            "region": list(box), "frame": [px,py,*size], "frame_filled": True,
+            "complete_panel_preserved": treatment == "panel", "requested_treatment": requested_treatment,
+            "image_treatment": treatment, "cutout_fallback": fallback, "photo_backdrop": backdrop,
+            "mask_has_transparency": mask.getextrema()[0] < 255,
+            "mask_bounds_match": True, "subject_and_edges_inspection_required": True,
+            "proportional_scale": True})
+        return self.photo_checks[-1]["frame"]
 
-    def bubble(self, text, box, sender="BURST SMS"):
-        """Standalone SMS card with a distinct sender header and content-sized bubble."""
+    def bubble(self, text, box, sender="BURST SMS", paint=True):
+        """Measure before painting: both the sender card and message bubble hug actual content."""
         x, y, w, h = box
-        inset, label_y, message_y = (20, 16, 55) if self.compact else (28, 25, 80)
-        self.draw.rounded_rectangle((x, y, x+w, y+h), 24, fill=PALETTE["white"])
-        self.text(sender, (x+inset, y+label_y, w-2*inset, 40), 20 if self.compact else 25, bold=True, max_lines=1)
-        used = self.text(text or "Your order is ready for collection. Thank you!", (x+inset, y+message_y, w-2*inset, h-message_y-18), 22 if self.compact else 29, max_lines=4)
-        self.draw.rounded_rectangle((x+12, y+message_y-12, x+w-12, y+message_y+used+12), 16, fill=PALETTE["cloud"])
+        inset, label_y, message_y = (20,16,55) if self.compact else (28,25,80)
+        probe = Canvas(self.image.size)
+        probe.text(sender,(x+inset,y+label_y,w-2*inset,40),20 if self.compact else 25,bold=True,max_lines=1)
+        used = probe.text(text or "Your order is ready for collection. Thank you!",(x+inset,y+message_y,w-2*inset,h-message_y-18),22 if self.compact else 29,max_lines=4)
+        card_height = message_y+used+18
+        if paint:
+            self.draw.rounded_rectangle((x,y,x+w-1,y+card_height-1),24,fill=PALETTE["white"])
+            self.draw.rounded_rectangle((x+12,y+message_y-12,x+w-13,y+message_y+used+12),16,fill=PALETTE["cloud"])
+            self.pending_text.extend(probe.pending_text)
+            self.text_checks.extend(probe.text_checks)
+            self.message_card = [x,y,w,card_height]
+        return card_height
 
     def phone(self, campaign, box):
         """Proportional device or intentionally cropped close-up, with readable SMS UI."""
@@ -358,7 +365,7 @@ def render(campaign: Campaign) -> tuple[bytes, dict]:
         if not photo:
             raise Hold("Photo description requires photography")
         photo = {**photo, "alt": campaign.photo_description}
-    if campaign.image_treatment != "panel" and not photo:
+    if (campaign.image_treatment != "panel" or campaign.photo_backdrop != "none") and not photo:
         raise Hold("Photo treatment requires photography")
     if (campaign.phone_view != "auto" or campaign.sender_name != "BURST SMS") and template["layout"] not in ["phone", "conversation"]:
         raise Hold("Sender/device options require a messaging template")
@@ -373,32 +380,35 @@ def render(campaign: Campaign) -> tuple[bytes, dict]:
     d = c.draw
     compact = c.compact
     header_height = 100 if compact else 150
-    footer = height - (110 if compact else 180)
+    cta_height = (150 if campaign.offer_terms else 110) if compact else 180
+    brand_y = 0 if campaign.brand_strip == "top" else height-header_height
+    footer = height-cta_height if campaign.brand_strip == "top" else brand_y-cta_height
     # Fixed white header, original logo, separate divider and market descriptor.
-    d.rectangle((0, 0, width, header_height), fill=PALETTE["white"])
+    brand_canvas = Image.new("RGB", (width,header_height), PALETTE["white"])
+    brand_draw = ImageDraw.Draw(brand_canvas)
     logo = Image.open(PLUGIN / "assets/burst-sms-logo.png").convert("RGB")
     logo_factor = 1.3 if compact else 2
     scaled_logo = logo.resize((round(logo.width*logo_factor), round(logo.height*logo_factor)), Image.Resampling.LANCZOS)
     logo_x, logo_y = 56, 10 if compact else 15
-    c.image.paste(scaled_logo, (logo_x, logo_y))
-    d.line((280 if compact else 382, 28 if compact else 48, 280 if compact else 382, 72 if compact else 107), fill=PALETTE["cyan"], width=2)
+    brand_canvas.paste(scaled_logo, (logo_x,logo_y))
+    brand_draw.line((280 if compact else 382, 28 if compact else 48, 280 if compact else 382, 72 if compact else 107), fill=PALETTE["cyan"], width=2)
     descriptor_font = ImageFont.truetype(str(SERVICE / "fonts/NotoSans-SemiBold.ttf"), 20 if compact else 24)
     tx = 310 if compact else 415
     for letter in "PHILIPPINES":
-        d.text((tx, 40 if compact else 65), letter, fill=PALETTE["navy"], font=descriptor_font, anchor="lt")
-        tx += d.textlength(letter, font=descriptor_font) + 3
+        brand_draw.text((tx, 40 if compact else 65), letter, fill=PALETTE["navy"], font=descriptor_font, anchor="lt")
+        tx += brand_draw.textlength(letter, font=descriptor_font) + 3
     layout = ("conversation" if campaign.message or campaign.sender_name != "BURST SMS" else "split") if template["layout"] == "phone" and photo else template["layout"]
     if campaign.phone_view != "auto" and layout != "phone":
         raise Hold("Device view requires phone imagery; use auto for a photographic SMS card")
-    body_top, body_bottom = (125 if compact else 195), footer - (20 if compact else 28)
+    body_top = (125 if compact else 195) if campaign.brand_strip == "top" else (25 if compact else 45)
+    body_bottom = footer-(20 if compact else 28)
     body_height = body_bottom - body_top
     has_visual = layout in ("phone", "split", "team", "conversation")
     side = layout in ("phone", "split", "team", "conversation") and (campaign.composition == "side-by-side" or campaign.composition == "auto" and height <= 1500)
     copy_width = 455 if side else 880 if layout == "feature" else 940
     copy_x = 561 if side and campaign.image_position == "left" else 100 if layout == "feature" else 64
     gap = 20 if compact else 30
-    conversation_reserve = 165 if compact else 250
-    budget = body_height-conversation_reserve if side and layout == "conversation" and not compact else body_height if side or not has_visual else body_height-(350 if layout == "phone" else 260 if layout == "conversation" else 230)-gap
+    budget = body_height if side or not has_visual else body_height-(350 if layout == "phone" else 260 if layout == "conversation" else 230)-gap
     try:
         copy_height = c.copy_block(campaign, copy_x, body_top, copy_width, budget,
                                   dark=layout == "statement", paint=False, column=side)
@@ -413,44 +423,87 @@ def render(campaign: Campaign) -> tuple[bytes, dict]:
     visual_height = body_height if side else body_height-copy_height-gap if has_visual else 0
     copy_y = body_top+(budget-copy_height)//2 if side else body_top+(body_height-copy_height)//2 if not has_visual else body_top+visual_height+gap if image_first else body_top
     visual_y = body_top if side or image_first else body_top+copy_height+gap
+    if layout == "conversation" and not side:
+        # Centre the actual copy/photo/card group, not a large empty visual allocation.
+        group_width = 952
+        measured_card = c.bubble(campaign.message,(64,visual_y,group_width,min(300,visual_height)),campaign.sender_name,paint=False)
+        crop = photo["crop"]
+        measured_photo = min(visual_height-measured_card-16, round(group_width*(crop[3]-crop[1])/(crop[2]-crop[0])))
+        group_height = measured_photo+measured_card+16
+        spare = max(0,visual_height-group_height)
+        if image_first:
+            visual_y += spare//2
+            copy_y = visual_y+group_height+gap
+        else:
+            copy_y += spare//2
+            visual_y += spare//2
+        visual_height = group_height
     if layout == "statement":
-        d.rectangle((0, header_height+1, width, footer), fill=PALETTE["navy"])
+        d.rectangle((0,header_height if campaign.brand_strip == "top" else 0,width,height if campaign.brand_strip == "top" else brand_y),fill=PALETTE["navy"])
     elif layout == "feature":
-        d.rectangle((0, header_height+1, width, footer), fill=PALETTE["white"])
-        d.rounded_rectangle((62, header_height+25, 1018, footer-20), 42, fill=PALETTE["cloud"])
-        d.rectangle((62, header_height+65, 72, footer-60), fill=PALETTE["cyan"])
+        d.rectangle((0,header_height if campaign.brand_strip == "top" else 0,width,footer),fill=PALETTE["cloud"] if campaign.brand_strip == "bottom" else PALETTE["white"])
+        d.rounded_rectangle((62,body_top-20,1018,footer-20), 42, fill=PALETTE["cloud"])
+        d.rectangle((62,body_top+20,72,footer-60), fill=PALETTE["cyan"])
     c.copy_block(campaign, copy_x, copy_y, copy_width, copy_height, dark=layout == "statement", column=side)
     if layout == "phone":
         c.phone(campaign, (64 if side and campaign.image_position == "left" else 548 if side else 64,
                            visual_y, 468 if side else 952, visual_height))
     elif layout == "conversation":
-        photo_x = 64 if campaign.image_position == "left" else 548
-        bubble_x = 575 if campaign.image_position == "left" else 64
-        c.photo(photo, (photo_x, visual_y, 468, visual_height-conversation_reserve if compact and side else visual_height), campaign.image_position, campaign.image_treatment)
-        c.bubble(campaign.message, (photo_x if compact and side else copy_x if side else bubble_x, body_bottom-(conversation_reserve-20) if side else visual_y, 455 if side else 440, conversation_reserve-20 if side else min(300, visual_height)), campaign.sender_name)
+        # Photo and SMS share one aligned group in the visual column.
+        group_width = 468 if side else 952
+        group_x = (64 if campaign.image_position == "left" else 548) if side else (width-group_width)//2
+        card_height = c.bubble(campaign.message,(group_x,visual_y,group_width,min(300,visual_height)),campaign.sender_name,paint=False)
+        photo_budget = visual_height-card_height-16
+        if photo_budget < 100:
+            raise Hold("Photograph and SMS need more body space; shorten copy or change composition")
+        frame = c.photo(photo,(group_x,visual_y,group_width,photo_budget),"centre",campaign.image_treatment,campaign.photo_backdrop)
+        c.bubble(campaign.message,(group_x,frame[1]+frame[3]+16,group_width,card_height),campaign.sender_name)
     elif layout in ("split", "team"):
         photo_x = 64 if campaign.image_position == "left" else 548
-        c.photo(photo, (photo_x if side else 64, visual_y, 468 if side else 952, visual_height), "centre" if side else campaign.image_position, campaign.image_treatment)
-    d.rectangle((0, footer, width, height), fill=PALETTE["white"])
-    cta_font = font(24 if compact else 29, True)
-    button_width = int(d.textlength(campaign.cta, font=cta_font)) + 64
-    d.rounded_rectangle((64, footer + (18 if compact else 28), 64 + button_width, footer + (70 if compact else 100)), 36, fill=PALETTE["violet"])
-    d.text((96, footer + (32 if compact else 48)), campaign.cta, font=cta_font, fill=PALETTE["white"], anchor="lt")
-    c.text("burstsms.com.ph", (68, footer + (80 if compact else 121), 650, 45 if not compact else 28), 20 if compact else 28, bold=True, max_lines=1)
+        c.photo(photo, (photo_x if side else 64, visual_y, 468 if side else 952, visual_height), "centre" if side else campaign.image_position, campaign.image_treatment,campaign.photo_backdrop)
+    if campaign.brand_strip == "top":
+        d.rectangle((0,footer,width,height),fill=PALETTE["white"])
+    cta_font = font(24 if compact else 29,True)
+    button_width = round(d.textlength(campaign.cta,font=cta_font))+66
+    button_y = footer+(18 if compact else 28)
+    button_height = 52 if compact else 72
+    button_box = [64,button_y,button_width,button_height]
+    d.rounded_rectangle((64,button_y,64+button_width-1,button_y+button_height-1),button_height//2,fill=PALETTE["violet"])
+    c.text(campaign.cta,(96,button_y+(14 if compact else 20),button_width-64,40),24 if compact else 29,"white",True,1)
+    website_size = 20 if compact else 28
+    website_width = round(d.textlength("burstsms.com.ph",font=font(website_size,True)))+2
+    website_x = width-64-website_width
+    same_line = website_x >= 64+button_width+40
+    website_y = button_y+(16 if compact else 22) if same_line else footer+(80 if compact else 121)
+    website_box = [website_x if same_line else 68,website_y,website_width,40]
+    c.text("burstsms.com.ph",tuple(website_box),website_size,
+           "white" if layout == "statement" and campaign.brand_strip == "bottom" else "navy",True,1)
+    terms_box = None
+    if campaign.offer_terms:
+        terms_y = button_y+button_height+12 if same_line else website_y+36
+        terms_box = [64,terms_y,width-128,footer+cta_height-terms_y-12]
+        c.text(campaign.offer_terms,tuple(terms_box),22,
+               "white" if layout == "statement" and campaign.brand_strip == "bottom" else "navy",False,4)
+    # Paint the isolated brand bar last. Its pixels cannot contain CTA/campaign content.
+    c.image.paste(brand_canvas,(0,brand_y))
+    logo_y += brand_y
+    protected_brand = [0,brand_y,width,header_height]
+    cta_region = [0,footer,width,cta_height]
+    for check in c.text_checks:
+        tx,ty,tw,th = check["box"]
+        if ty < brand_y+header_height and ty+check["used_height"] > brand_y:
+            raise Hold("Campaign text intrudes into the brand-only bar")
+    for check in c.photo_checks:
+        px,py,pw,ph = check["frame"]
+        if py+ph > footer or py < body_top:
+            raise Hold("Photography intrudes into protected CTA/brand space")
+    if not (footer <= button_y and website_y < footer+cta_height and (campaign.brand_strip != "bottom" or footer+cta_height == brand_y)):
+        raise Hold("CTA placement does not follow the brand bar")
+    if terms_box is not None:
+        terms_check = next(check for check in reversed(c.text_checks) if check["text"] == campaign.offer_terms)
+        if not (terms_box[0] >= 64 and terms_box[1] >= button_y+button_height+12 and footer <= terms_box[1] and terms_box[1]+terms_check["used_height"] <= footer+cta_height):
+            raise Hold("Terms must fit alongside CTA inside its reserved region")
     c.finish_text()
-    if campaign.brand_strip == "bottom":
-        original = c.image.copy()
-        c.image.paste(original.crop((0, header_height, width, height)), (0, 0))
-        c.image.paste(original.crop((0, 0, width, header_height)), (0, height-header_height))
-        logo_y = height-header_height+logo_y
-        for check in c.text_checks:
-            check["box"] = list(check["box"])
-            check["box"][1] -= header_height
-        if hasattr(c, "phone_check"):
-            c.phone_check["visible_frame"][1] -= header_height
-        for check in c.photo_checks:
-            check["region"][1] -= header_height
-            check["frame"][1] -= header_height
     logo_pixels = c.image.crop((logo_x, logo_y, logo_x + scaled_logo.width, logo_y + scaled_logo.height))
     if ImageChops.difference(logo_pixels, scaled_logo).getbbox():
         raise Hold("Logo pixels changed after composition")
@@ -466,6 +519,9 @@ def render(campaign: Campaign) -> tuple[bytes, dict]:
         if hasattr(c, "phone_check"):
             for name in ("device_dimensions", "visible_frame"):
                 c.phone_check[name] = [round(v*export_scale) for v in c.phone_check[name]]
+        for box in (button_box,website_box,protected_brand,cta_region,terms_box,getattr(c,"message_card",None)):
+            if box is not None:
+                box[:] = [round(v*export_scale) for v in box]
         logo_x, logo_y = round(logo_x*export_scale), round(logo_y*export_scale)
         scaled_logo = logo.resize((round(logo.width*logo_factor*export_scale), round(logo.height*logo_factor*export_scale)), Image.Resampling.LANCZOS)
         c.image.paste(scaled_logo, (logo_x, logo_y))
@@ -490,14 +546,16 @@ def render(campaign: Campaign) -> tuple[bytes, dict]:
         "logo_source": "assets/burst-sms-logo.png", "logo_sha256": digest((PLUGIN / "assets/burst-sms-logo.png").read_bytes()),
         "palette": PALETTE, "typography": "Bundled Noto Sans Regular, SemiBold and Bold", "text_checks": c.text_checks,
         "body_layout": "side-by-side" if side else "image-first" if image_first else "stacked" if has_visual else "statement",
+        "brand_region": protected_brand, "cta_region": cta_region, "cta_button": button_box,
+        "terms_box": terms_box, "website_box": website_box, "cta_alignment": "same-line" if same_line else "stacked", "message_card": getattr(c,"message_card",None),
         "phone_check": getattr(c, "phone_check", None),
         "sender_name": campaign.sender_name if layout in ("phone", "conversation") else None,
         "phone_message": (campaign.message or "Your order is ready for collection. Thank you!") if layout in ("phone", "conversation") else None,
         "photo_checks": c.photo_checks, "brand_strip": campaign.brand_strip, "logo_box": [logo_x, logo_y, scaled_logo.width, scaled_logo.height],
-        "alt_text": "Burst SMS Philippines: " + ". ".join(part.rstrip(". ") for part in [campaign.headline, campaign.accent, photo["alt"] if photo else ""] if part),
-        "channel_copy": campaign.primary_text + "\n\n" + campaign.cta + ": " + DESTINATION,
+        "alt_text": "Burst SMS Philippines: " + ". ".join(part.rstrip(". ") for part in [campaign.headline, campaign.accent, photo["alt"] if photo else "", ("Illustrative SMS from "+campaign.sender_name+": "+(campaign.message or "Your order is ready for collection. Thank you!")) if layout in ("phone","conversation") else ""] if part),
+        "channel_copy": campaign.primary_text + "\n\n" + campaign.cta + ": " + DESTINATION + ("\n\nTerms: "+campaign.offer_terms if campaign.offer_terms else ""),
         "contrast_ratios": contrasts,
-        "checks": {"asset_integrity": True, "logo_pixels": True, "locked_styles": True, "text_fit": True, "fixed_dimensions": True, "fixed_destination": True, "text_contrast": True, "message_visible": layout not in ("phone", "conversation") or any(t["text"] == (campaign.message or "Your order is ready for collection. Thank you!") for t in c.text_checks), "photo_frame_fit": all(p["frame_filled"] and p["proportional_scale"] for p in c.photo_checks)},
-        "inspection_required": ["copy_and_claims", "visual_composition", "local_fit_and_photography", "accessibility"]
+        "checks": {"asset_integrity": True, "logo_pixels": True, "locked_styles": True, "text_fit": True, "fixed_dimensions": True, "fixed_destination": True, "text_contrast": True, "message_visible": layout not in ("phone", "conversation") or any(t["text"] == (campaign.message or "Your order is ready for collection. Thank you!") for t in c.text_checks), "cta_placement": True, "brand_bar_separation": True, "terms_placement": True, "text_collisions": True, "mask_bounds": all(p["mask_bounds_match"] for p in c.photo_checks), "photo_frame_fit": all(p["frame_filled"] and p["proportional_scale"] for p in c.photo_checks)},
+        "inspection_required": ["copy_and_claims", "visual_composition", "local_fit_and_photography", "accessibility", "photo_edges", "body_balance", "cta_and_terms", "campaign_effectiveness"]
     }
     return png, report

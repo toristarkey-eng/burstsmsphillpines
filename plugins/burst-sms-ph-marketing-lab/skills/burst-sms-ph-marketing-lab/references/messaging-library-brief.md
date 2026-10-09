@@ -6,7 +6,7 @@ This is the searchable plugin companion to the approved Word master in `../asset
 
 Build a complete reusable messaging library for the Philippines commercial and marketing team, led by Grace Briones, Country Manager, Philippines. Support everyday content, enterprise outreach, partner conversations, sales enablement, and usable finished assets.
 
-Lead with regulated and operational audiences: government and public services, financial services, healthcare, and utilities. Also cover retail and ecommerce, booking and service businesses, software platforms, agencies, and white-label or reseller partners.
+Choose the audience and benefit for each brief. Cover government/public services, financial services, healthcare, utilities, retail/ecommerce, booking/service businesses, software platforms, agencies and white-label/reseller partners as relevant. Do not default every campaign to regulated audiences or compliance. Current owner direction dated 9 October 2026 supersedes a blanket regulated-audience emphasis in the preserved Word master.
 
 ## Mandatory customer-facing rules
 
@@ -56,3 +56,9 @@ Known unresolved source conflicts remain on `Hold`, including conflicting SMS le
 All customer-facing assets must promote Burst SMS, use the Philippines website destination, and pass copy, image, metadata, alt-text, QR-code, and UI checks. No roadmap item may be presented as live. Do not use unsupported PH MMS, reply-to-alpha, AU-only compliance, RCS, or voice claims. Avoid em dashes, generic SaaS filler, forced slang, fabricated testimonials, and unsubstantiated superiority claims.
 
 Every social post must include its supporting image, correct supplied lockup, readable layout, and appropriate alt text. Preserve exact approved artwork and quotes. Review the library monthly and whenever product, routing, pricing, carrier rules, or brand instructions change.
+
+## Owner-confirmed Philippines team expertise, 9 October 2026
+
+Source: Tori Starkey's explicit instruction and confirmation in Work on 9 October 2026. Scope: compliance and onboarding campaign positioning for the Philippines team. Owner-confirmed proposition: the team's compliance expertise helps customers navigate messaging requirements relevant to their organisation, use case, sender type and delivery route. Use this as a reason to enquire where relevant, with the original approved team photograph. This is owner confirmation of positioning, not independent regulatory certification or approval of a specific legal claim, route or sender. Never imply guaranteed compliance, legal advice or regulatory approval. Specific regulations, registration/eligibility and operational claims still need current scoped evidence. Record this source/date/scope in final claim inspection notes.
+
+Campaign choice: lead with the customer's relevant need and one compelling reason to choose Burst SMS. Engagement, operational updates, automation, sender recognition and white label remain valid benefit directions subject to the existing capability/claim rules. Compliance is one campaign direction, not the default message.

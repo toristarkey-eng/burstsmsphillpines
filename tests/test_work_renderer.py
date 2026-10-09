@@ -8,6 +8,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 from PIL import Image, ImageChops
 from pydantic import ValidationError
@@ -152,16 +153,76 @@ class RendererTests(unittest.TestCase):
         for treatment in ('rounded','circle','cutout'):
             _,report=render(campaign('people-first','square','collaborating-colleagues').model_copy(update={'image_treatment':treatment}))
             check=report['photo_checks'][0]
-            self.assertEqual(check['image_treatment'],treatment)
-            self.assertTrue(check['mask_has_transparency'])
+            self.assertEqual(check['requested_treatment'],treatment)
+            self.assertEqual(check['image_treatment'],'panel' if treatment=='cutout' else treatment)
+            self.assertEqual(check['mask_has_transparency'],treatment!='cutout')
+            if treatment=='cutout': self.assertIn('retained original',check['cutout_fallback'])
             self.assertTrue(check['subject_and_edges_inspection_required'])
         _,report=render(campaign('people-first','portrait','source-collaborative').model_copy(update={
             'photo_crop':[1158,3,1530,330], 'photo_description':'Illustrative colleagues at a laptop', 'image_treatment':'cutout'}))
         self.assertEqual(report['photography']['crop'],[1158,3,1530,330])
         for update in ({'photo_id':'source-collaborative'}, {'photo_crop':[-1,0,100,100]},
-                       {'photo_crop':[0,0,99999,99999]}, {'image_treatment':'arbitrary'},
-                       {'photo_id':'retail-messaging','image_treatment':'cutout'}):
+                       {'photo_crop':[0,0,99999,99999]}, {'image_treatment':'arbitrary'}):
             with self.assertRaises(Hold): render(campaign('people-first').model_copy(update=update))
+
+    def test_cta_brand_terms_and_photo_treatments_across_formats(self):
+        sizes=[('square',None),('portrait',None),('landscape',None),('story',None),('custom',[1200,800])]
+        for fmt,dims in sizes:
+            for strip in ('top','bottom'):
+                for treatment in ('panel','rounded','circle','cutout'):
+                    brief=campaign('customer-updates').model_copy(update={'format':fmt,'dimensions':dims,'brand_strip':strip,
+                        'image_treatment':treatment,'headline':'Stay connected.','accent':'Business messaging.',
+                        'supporting':'Talk to our team.','message':'Your order is ready.',
+                        'offer_terms':'Eligibility applies. Confirm details with our team.'})
+                    with self.subTest(format=fmt,strip=strip,treatment=treatment):
+                        png,r=render(brief)
+                        image=Image.open(io.BytesIO(png)).convert('RGB')
+                        bx,by,bw,bh=r['brand_region'];cx,cy,cw,ch=r['cta_region']
+                        button=r['cta_button']; terms=r['terms_box']
+                        self.assertLessEqual(cy+ch,by if strip=='bottom' else image.height)
+                        self.assertLessEqual(terms[1]+terms[3],cy+ch+1)
+                        self.assertLessEqual(button[1]+button[3],cy+ch+1)
+                        self.assertEqual(r['cta_alignment'],'same-line')
+                        website=r['website_box']
+                        self.assertGreater(website[0],button[0]+button[2])
+                        self.assertAlmostEqual(website[1],button[1]+(16 if r['layout_dimensions'][1]<900 else 22)*image.width/1080,delta=2)
+                        if strip=='bottom':
+                            self.assertAlmostEqual(cy+ch,by,delta=1)
+                            self.assertEqual(image.getpixel((image.width-2,cy+4)),(244,245,255))
+                        else: self.assertEqual(image.getpixel((image.width-2,cy+4)),(255,255,255))
+                        for text in r['text_checks']:
+                            self.assertTrue(text['box'][1]+text['used_height']<=by or text['box'][1]>=by+bh)
+                        frame=r['photo_checks'][0]['frame']; card=r['message_card']
+                        self.assertLessEqual(frame[1]+frame[3],card[1])
+                        self.assertLessEqual(card[1]+card[3],cy)
+                        self.assertTrue(all(r['checks'].values()))
+                        self.assertIn('photo_edges',r['inspection_required'])
+        # A requested RGB cutout must preserve exactly the original-background raster.
+        original,_=render(campaign('people-first').model_copy(update={'image_treatment':'panel'}))
+        fallback,r=render(campaign('people-first').model_copy(update={'image_treatment':'cutout'}))
+        self.assertEqual(original,fallback)
+        self.assertIsNotNone(r['photo_checks'][0]['cutout_fallback'])
+
+    def test_masks_backdrops_and_native_alpha_preserve_bounds_and_white_subjects(self):
+        for treatment in ('rounded','circle'):
+            for backing in ('none','cyan-ellipse'):
+                c=Canvas((300,300));before=c.image.copy()
+                c.photo(catalog()['photos']['workplace-portrait'],(40,40,220,220),treatment=treatment,backdrop=backing)
+                x,y,w,h=c.photo_checks[0]['frame']
+                for region in ((0,0,300,y),(0,y+h,300,300),(0,0,x,300),(x+w,0,300,300)):
+                    self.assertIsNone(ImageChops.difference(c.image.crop(region),before.crop(region)).getbbox())
+                # Rounded/ellipse corner outside the shared mask cannot contain a cyan ellipse sliver.
+                self.assertEqual(c.image.getpixel((x,y)),before.getpixel((x,y)))
+        source=Image.new('RGBA',(100,100),(255,255,255,0))
+        from PIL import ImageDraw
+        ImageDraw.Draw(source).rectangle((20,10,80,99),fill=(255,255,255,255))
+        ImageDraw.Draw(source).rectangle((40,40,60,70),fill=(0,42,102,255))
+        with patch('runtime.renderer.Image.open',return_value=source):
+            c=Canvas((140,140));c.photo({'file':'registered-alpha.png','crop':[0,0,100,100],'approved_subject_alpha':True},(20,20,100,100),treatment='cutout')
+        self.assertEqual(c.image.getpixel((45,45)),(255,255,255))
+        self.assertEqual(c.image.getpixel((70,75)),(0,42,102))
+        self.assertEqual(c.image.getpixel((25,25)),(244,245,255))
+        self.assertIsNone(c.photo_checks[0]['cutout_fallback'])
 
     def test_adaptive_copy_uses_compact_measured_spacing(self):
         _, report = render(campaign(fmt='square').model_copy(update={
@@ -324,6 +385,18 @@ class StandaloneTests(unittest.TestCase):
                 result=self.validate(); self.assertNotEqual(result.returncode,0)
                 self.assertFalse((self.output/'delivery-validation.json').exists())
             finally: file.write_bytes(original)
+
+    def test_visual_edge_balance_or_cta_failure_overrides_technical_pass(self):
+        self.prepare()
+        original=json.loads(self.review.read_text())
+        for key in ('photo_edges','body_balance','cta_and_terms','campaign_effectiveness'):
+            self.review.write_text(json.dumps(original))
+            self.assertEqual(self.validate().returncode,0)
+            failed=json.loads(json.dumps(original)); failed['checks'][key]=False
+            failed['notes'][key]='Actual visual check failed; do not deliver this artwork.'
+            self.review.write_text(json.dumps(failed))
+            self.assertNotEqual(self.validate().returncode,0)
+            self.assertFalse((self.output/'delivery-validation.json').exists())
 
     def test_failed_package_preflight_invalidates_previous_delivery_receipt(self):
         self.prepare()

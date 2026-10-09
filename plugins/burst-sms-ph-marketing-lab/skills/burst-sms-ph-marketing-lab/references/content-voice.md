@@ -28,3 +28,5 @@ Use a specific next step, such as `Talk to our team`, `Explore SMS solutions`, `
 
 Label unsupported numbers and claims as placeholders. Current claims must link to an approved product, legal, compliance, or analytics source before publication.
 
+
+Choose messaging for the customer and objective, rather than repeating compliance-led copy. Lead with a concrete relevant benefit and a substantiated reason to choose Burst SMS. For compliance/onboarding, use the dated owner-confirmed Philippines team expertise within its recorded scope; never promise guaranteed compliance or regulatory approval. Facebook artwork requires a short customer-focused headline, strong relevant focal point and immediately clear action.
