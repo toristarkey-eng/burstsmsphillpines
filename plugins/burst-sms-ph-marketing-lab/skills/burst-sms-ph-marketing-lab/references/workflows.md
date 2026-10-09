@@ -2,6 +2,7 @@
 
 ## Create a campaign
 
+0. Read every packaged reference named in `SKILL.md`. Do not proceed from conversation context or memory alone. If any reference is unavailable, stop and return a text-only `Hold` response.
 1. Define the audience, moment, and desired action.
 2. Choose one core promise that the available evidence can support.
 3. Select the channel and adapt the level of detail.
@@ -12,7 +13,7 @@
 8. Correct every failed check, then repeat the review until all applicable checks pass.
 9. Present or deliver the creative only after it passes the complete review. Never show failed drafts or non-compliant concepts.
 
-For visual work, this workflow does not authorise image-generation or image-editing tools. Select an exact registered approved asset or place the visual deliverable on `Hold`. A written production brief is not visual creative and may be provided while the image is withheld.
+For visual work, this workflow does not authorise image-generation or image-editing tools. There is no generate-then-review path. Select an exact registered approved asset or place the visual deliverable on `Hold`. A production brief must be text only, begin with `Production brief — no visual preview rendered`, follow the contract in `SKILL.md`, and end with `No artwork has been generated or displayed.` Never attach, embed, render, or preview a concept alongside it.
 
 ## Review an asset
 
@@ -27,6 +28,7 @@ Check:
 - Destination: customer-facing links use `https://burstsms.com.ph/`; no invented path or customer-facing Kudosity branding appears.
 - Tool provenance: the image is an exact registered approved asset and was not generated, edited, approximated, or recomposed by an image model.
 - Prohibited visual signatures: no hot-pink Burst identity, no radiating pink symbol, no approximated lowercase `burst` wordmark, and no invented `SMS PHILIPPINES` sub-lockup.
+- Prohibited alternate signatures: no paper-plane logo, no approximated one-word blue `BurstSMS`, no widely spaced `PHILIPPINES` sub-line, no yellow highlight marks, and no royal-blue campaign palette.
 
 Any failed check blocks presentation and delivery. Correct the issue and repeat the full review before showing the creative. If a required check cannot be completed, withhold the creative and state what evidence, approval, or source material is missing.
 
@@ -41,7 +43,7 @@ Any failed check blocks presentation and delivery. Correct the issue and repeat 
 
 ## Social post deliverables
 
-For LinkedIn, Facebook, and other social post requests, create the finished caption and select an exact registered approved image when one is relevant. Honour an explicit copy-only request. If no approved asset fits, return the caption, alt-text intent, and production brief, mark the image `Hold`, and do not generate or display a visual concept.
+For LinkedIn, Facebook, and other social post requests, create the finished caption and name an exact registered approved image when one is relevant. Honour an explicit copy-only request. If no approved asset fits, return the caption, alt-text intent, and text-only production brief, mark the image `Hold`, and do not generate, attach, embed, render, preview, or display a visual concept.
 
 ## Claims and approval status
 
