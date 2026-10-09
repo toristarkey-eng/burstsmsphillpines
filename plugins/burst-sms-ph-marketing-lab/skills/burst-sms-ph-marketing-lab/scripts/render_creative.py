@@ -127,7 +127,7 @@ def main(argv=None):
         engine.load_locks()
         versions = check_dependencies()
         if args.action == "preflight":
-            result = {"status": "PASSED", "plugin": "burst-sms-ph-marketing-lab", "version": "0.4.4", "runtime_versions": versions, "logo_sha256": engine.APPROVED_LOGO_SHA256}
+            result = {"status": "PASSED", "plugin": "burst-sms-ph-marketing-lab", "version": "0.4.5", "runtime_versions": versions, "logo_sha256": engine.APPROVED_LOGO_SHA256}
         elif args.action == "catalog":
             result = engine.catalog()
         elif args.action == "render":

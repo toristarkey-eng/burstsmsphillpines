@@ -195,6 +195,43 @@ class RendererTests(unittest.TestCase):
             self.assertLessEqual(my+mh,y+h+2)
             self.assertTrue(all(r['checks'].values()))
 
+    def test_full_background_coverage_overlays_and_protected_bars(self):
+        for fmt in ('square','portrait','landscape','story'):
+            brief=campaign('recognition',fmt,'workplace-portrait').model_copy(update={
+                'composition':'photo-background','heading_style':'navy','brand_strip':'bottom',
+                'headline':'A little ping.','accent':'','supporting':'','message':'Order ready.',
+                'sender_name':'ACME SHOP','sms_position':'lower-left'})
+            png,r=render(brief)
+            self.assertEqual(r['body_layout'],'photo-background')
+            self.assertTrue(all(r['checks'].values()))
+            self.assertEqual(r['photo_checks'][0]['frame'],r['body_region'])
+            self.assertFalse(r['photo_checks'][0]['mask_has_transparency'])
+            self.assertEqual(r['photo_checks'][0]['image_treatment'],'panel')
+            self.assertEqual(r['heading_region'][1],0)
+            self.assertEqual(r['heading_region'][3],r['body_region'][1])
+            self.assertEqual(r['body_region'][1]+r['body_region'][3],r['brand_region'][1])
+            self.assertEqual(r['cta_alignment'],'same-line')
+            mx,my,mw,mh=r['message_card'];self.assertLessEqual(my+mh,r['cta_button'][1])
+            img=Image.open(io.BytesIO(png)).convert('RGB');bx,by,bw,bh=r['body_region']
+            # Middle-edge photograph pixels differ from the cloud canvas; no floating tile gutters.
+            self.assertNotEqual(img.getpixel((0,by+10)),(246,245,255))
+            self.assertNotEqual(img.getpixel((img.width-1,by+10)),(246,245,255))
+
+    def test_background_registered_subjects_reject_bad_crops_and_overlays(self):
+        import json
+        brief=Campaign(**json.loads((SKILL/'references/examples/photo-background-ping.json').read_text()))
+        _,r=render(brief)
+        self.assertTrue(r['checks']['registered_subject_preservation'])
+        self.assertEqual(len(r['photo_background']['subject_regions']),3)
+        for position in ('upper-left','upper-right','middle-left','middle-right'):
+            with self.assertRaises(Hold):render(brief.model_copy(update={'sms_position':position}))
+        for fmt in ('square','landscape','story'):
+            with self.assertRaises(Hold):render(brief.model_copy(update={'format':fmt}))
+        for fields in ({'brand_strip':'top'},{'heading_style':'light'},{'photo_id':None},
+                       {'message':''},{'image_treatment':'rounded'},{'photo_backdrop':'cyan-ellipse'},
+                       {'message_placement':'beside'}):
+            with self.assertRaises(Hold):render(brief.model_copy(update=fields))
+
     def test_dynamic_photo_masks_and_source_scene_selection(self):
         for treatment in ('rounded','circle','cutout'):
             _,report=render(campaign('people-first','square','collaborating-colleagues').model_copy(update={'image_treatment':treatment}))

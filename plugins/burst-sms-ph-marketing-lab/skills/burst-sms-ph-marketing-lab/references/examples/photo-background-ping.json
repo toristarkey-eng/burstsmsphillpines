@@ -1,0 +1,17 @@
+{
+  "template_id": "recognition",
+  "format": "portrait",
+  "headline": "Good news deserves a little ping",
+  "accent": "",
+  "supporting": "",
+  "primary_text": "Keep customers in the loop. Talk to the Burst SMS Philippines team about your customer messaging needs.",
+  "photo_id": "two-shoppers",
+  "message": "Your order is ready to collect.",
+  "sender_name": "ACME SHOP",
+  "brand_strip": "bottom",
+  "composition": "photo-background",
+  "heading_style": "navy",
+  "sms_position": "lower-left",
+  "image_treatment": "panel",
+  "photo_backdrop": "none"
+}
