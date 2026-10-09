@@ -43,9 +43,42 @@ class RendererTests(unittest.TestCase):
                     self.assertEqual(report['delivery_status'], 'INSPECTION_REQUIRED')
                     self.assertEqual(report['destination'], 'https://burstsms.com.ph/')
 
+    def test_explicit_formats_recompose_preserve_logo_and_dimensions(self):
+        requests = [('landscape', None, (1200,628)), ('story', None, (1080,1920)),
+                    ('custom', [1200,800], (1200,800)), ('custom', [1200,600], (1200,600)),
+                    ('custom', [600,1200], (600,1200))]
+        master=Image.open(SKILL/'assets/burst-sms-logo.png').convert('RGB')
+        for fmt, dims, size in requests:
+            for template in catalog()['templates']:
+                for strip in ('top','bottom'):
+                    with self.subTest(format=fmt, dimensions=dims, template=template, strip=strip):
+                        brief=campaign(template,'portrait' if fmt=='custom' else fmt).model_copy(update={'format':fmt, **{'dimensions':dims,'brand_strip':strip,
+                            'headline':'Stay connected.', 'accent':'Business messaging.',
+                            'supporting':'Talk to our team.', 'message':'Order ready. Thank you!' if template in ('recognition','customer-updates') else ''}})
+                        png,report=render(brief)
+                        image=Image.open(io.BytesIO(png)).convert('RGB')
+                        self.assertEqual(image.size,size)
+                        self.assertEqual(report['dimensions'],list(size))
+                        x,y,w,h=report['logo_box']
+                        expected=master.resize((w,h),Image.Resampling.LANCZOS)
+                        self.assertIsNone(ImageChops.difference(image.crop((x,y,x+w,y+h)),expected).getbbox())
+                        self.assertAlmostEqual(w/h,master.width/master.height,delta=0.03)
+                        self.assertTrue(all(report['checks'].values()))
+                        for text in report['text_checks']:
+                            tx,ty,tw,th=text['box']
+                            self.assertGreaterEqual(min(tx,ty),0)
+                            self.assertLessEqual(tx+tw,size[0]+1)
+                            self.assertLessEqual(ty+text['used_height'],size[1]+1)
+        self.assertEqual(campaign().format,'portrait')
+        for updates in ({'format':'custom'}, {'format':'custom','dimensions':[1600,200]},
+                        {'format':'custom','dimensions':[4097,3000]}, {'format':'custom','dimensions':[600.0,600]},
+                        {'format':'square','dimensions':[1200,1200]}):
+            with self.assertRaises(Hold): render(campaign().model_copy(update=updates))
+
     def test_all_registered_photos_and_ctas_in_both_sizes(self):
         config = catalog()
         for photo_id, photo in config['photos'].items():
+            if photo.get('requires_crop'): continue
             for template in photo['templates']:
                 for fmt in config['formats']:
                     with self.subTest(photo=photo_id, template=template, format=fmt):
@@ -68,7 +101,7 @@ class RendererTests(unittest.TestCase):
         for template in catalog()['templates']:
             for fmt in ('square', 'portrait'):
                 for strip in ('top', 'bottom'):
-                    for composition in ('text-first', 'image-first'):
+                    for composition in ('auto', 'side-by-side', 'text-first', 'image-first'):
                         _,report=render(campaign(template,fmt).model_copy(update={'brand_strip':strip,'composition':composition}))
                         height=report['dimensions'][1]
                         for check in report['text_checks']:
@@ -77,9 +110,62 @@ class RendererTests(unittest.TestCase):
                             self.assertLessEqual(y+check['used_height'],height if strip=='top' else height-150)
                         self.assertTrue(all(report['checks'].values()))
 
+    def test_auto_body_balances_copy_and_phone_with_a_real_message(self):
+        png, report = render(campaign(fmt='square').model_copy(update={
+            'headline': 'Your next business move?', 'accent': 'White Label SMS.',
+            'supporting': "Looking to offer SMS under your own brand? Let's talk.",
+            'message': 'Your order is ready for collection. Thank you!', 'image_position': 'right'}))
+        self.assertEqual(report['body_layout'], 'side-by-side')
+        headline = report['text_checks'][0]
+        message = next(t for t in report['text_checks'] if t['text'] == report['phone_message'])
+        self.assertLess(headline['box'][0]+headline['box'][2], message['box'][0])
+        self.assertTrue(report['checks']['message_visible'])
+        # Check the actual rendered message card, not just a declared flag.
+        image=Image.open(io.BytesIO(png)).convert('RGB')
+        x,y,w,h=message['box']
+        self.assertIn((0,42,102), set(image.crop((x,y,x+w,y+message['used_height'])).get_flattened_data()))
+        for placeholder in ('Your brand here','Your message here','Lorem ipsum'):
+            with self.assertRaises(Hold): render(campaign().model_copy(update={'message':placeholder}))
+
+    def test_phone_views_sender_and_bubble_are_measured_not_placeholders(self):
+        for fmt in ('square','landscape','story'):
+            for view in ('auto','full','detail'):
+                if fmt=='landscape' and view=='full':
+                    with self.assertRaisesRegex(Hold,'Full phone view is too small'): render(campaign(fmt=fmt).model_copy(update={'phone_view':view}))
+                    continue
+                png,report=render(campaign(fmt=fmt).model_copy(update={'phone_view':view,'sender_name':'ACME SHOP','message':'Your order is ready.'}))
+                check=report['phone_check']
+                self.assertAlmostEqual(check['device_dimensions'][0]/check['device_dimensions'][1],0.5,delta=0.003)
+                self.assertEqual(check['sender_header'],'ACME SHOP')
+                self.assertTrue(check['message_bubble'] and check['message_fully_visible'])
+                image=Image.open(io.BytesIO(png)).convert('RGB')
+                self.assertTrue(any(t['text']=='ACME SHOP' for t in report['text_checks']))
+                message=next(t for t in report['text_checks'] if t['text']=='Your order is ready.')
+                x,y,w,h=message['box']
+                pixels=set(image.crop((x,y,x+w,y+message['used_height'])).get_flattened_data())
+                self.assertIn((0,42,102),pixels)
+                self.assertIn((244,245,255),pixels)
+        for sender in ('YOUR BRAND','OVERLONGSENDER','evil.example','<brand>'):
+            with self.assertRaises(Hold): render(campaign().model_copy(update={'sender_name':sender}))
+
+    def test_dynamic_photo_masks_and_source_scene_selection(self):
+        for treatment in ('rounded','circle','cutout'):
+            _,report=render(campaign('people-first','square','collaborating-colleagues').model_copy(update={'image_treatment':treatment}))
+            check=report['photo_checks'][0]
+            self.assertEqual(check['image_treatment'],treatment)
+            self.assertTrue(check['mask_has_transparency'])
+            self.assertTrue(check['subject_and_edges_inspection_required'])
+        _,report=render(campaign('people-first','portrait','source-collaborative').model_copy(update={
+            'photo_crop':[1158,3,1530,330], 'photo_description':'Illustrative colleagues at a laptop', 'image_treatment':'cutout'}))
+        self.assertEqual(report['photography']['crop'],[1158,3,1530,330])
+        for update in ({'photo_id':'source-collaborative'}, {'photo_crop':[-1,0,100,100]},
+                       {'photo_crop':[0,0,99999,99999]}, {'image_treatment':'arbitrary'},
+                       {'photo_id':'retail-messaging','image_treatment':'cutout'}):
+            with self.assertRaises(Hold): render(campaign('people-first').model_copy(update=update))
+
     def test_adaptive_copy_uses_compact_measured_spacing(self):
         _, report = render(campaign(fmt='square').model_copy(update={
-            'headline': 'Keep customers', 'accent': 'informed.', 'supporting': 'Discuss customer updates with our team.'}))
+            'headline': 'Keep customers', 'accent': 'informed.', 'supporting': 'Discuss customer updates with our team.', 'composition': 'text-first'}))
         heading, accent, supporting = report['text_checks'][:3]
         self.assertEqual(accent['box'][1] - (heading['box'][1] + heading['used_height']), 12)
         self.assertEqual(supporting['box'][1] - (accent['box'][1] + accent['used_height']), 28)
@@ -111,6 +197,11 @@ class RendererTests(unittest.TestCase):
         _, report = render(campaign(fmt='square', photo='retail-messaging'))
         self.assertTrue(report['photo_checks'][0]['complete_panel_preserved'])
         with self.assertRaises(Hold): render(campaign(photo='commercial-team'))
+        _, report = render(campaign(fmt='square',photo='retail-messaging').model_copy(update={'message':'Your order is ready.','sender_name':'ACME SHOP'}))
+        self.assertEqual(report['phone_message'],'Your order is ready.')
+        self.assertTrue(any(t['text']=='ACME SHOP' for t in report['text_checks']))
+        self.assertTrue(any(t['text']=='Your order is ready.' for t in report['text_checks']))
+        with self.assertRaises(Hold): render(campaign(photo='retail-messaging').model_copy(update={'phone_view':'full'}))
         for key,value in [('brand_strip','middle'),('composition','freeform'),('image_position',[5,10])]:
             with self.assertRaises(Hold): render(campaign().model_copy(update={key:value}))
 
@@ -118,7 +209,7 @@ class RendererTests(unittest.TestCase):
         for name, value in [('colour','#ff00ff'),('logo_path','/tmp/logo.png'),('font','Arial'),('dimensions',[400,400]),('html','<script>'),('destination','https://evil.example'),('approved',True),('skip_validation',True)]:
             with self.subTest(field=name), self.assertRaises(ValidationError):
                 Campaign.model_validate({**campaign().model_dump(),name:value})
-        for update in [{'photo_id':'../../etc/passwd'}, {'photo_id':'unregistered'}, {'template_id':'arbitrary'}, {'format':'landscape'}, {'cta':'Visit another site'}, {'headline':'Use Kudosity'}, {'headline':'Guaranteed best results'}, {'headline':'Go to evil.example'}, {'headline':'Try 192.0.2.1'}, {'headline':'Hello\u202eevil'}]:
+        for update in [{'photo_id':'../../etc/passwd'}, {'photo_id':'unregistered'}, {'template_id':'arbitrary'}, {'format':'unsupported-banner'}, {'cta':'Visit another site'}, {'headline':'Use Kudosity'}, {'headline':'Guaranteed best results'}, {'headline':'Go to evil.example'}, {'headline':'Try 192.0.2.1'}, {'headline':'Hello\u202eevil'}]:
             with self.subTest(update=update), self.assertRaises(Hold):
                 render(campaign().model_copy(update=update))
 

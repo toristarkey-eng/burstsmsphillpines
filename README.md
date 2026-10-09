@@ -78,3 +78,7 @@ private inspection plus delivery validation remain required.
 Owner authorisation for team release was given on 9 October 2026. Release follows
 passing automated, visual and CI checks. The existing Git-synced plugin identity
 remains unchanged; no external hosting or service credentials are needed.
+
+Version 0.4.2 makes balanced side-by-side body composition the automatic default for copy/phone/photo layouts. Brand/CTA bars stay unchanged; meaningful visible message cards and visual composition review are mandatory for every user.
+
+Explicitly requested landscape (1200 × 628), static Story/Reel cover (1080 × 1920) and custom PNG dimensions are supported. Square/portrait remain default. Custom sizes are 600–4096px per side, aspect ratio 1:2 through 2:1, with body recomposition and unchanged delivery checks. Narrow banners and print/video/vector exports need dedicated capabilities.

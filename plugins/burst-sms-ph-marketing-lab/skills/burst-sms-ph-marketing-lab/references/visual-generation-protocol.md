@@ -11,3 +11,7 @@ New artwork is produced only in Work through the bundled deterministic renderer.
 7. Attach only the exact passed PNG with its exact channel-ready copy, meaningful alt text and concise check result. No post-validation edits or failed variants may be shown.
 
 See `work-runtime.md` for commands and file formats. Technical checks do not establish publication authority, claims, consent or endorsement. Required publication-owner approval remains a content-governance rule; no hosted approval system, signing credential or MCP app exists in this release.
+
+## Art direction acceptance
+
+Visual composition requires a clear campaign idea, a strong focal point, deliberate hierarchy, balanced visual weight, purposeful whitespace, relevant photography, finished mask edges and readability at feed size. Technical fit is necessary but does not establish creative quality. Inspect the actual phone message and selected photo subject. Reject poor wraps, placeholder screens, unexplained empty halves and irrelevant filler; improve the body and rerender privately. Preserve brand and CTA bars through every variation.

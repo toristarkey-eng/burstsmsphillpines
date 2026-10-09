@@ -1,8 +1,8 @@
 # Fresh-conversation acceptance for Work-only PR #1
 
-These are manual acceptance tests for the revised 0.4.1 package, not a release
+These are manual acceptance tests for the revised 0.4.2 package, not a release
 instruction. Use an isolated test installation from PR #1's final commit. Confirm
-the existing plugin name and ID are unchanged and version 0.4.1 is installed.
+the existing plugin name and ID are unchanged and version 0.4.2 is installed.
 Release only after automated and actual visual checks pass and the owner authorises the team update.
 
 ## Work, fresh conversation for each test
@@ -35,3 +35,11 @@ not production approvals. Do not merge or release until separately authorized.
 ## Adaptive composition checks
 
 Test short and two-line headlines with and without accent/supporting copy. Expect compact measured gaps and readable bounded font sizes. Test top/bottom brand strips, image-first/text-first, and left/centre/right imagery. Verify original logo pixels, exact dimensions, intact subjects, proportionate fully filled photo frames and no collisions. Recognition accepts optional registered illustrative photos; commercial-team photography remains team-only.
+
+## Body art direction regression (0.4.2)
+
+Create a square recognition ad with headline “Your next business move?”, accent “White Label SMS.”, a neutral reseller invitation and fictional order-update message. Use default composition. Expect balanced copy beside the phone, a readable SMS inside a distinct message card and unchanged brand/CTA bars. Repeat with image-first/text-first, both sizes, top/bottom brand strips and registered photo compositions. Explicitly reject “Your brand here” and “Your message here” as message copy. A technical pass cannot waive visual inspection for awkward blank halves, empty phone mock-ups or weak hierarchy.
+
+## Explicit format requests
+
+In fresh Work conversations request a landscape 1200 × 628 ad, a static Story/Reel cover 1080 × 1920 and custom 1200 × 800 artwork. Confirm exact dimensions, proportional original logo, protected bars, recomposed body, meaningful SMS, text fit and full/display-size inspection before delivery. Verify a normal request still defaults to square/portrait. A narrow 1600 × 200 banner, ambiguous custom dimensions or request for video must receive a specific capability explanation rather than stretched artwork.

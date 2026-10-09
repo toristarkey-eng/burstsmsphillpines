@@ -22,3 +22,7 @@ These registered files are approved as supporting photography sources for Burst 
 ## Approval boundary
 
 Cropping a panel, colour treatment, retouching, adding copy, adding the logo or otherwise composing a new layout creates new creative. The result must pass the full logo, palette, typography, copy, claims, accessibility, local-fit, dimensions and destination checks before it can be displayed or delivered. The library approval does not approve every possible crop, caption or derivative.
+
+## Dynamic campaign presentation
+
+The approved source does not mandate a rectangular panel in the final ad. The renderer supports proportionate panels, rounded/elliptical masks and clean-background cutouts. Choose coherent scenes anywhere in the four approved sheets with recorded source crop and descriptive alt text. Check masked faces, hair, hands, clothing, equipment and edges privately before delivery. Background removal that damages a subject fails review; select another crop/treatment. Team-supplied photography requires usage approval and library registration, not approval of an exact finished ad.

@@ -46,6 +46,14 @@
     "portrait": [
       1080,
       1350
+    ],
+    "landscape": [
+      1200,
+      628
+    ],
+    "story": [
+      1080,
+      1920
     ]
   },
   "ctas": [
@@ -81,7 +89,8 @@
         "people-first",
         "customer-updates",
         "recognition"
-      ]
+      ],
+      "clean_background": true
     },
     "collaborating-colleagues": {
       "file": "assets/photography/diverse-collaborative-work-portrait-grid.png",
@@ -96,7 +105,8 @@
         "people-first",
         "customer-updates",
         "recognition"
-      ]
+      ],
+      "clean_background": true
     },
     "small-business-counter": {
       "file": "assets/photography/diverse-collaborative-work-portrait-grid.png",
@@ -111,7 +121,8 @@
         "people-first",
         "customer-updates",
         "recognition"
-      ]
+      ],
+      "clean_background": true
     },
     "retail-messaging": {
       "file": "assets/photography/everyday-connections-manila.png",
@@ -127,6 +138,61 @@
         "customer-updates",
         "recognition"
       ]
+    },
+    "source-workforce": {
+      "file": "assets/photography/diverse-filipino-workforce-portrait-collage.png",
+      "crop": null,
+      "requires_crop": true,
+      "clean_background": true,
+      "alt": "Selected illustrative Philippine workplace scene",
+      "templates": [
+        "recognition",
+        "customer-updates",
+        "people-first"
+      ]
+    },
+    "source-connections": {
+      "file": "assets/photography/everyday-connections-manila.png",
+      "crop": null,
+      "requires_crop": true,
+      "clean_background": false,
+      "alt": "Selected illustrative Philippine workplace scene",
+      "templates": [
+        "recognition",
+        "customer-updates",
+        "people-first"
+      ]
+    },
+    "source-coffee": {
+      "file": "assets/photography/good-coffee-good-people-montage.png",
+      "crop": null,
+      "requires_crop": true,
+      "clean_background": false,
+      "alt": "Selected illustrative Philippine workplace scene",
+      "templates": [
+        "recognition",
+        "customer-updates",
+        "people-first"
+      ]
+    },
+    "source-collaborative": {
+      "file": "assets/photography/diverse-collaborative-work-portrait-grid.png",
+      "crop": null,
+      "requires_crop": true,
+      "clean_background": true,
+      "alt": "Selected illustrative Philippine workplace scene",
+      "templates": [
+        "recognition",
+        "customer-updates",
+        "people-first"
+      ]
     }
+  },
+  "custom_dimensions": {
+    "minimum_side": 600,
+    "maximum_side": 4096,
+    "minimum_height_to_width": 0.5,
+    "maximum_height_to_width": 2,
+    "explicit_request_required": true
   }
 }
