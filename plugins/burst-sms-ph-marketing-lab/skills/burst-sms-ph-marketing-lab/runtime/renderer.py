@@ -13,8 +13,9 @@ from PIL import Image, ImageChops, ImageDraw, ImageFont, ImageOps
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
 
 ROOT = Path(__file__).resolve().parents[1]
-SERVICE = ROOT / "creative_service"
-PLUGIN = ROOT / "plugins/burst-sms-ph-marketing-lab"
+SERVICE = ROOT / "runtime"
+PLUGIN = ROOT
+APPROVED_LOGO_SHA256 = "3b6bb8131d6ce1bf81d7f2481d8b3159058c8e71e87e0d6b5f1582efde3341f2"
 DESTINATION = "https://burstsms.com.ph/"
 PALETTE = {"navy": "#002A66", "violet": "#4C23CC", "cyan": "#00AEC4", "blue": "#005677", "white": "#FFFFFF", "cloud": "#F4F5FF"}
 
@@ -73,33 +74,36 @@ class Campaign(BaseModel):
 
 
 def load_locks() -> dict:
-    """Validate all renderer inputs and code against the committed release lock."""
-    lock = json.loads((SERVICE / "release-lock.json").read_text())
-    if lock.get("schema_version") != 1 or not isinstance(lock.get("files"), dict):
-        raise Hold("Release lock is invalid")
-    required = {str(p.relative_to(ROOT)) for p in SERVICE.rglob("*")
-                if p.is_file() and (p.suffix in {".py", ".ttf"} or p.name in {"templates.json", "requirements.txt"}) and "__pycache__" not in p.parts}
-    required.update({"design-system/tokens/tokens.json", "plugins/burst-sms-ph-marketing-lab/scripts/brand-preflight.mjs", "plugins/burst-sms-ph-marketing-lab/brand-integrity.json"})
-    templates = json.loads((SERVICE / "templates.json").read_text())
-    required.update("plugins/burst-sms-ph-marketing-lab/" + photo["file"] for photo in templates["photos"].values())
-    if not required.issubset(lock["files"]):
-        raise Hold("Release lock omits a production input")
-    for relative, expected in lock["files"].items():
-        if Path(relative).is_absolute() or ".." in Path(relative).parts or not isinstance(expected, str) or not re.fullmatch(r"[0-9a-f]{64}", expected):
-            raise Hold("Release lock entry is invalid")
-        if digest((ROOT / relative).read_bytes()) != expected:
-            raise Hold(f"Release integrity mismatch: {relative}")
-    integrity = json.loads((PLUGIN / "brand-integrity.json").read_text())
-    for relative, expected in integrity["files"].items():
-        if digest((ROOT / relative).read_bytes()) != expected:
-            raise Hold(f"Approved brand asset integrity mismatch: {relative}")
-    tokens = json.loads((ROOT / "design-system/tokens/tokens.json").read_text())
-    for name in ["navy", "violet", "cyan", "blue"]:
-        if tokens["color"]["brand"][name]["$value"] != PALETTE[name]:
-            raise Hold(f"Brand token changed: {name}")
-    if "Noto Sans" not in tokens["font"]["family"]["sans"]["$value"]:
-        raise Hold("Required Noto Sans font family is missing")
-    return lock
+    """Verify the installed skill package locally, without a checkout or network."""
+    try:
+        lock = json.loads((ROOT / "brand-integrity.json").read_text())
+        if lock.get("schema_version") != 1 or lock.get("plugin_name") != "burst-sms-ph-marketing-lab" or not isinstance(lock.get("files"), dict):
+            raise Hold("Bundled integrity manifest is invalid")
+        required = {"SKILL.md", "runtime/__init__.py", "runtime/renderer.py", "runtime/requirements.txt", "runtime/templates.json", "assets/tokens.json", "assets/burst-sms-logo.png", "scripts/render_creative.py", "scripts/brand_preflight.py", "assets/approved/burst-sms-ph-messaging-library-brief.docx"}
+        required.update(str(p.relative_to(ROOT)) for folder in [ROOT / "runtime", ROOT / "scripts", ROOT / "references"] for p in folder.rglob("*") if p.is_file() and "__pycache__" not in p.parts and p.suffix != ".pyc")
+        templates = json.loads((SERVICE / "templates.json").read_text())
+        required.update(photo["file"] for photo in templates["photos"].values())
+        if not required.issubset(lock["files"]):
+            raise Hold("Bundled integrity manifest omits a required input")
+        for relative, expected in lock["files"].items():
+            file = ROOT / relative
+            if Path(relative).is_absolute() or ".." in Path(relative).parts or not file.resolve().is_relative_to(ROOT.resolve()) or not isinstance(expected, str) or not re.fullmatch(r"[0-9a-f]{64}", expected):
+                raise Hold("Bundled integrity entry is invalid")
+            if digest(file.read_bytes()) != expected:
+                raise Hold(f"Bundled integrity mismatch: {relative}")
+        if digest((ROOT / "assets/burst-sms-logo.png").read_bytes()) != APPROVED_LOGO_SHA256:
+            raise Hold("Approved logo master changed")
+        tokens = json.loads((ROOT / "assets/tokens.json").read_text())
+        for name in ["navy", "violet", "cyan", "blue"]:
+            if tokens["color"]["brand"][name]["$value"] != PALETTE[name]:
+                raise Hold(f"Brand token changed: {name}")
+        if tokens["color"]["neutral"]["white"]["$value"] != PALETTE["white"] or "Noto Sans" not in tokens["font"]["family"]["sans"]["$value"]:
+            raise Hold("Required white or Noto Sans token changed")
+        return lock
+    except (OSError, ValueError, TypeError, KeyError, AttributeError) as exc:
+        if isinstance(exc, Hold):
+            raise
+        raise Hold("Required bundled input is missing or invalid") from exc
 
 
 def catalog() -> dict:
@@ -273,7 +277,7 @@ def render(campaign: Campaign) -> tuple[bytes, dict]:
     if any(value < 4.5 for value in contrasts.values()):
         raise Hold("Locked text colour contrast failed")
     report = {
-        "technical_status": "PASSED", "publication_status": "AWAITING_OWNER_REVIEW",
+        "technical_status": "PASSED", "delivery_status": "INSPECTION_REQUIRED",
         "campaign": campaign.model_dump(), "campaign_sha256": digest(canonical(campaign.model_dump())),
         "png_sha256": digest(png), "release_sha256": digest(canonical(lock)),
         "dimensions": [width, height], "destination": DESTINATION,
@@ -284,6 +288,6 @@ def render(campaign: Campaign) -> tuple[bytes, dict]:
         "channel_copy": campaign.primary_text + "\n\n" + campaign.cta + ": " + DESTINATION,
         "contrast_ratios": contrasts,
         "checks": {"asset_integrity": True, "logo_pixels": True, "locked_styles": True, "text_fit": True, "fixed_dimensions": True, "fixed_destination": True, "text_contrast": True},
-        "requires_human_review": ["wording_and_claims", "visual_composition", "local_fit_and_photography", "accessibility", "publication_authority"]
+        "inspection_required": ["copy_and_claims", "visual_composition", "local_fit_and_photography", "accessibility"]
     }
     return png, report

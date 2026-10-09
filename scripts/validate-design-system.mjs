@@ -1,159 +1,44 @@
-import fs from "node:fs";
-import crypto from "node:crypto";
-import path from "node:path";
-import process from "node:process";
+import fs from 'node:fs';
+import path from 'node:path';
+import crypto from 'node:crypto';
 
 const root = process.cwd();
-const required = [
-  "creative_service/renderer.py",
-  "creative_service/server.py",
-  "creative_service/store.py",
-  "creative_service/templates.json",
-  "creative_service/release-lock.json",
-  "creative_service/fonts/NotoSans-Regular.ttf",
-  "creative_service/fonts/NotoSans-Bold.ttf",
-  "tests/test_creative_service.py",
-  "design-system/index.html",
-  "design-system/styles.css",
-  "design-system/app.js",
-  "design-system/tokens/tokens.json",
-  "design-system/tokens/tokens.css",
-  "design-system/assets/brand/burst-sms-logo-primary.png",
-  "design-system/assets/photography/burst-sms-ph-commercial-team.jpg",
-  "design-system/assets/photography/library/diverse-filipino-workforce-portrait-collage.png",
-  "design-system/assets/photography/library/everyday-connections-manila.png",
-  "design-system/assets/photography/library/good-coffee-good-people-montage.png",
-  "design-system/assets/photography/library/diverse-collaborative-work-portrait-grid.png",
-  "plugins/burst-sms-ph-marketing-lab/plugin.json",
-  "plugins/burst-sms-ph-marketing-lab/.codex-plugin/plugin.json",
-  "plugins/burst-sms-ph-marketing-lab/brand-integrity.json",
-  "plugins/burst-sms-ph-marketing-lab/scripts/brand-preflight.mjs",
-  "plugins/burst-sms-ph-marketing-lab/scripts/prepare-facebook-ad.mjs",
-  "tests/brand-workflow.test.mjs",
-  "plugins/burst-sms-ph-marketing-lab/assets/burst-sms-logo.png",
-  "plugins/burst-sms-ph-marketing-lab/assets/burst-sms-ph-commercial-team.jpg",
-  "plugins/burst-sms-ph-marketing-lab/assets/burst-sms-ph-lockup-light-reference.png",
-  "plugins/burst-sms-ph-marketing-lab/assets/burst-sms-ph-lockup-dark-reference.png",
-  "plugins/burst-sms-ph-marketing-lab/assets/approved/approved-coffee-chat-team-with-lockup.png",
-  "plugins/burst-sms-ph-marketing-lab/assets/approved/approved-coffee-chat-team.png",
-  "plugins/burst-sms-ph-marketing-lab/assets/approved/approved-grace-briones-country-manager.png",
-  "plugins/burst-sms-ph-marketing-lab/assets/approved/approved-sender-id-free-offer.png",
-  "plugins/burst-sms-ph-marketing-lab/assets/approved/approved-sender-id-great-offer.png",
-  "plugins/burst-sms-ph-marketing-lab/assets/approved/approved-be-recognised-facebook.png",
-  "plugins/burst-sms-ph-marketing-lab/assets/approved/approved-keep-customers-in-loop.png",
-  "plugins/burst-sms-ph-marketing-lab/assets/approved/burst-sms-ph-messaging-library-brief.docx",
-  "plugins/burst-sms-ph-marketing-lab/assets/photography/diverse-filipino-workforce-portrait-collage.png",
-  "plugins/burst-sms-ph-marketing-lab/assets/photography/everyday-connections-manila.png",
-  "plugins/burst-sms-ph-marketing-lab/assets/photography/good-coffee-good-people-montage.png",
-  "plugins/burst-sms-ph-marketing-lab/assets/photography/diverse-collaborative-work-portrait-grid.png",
-  "plugins/burst-sms-ph-marketing-lab/skills/burst-sms-ph-marketing-lab/SKILL.md",
-  "plugins/burst-sms-ph-marketing-lab/skills/burst-sms-ph-marketing-lab/references/approved-assets.md",
-  "plugins/burst-sms-ph-marketing-lab/skills/burst-sms-ph-marketing-lab/references/messaging-library-brief.md",
-  "plugins/burst-sms-ph-marketing-lab/skills/burst-sms-ph-marketing-lab/references/visual-generation-protocol.md",
-  "plugins/burst-sms-ph-marketing-lab/skills/burst-sms-ph-marketing-lab/references/image-library.md",
-  "design-system/docs/approved-assets.md",
-  "design-system/docs/image-library.md",
-  "design-system/docs/visual-generation-protocol.md",
-  "design-system/docs/plugin-creative-workflow-audit.md",
-  "design-system/briefs/burst-sms-ph-messaging-library-brief.docx",
-  ".agents/plugins/marketplace.json"
-];
-
+const plugin = path.join(root, 'plugins/burst-sms-ph-marketing-lab');
+const skill = path.join(plugin, 'skills/burst-sms-ph-marketing-lab');
 const errors = [];
-for (const relative of required) {
-  if (!fs.existsSync(path.join(root, relative))) errors.push(`Missing ${relative}`);
-}
-
-const tokens = JSON.parse(fs.readFileSync(path.join(root, "design-system/tokens/tokens.json"), "utf8"));
-const integrity = JSON.parse(fs.readFileSync(path.join(root, "plugins/burst-sms-ph-marketing-lab/brand-integrity.json"), "utf8"));
-const sha256 = (buffer) => crypto.createHash("sha256").update(buffer).digest("hex");
-for (const [relative, expectedHash] of Object.entries(integrity.files)) {
-  const absolute = path.join(root, relative);
-  if (fs.existsSync(absolute) && sha256(fs.readFileSync(absolute)) !== expectedHash) {
-    errors.push(`Integrity hash mismatch: ${relative}`);
+const sha = bytes => crypto.createHash('sha256').update(bytes).digest('hex');
+const json = file => JSON.parse(fs.readFileSync(file, 'utf8'));
+try {
+  const lock = json(path.join(skill, 'brand-integrity.json'));
+  if (lock.plugin_name !== 'burst-sms-ph-marketing-lab' || lock.plugin_version !== '0.4.0' || lock.runtime !== 'Work') errors.push('Wrong Work package identity/version');
+  for (const [relative, expected] of Object.entries(lock.files)) {
+    const target = path.resolve(skill, relative);
+    if (!target.startsWith(skill + path.sep) || !fs.realpathSync(target).startsWith(skill + path.sep)) errors.push(`Unsafe package path: ${relative}`);
+    else if (sha(fs.readFileSync(target)) !== expected) errors.push(`Bundled integrity mismatch: ${relative}`);
   }
-}
-if (integrity.repository !== "https://github.com/toristarkey-eng/burstsmsphillpines") errors.push("Integrity manifest has the wrong repository");
-if (integrity.pluginVersion !== "0.3.0") errors.push("Integrity manifest has the wrong plugin version");
-const css = fs.readFileSync(path.join(root, "design-system/tokens/tokens.css"), "utf8").toLowerCase();
-for (const [name, token] of Object.entries(tokens.color.brand)) {
-  if (!css.includes(token.$value.toLowerCase())) errors.push(`Brand colour ${name} is missing from tokens.css`);
-}
-
-for (const manifestPath of [
-  "plugins/burst-sms-ph-marketing-lab/plugin.json",
-  "plugins/burst-sms-ph-marketing-lab/.codex-plugin/plugin.json"
-]) {
-  const manifest = JSON.parse(fs.readFileSync(path.join(root, manifestPath), "utf8"));
-  if (manifest.name !== "burst-sms-ph-marketing-lab") errors.push(`${manifestPath} has the wrong plugin name`);
-  if (manifest.version !== "0.3.0") errors.push(`${manifestPath} has an unexpected version`);
-}
-
-const skill = fs.readFileSync(path.join(root, "plugins/burst-sms-ph-marketing-lab/skills/burst-sms-ph-marketing-lab/SKILL.md"), "utf8");
-for (const requiredPolicy of [
-  "Never generate, display, or deliver creative",
-  "Never call an image-generation or image-editing tool on ChatGPT",
-  "without exception",
-  "Never expose a non-compliant draft",
-  "Exact, byte-unchanged files",
-  "radiating pink symbol",
-  "paper-plane logo",
-  "Mandatory GitHub source of truth",
-  "https://github.com/toristarkey-eng/burstsmsphillpines",
-  "scripts/brand-preflight.mjs",
-  "scripts/prepare-facebook-ad.mjs",
-  "Completed visual creative plus recommended copy",
-  "No verified brand assets, no creative",
-  "No successful compliance checks, no delivery",
-  "Generated intermediate output can remain non-user-visible",
-  "deterministic compositor",
-  "references/visual-generation-protocol.md"
-  ,"references/image-library.md"
-]) {
-  if (!skill.includes(requiredPolicy)) errors.push(`Plugin skill is missing mandatory policy: ${requiredPolicy}`);
-}
-
-for (const requiredPolicy of [
-  "Promote Burst SMS only",
-  "https://burstsms.com.ph/",
-  "Treat every exact file listed in `references/approved-assets.md` as approved"
-]) {
-  if (!skill.includes(requiredPolicy)) errors.push(`Plugin skill is missing library policy: ${requiredPolicy}`);
-}
-
-for (const name of [
-  "approved-coffee-chat-team-with-lockup.png",
-  "approved-coffee-chat-team.png",
-  "approved-grace-briones-country-manager.png",
-  "approved-sender-id-free-offer.png",
-  "approved-sender-id-great-offer.png"
-  ,"approved-be-recognised-facebook.png"
-  ,"approved-keep-customers-in-loop.png"
-]) {
-  const pluginAsset = fs.readFileSync(path.join(root, "plugins/burst-sms-ph-marketing-lab/assets/approved", name));
-  const designAsset = fs.readFileSync(path.join(root, "design-system/assets/approved", name));
-  if (!pluginAsset.equals(designAsset)) errors.push(`Approved asset copies differ: ${name}`);
-}
-
-for (const name of [
-  "diverse-filipino-workforce-portrait-collage.png",
-  "everyday-connections-manila.png",
-  "good-coffee-good-people-montage.png",
-  "diverse-collaborative-work-portrait-grid.png"
-]) {
-  const pluginAsset = fs.readFileSync(path.join(root, "plugins/burst-sms-ph-marketing-lab/assets/photography", name));
-  const designAsset = fs.readFileSync(path.join(root, "design-system/assets/photography/library", name));
-  if (!pluginAsset.equals(designAsset)) errors.push(`Photography library copies differ: ${name}`);
-}
-
-const html = fs.readFileSync(path.join(root, "design-system/index.html"), "utf8");
-for (const id of ["foundations", "logo", "components", "voice", "templates", "governance"]) {
-  if (!html.includes(`id="${id}"`)) errors.push(`Preview is missing #${id}`);
-}
-
-if (errors.length) {
-  console.error(errors.join("\n"));
-  process.exit(1);
-}
-
-console.log("Burst SMS Philippines design system validation passed.");
+  const logoHash = '3b6bb8131d6ce1bf81d7f2481d8b3159058c8e71e87e0d6b5f1582efde3341f2';
+  if (sha(fs.readFileSync(path.join(skill, 'assets/burst-sms-logo.png'))) !== logoHash) errors.push('Approved logo changed');
+  for (const relative of ['plugin.json', '.codex-plugin/plugin.json']) {
+    const manifest = json(path.join(plugin, relative));
+    if (manifest.name !== lock.plugin_name || manifest.version !== lock.plugin_version) errors.push(`Manifest identity/version mismatch: ${relative}`);
+    if (manifest.apps || manifest.mcpServers || manifest.extensions?.['com.openai']?.apps) errors.push(`Hosted binding remains: ${relative}`);
+  }
+  const marketplace = json(path.join(root, '.agents/plugins/marketplace.json'));
+  if (marketplace.name !== 'personal' || marketplace.plugins[0].pluginId !== 'Plugin_f128b9ca740081918b32107ab5b22124') errors.push('Existing marketplace/plugin identity changed');
+  for (const file of ['.app.json', '.mcp.json', 'mcp.json']) if (fs.existsSync(path.join(plugin, file))) errors.push(`Hosted configuration remains: ${file}`);
+  const tokens = json(path.join(skill, 'assets/tokens.json'));
+  if (JSON.stringify(tokens) !== JSON.stringify(json(path.join(root, 'design-system/tokens/tokens.json')))) errors.push('Bundled tokens differ from approved source');
+  const css = fs.readFileSync(path.join(root, 'design-system/tokens/tokens.css'), 'utf8').toLowerCase();
+  for (const [name, token] of Object.entries(tokens.color.brand)) if (!css.includes(token.$value.toLowerCase())) errors.push(`Missing CSS token: ${name}`);
+  const skillText = fs.readFileSync(path.join(skill, 'SKILL.md'), 'utf8');
+  for (const policy of ['Creative production requires Work.', 'ordinary Chat', 'No successful compliance checks, no delivery', 'Never call an image-generation or image-editing tool', 'brand_preflight.py', 'image_ready_for_delivery: true', 'Promote Burst SMS only']) if (!skillText.includes(policy)) errors.push(`Missing policy: ${policy}`);
+  const approved = path.join(skill, 'assets/approved');
+  for (const name of fs.readdirSync(approved).filter(name => name.endsWith('.png'))) {
+    if (!fs.readFileSync(path.join(approved, name)).equals(fs.readFileSync(path.join(root, 'design-system/assets/approved', name)))) errors.push(`Approved example changed: ${name}`);
+  }
+  if (!fs.readFileSync(path.join(approved, 'burst-sms-ph-messaging-library-brief.docx')).equals(fs.readFileSync(path.join(root, 'design-system/briefs/burst-sms-ph-messaging-library-brief.docx')))) errors.push('Messaging master changed');
+  const html = fs.readFileSync(path.join(root, 'design-system/index.html'), 'utf8');
+  for (const id of ['foundations', 'logo', 'components', 'voice', 'templates', 'governance']) if (!html.includes(`id="${id}"`)) errors.push(`Missing design-system section: ${id}`);
+} catch (error) { errors.push(error.message); }
+if (errors.length) { console.error(errors.join('\n')); process.exit(1); }
+console.log('Burst SMS Philippines design system and Work bundle validation passed.');

@@ -50,10 +50,10 @@ New finished Burst SMS Philippines marketing creative must include a consistent 
 
 ### Reference examples and production
 
-- `../../../assets/burst-sms-ph-lockup-light-reference.png` shows the approved light-layout direction.
-- `../../../assets/burst-sms-ph-lockup-dark-reference.png` shows the approved dark-layout direction.
+- `../assets/burst-sms-ph-lockup-light-reference.png` shows the approved light-layout direction.
+- `../assets/burst-sms-ph-lockup-dark-reference.png` shows the approved dark-layout direction.
 - These files are visual references, not production logo masters. Use the actual approved logo artwork and assemble the divider and descriptor deterministically.
-- Image generation is permitted only for a private, unbranded base layer under `visual-generation-protocol.md`. Models must not generate logos, typography, UI, message text, icons, CTAs, URLs, or brand graphics.
+- Creative production is Work-only through the bundled renderer under `visual-generation-protocol.md`. Models must not generate bases, logos, typography, UI, message text, icons, CTAs, URLs or brand graphics.
 - Add every brand element with deterministic composition using the actual supplied assets and approved tokens. Do not use generative editing after the brand layer is applied.
 - A production brief may accompany only a final visual that has passed the complete controlled protocol; never use an approximate logo or failed draft as an illustration.
 - Exact pre-approved creative listed in `approved-assets.md` may be reused unchanged even where an older composition differs from the current lockup rule. Any edit or derivative must follow the current rule and pass review.

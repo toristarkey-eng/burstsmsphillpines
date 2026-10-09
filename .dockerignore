@@ -1,9 +1,0 @@
-.git
-.tmp
-node_modules
-__pycache__
-*.pyc
-.env
-private-creatives
-.env.*
-.venv
