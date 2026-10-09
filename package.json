@@ -4,8 +4,7 @@
   "version": "0.1.0",
   "description": "Burst SMS Philippines design system and marketing lab plugin",
   "scripts": {
-    "test": "node scripts/validate-design-system.mjs",
+    "test": "node scripts/validate-design-system.mjs && node --test tests/brand-workflow.test.mjs",
     "validate": "node scripts/validate-design-system.mjs"
   }
 }
-

@@ -1,25 +1,34 @@
 ---
 name: burst-sms-ph-marketing-lab
-description: Create or review text-only Burst SMS Philippines campaigns, production briefs, landing pages, social copy, email, SMS examples, approved-asset selections, and design reviews using the approved Burst SMS Philippines brand system. Never generate or display visual concepts. Use whenever work must be on brand for Burst SMS Philippines.
+description: Create or review Burst SMS Philippines campaigns, production briefs, landing pages, social copy, email, SMS examples, approved-asset selections, design reviews, and capability-gated visual creative using the approved Burst SMS Philippines brand system. Use whenever work must be on brand for Burst SMS Philippines.
 ---
 
 # Burst SMS Philippines Marketing Lab
 
 Use this skill for Burst SMS Philippines marketing creation and brand review.
 
-## Source of truth
+## Mandatory GitHub source of truth
 
-Before every creation, concept, production-brief, asset-selection, or review request, read all five packaged references below. This is mandatory even when the conversation already contains brand information. Do not rely on memory, prior messages, retrieved summaries, or model knowledge as a substitute.
+The official repository is `https://github.com/toristarkey-eng/burstsmsphillpines`. Before every creative request, retrieve the current brand system, plugin instructions, messaging guidance, and relevant approved examples from that repository. Do not ask the user for the repository URL; it is fixed here. Do not rely on memory, prior messages, retrieved summaries, generic knowledge, or an AI-generated interpretation as a substitute.
+
+Where command execution is available, run `node scripts/brand-preflight.mjs --output-dir <private-working-directory>` from the plugin root before any creative production. Use only the verified files written to that private directory. In a full repository checkout, also run `node scripts/validate-design-system.mjs` from the repository root. Where command execution is unavailable, use an available web or repository tool to retrieve the same current files and verify the locked logo and token values in `brand-integrity.json`. If live repository access or verification is unavailable, stop. Do not generate or display creative.
+
+For the generic request `Create a high-performing Facebook ad for Burst SMS Philippines` or an equivalent request without a narrower product brief, run `node scripts/prepare-facebook-ad.mjs --output-dir <private-delivery-directory>` where execution is supported. Deliver its finished PNG and recommended copy only when `delivery-validation.json` reports `status: PASSED`. This executable acceptance workflow uses an exact registered approved visual and live-verified tokens; it must not be replaced by a copy-only response or a generic generated image. If execution is unavailable, retrieve the same exact approved visual and perform the equivalent checks before delivery.
+
+Retrieve and read all six current references below. Packaged copies support discovery and offline review, but they do not replace the mandatory live-repository check for creative generation.
 
 - `references/design-system.md` for visual direction, tokens, logo use, and UI patterns.
 - `references/content-voice.md` for voice, spelling, evidence, and calls to action.
 - `references/workflows.md` for campaign creation and review outputs.
 - `references/approved-assets.md` for the exact pre-approved creative library and reuse conditions.
 - `references/messaging-library-brief.md` for audiences, capabilities, claims governance, deliverables, and decision precedence.
+- `references/visual-generation-protocol.md` for the only permitted method of creating new visual artwork.
 
-The GitHub repository `toristarkey-eng/burstsmsphillpines` is the canonical managed source. The workspace plugin is synced from it, and these packaged references and assets are the runtime source of truth. Do not require users to grant live GitHub access. If any required packaged reference or asset cannot be read, stop: provide no concept, production brief, creative direction, or visual, and state exactly what is unavailable.
+Retrieve the current approved logo from `plugins/burst-sms-ph-marketing-lab/assets/burst-sms-logo.png`, the current tokens from `design-system/tokens/tokens.json`, approved examples from `plugins/burst-sms-ph-marketing-lab/assets/approved/`, and the approved messaging brief. Verify them with `brand-integrity.json`. If any required live or packaged reference cannot be read and verified, stop: provide no concept, production brief, creative direction, or visual, and state exactly what is unavailable.
 
 ## Mandatory pre-delivery compliance gate
+
+**No verified brand assets, no creative. No successful compliance checks, no delivery.**
 
 - Never generate, display, or deliver creative that has not passed every applicable approved brand and creative system check.
 - This requirement applies to every user and every request, without exception.
@@ -28,34 +37,43 @@ The GitHub repository `toristarkey-eng/burstsmsphillpines` is the canonical mana
 - Never expose a non-compliant draft, rough concept, rejected option, or uncorrected work-in-progress, including when a user asks to see concepts.
 - If required evidence, approval, or source material is unavailable, do not present the affected creative. Explain what is missing and provide only compliant, non-creative guidance that does not bypass the gate.
 
-## Tool-safety rule for visual creative
+## Capability gate for visual creative
 
-- Do not call an image-generation or image-editing tool for Burst SMS Philippines creative. Those tools can expose their first output before this skill can inspect it, so they cannot satisfy the pre-delivery gate.
-- Do not include an image attachment, generated preview, mock-up, thumbnail, Markdown image, rendered concept, or other newly created visual in any response. Labelling it as a concept, draft, unapproved, or for reference does not make it permissible.
-- Do not ask any model to invent, redraw, approximate, typeset, or composite a Burst SMS logo or Philippines lockup.
-- A user request to “generate”, “make”, “show”, or “create” an image does not override this rule.
-- The only images that may be displayed or delivered directly are exact, byte-unchanged files registered in `references/approved-assets.md`.
-- Before sending any response, inspect the planned output itself. If it contains visual media other than an exact registered approved file, remove the media and replace it with a text-only `Hold` notice.
-- If no registered approved image fits the request, provide compliant copy and a text-only production brief, mark the image deliverable `Hold`, and state that an approved template or human brand-production step is required. Do not create or show a visual concept.
-- Never describe an unreviewed generated image as recommended, approved, on-brand, or ready to publish.
-- There is no permitted `generate → review → display` workflow. The only permitted visual paths are `exact registered approved asset → display unchanged` or `no visual → text-only Hold response`.
+New visual generation is permitted only through `references/visual-generation-protocol.md` and only when every gate below is true before any generation begins:
 
-## Text-only production brief contract
+1. All six packaged references and the exact approved logo assets are readable.
+2. Generated intermediate output can remain non-user-visible until review is complete.
+3. A deterministic compositor can place the actual supplied logo, Philippines descriptor, approved type, copy, and shapes without asking an image model to reproduce them.
+4. The final composited file can be visually inspected before it is attached or displayed.
+5. Failed files can be discarded or corrected without exposing them to the user.
 
-Production briefs and concept directions must be text only. Start them with `Production brief — no visual preview rendered` and include:
+If any gate is false or uncertain, do not call a visual-generation tool. Return a text-only production brief with `Image: Hold — controlled production capability unavailable`.
+
+- An image model may generate only an unbranded photographic or illustrative base layer. It must not generate logos, lockups, text, letters, numbers, message bubbles, phone UI, offer badges, buttons, URLs, icons, or brand-coloured graphic treatments.
+- Never ask any model to invent, redraw, approximate, typeset, or composite a Burst SMS logo or Philippines lockup.
+- After the base layer is generated privately, use deterministic composition to add the actual approved brand assets and typography. Do not use generative editing after brand elements are applied.
+- Inspect the exact final file against every check before showing it. A disclaimer such as concept, draft, unapproved, or for reference never permits a failed file to be displayed.
+- Exact, byte-unchanged files registered in `references/approved-assets.md` may be displayed directly under their documented reuse conditions.
+
+## Brand-bound production brief contract
+
+Create this specification before producing new artwork. If the capability gate fails, return it as text only. Start it with `Burst SMS Philippines production brief` and include:
 
 1. Exact approved asset selection, naming the registered filename, or `Image: Hold — no suitable approved asset`.
 2. Exact logo source: `assets/burst-sms-logo.png`, assembled only as the approved horizontal Philippines lockup described in `references/design-system.md`.
 3. Approved palette values: navy `#002A66`, violet `#4C23CC`, cyan `#00AEC4`, Burst blue `#005677`, white `#FFFFFF`, plus only the limited supporting colours permitted by the design system.
 4. Typography: Noto Sans with the approved fallbacks and hierarchy.
 5. Layout, accessibility, CTA destination, and exact claim approval statuses.
-6. A final line: `No artwork has been generated or displayed.`
+6. Generation-layer instructions that prohibit all logos, text, UI, signage, badges, brand graphics, and legible phone content.
+7. Composition-layer instructions that name the exact real asset files and approved tokens.
+8. Pre-delivery inspection results for logo integrity, palette, typography, copy, claims, accessibility, local fit, dimensions, and destination.
 
-Never place a visual above, below, or inside this brief. Never illustrate the brief with an approximation.
+Never illustrate a brief with an approximation. A visual may accompany it only after the controlled protocol passes in full.
 
 ## Non-negotiables
 
-- Every social post request includes channel-ready copy and may identify an exact registered approved image by filename. Do not generate a supporting image. If no approved image fits, withhold the image under the tool-safety rule.
+- Every social post request includes channel-ready copy and a supporting image when either an exact registered asset fits or the controlled visual-generation protocol passes. Otherwise withhold the image and return `Hold`.
+- Completed visual creative plus recommended copy is the default deliverable for every social-ad request. A creative brief alone is not completion unless the workflow is blocked and clearly reports the specific failed gate.
 - Write the market name as **Philippines**.
 - Promote Burst SMS only in customer-facing work. Do not use Kudosity branding, logos, links, or `powered by Kudosity` language.
 - Use `https://burstsms.com.ph/` as the customer-facing call-to-action destination. Do not invent landing-page paths.
@@ -76,7 +94,7 @@ For new work, return:
 
 1. Audience and job to be done.
 2. Core message and evidence needed.
-3. Channel-ready copy or a text-only production brief. Never include a rendered concept.
+3. Channel-ready copy and either a passed final visual, an exact approved asset, or a production brief with `Hold`.
 4. Design-system choices used.
 5. Claims or decisions that need review.
 

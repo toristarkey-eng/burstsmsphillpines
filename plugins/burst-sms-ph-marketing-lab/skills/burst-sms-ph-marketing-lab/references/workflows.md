@@ -2,7 +2,7 @@
 
 ## Create a campaign
 
-0. Read every packaged reference named in `SKILL.md`. Do not proceed from conversation context or memory alone. If any reference is unavailable, stop and return a text-only `Hold` response.
+0. Retrieve the current repository at `https://github.com/toristarkey-eng/burstsmsphillpines`, run `scripts/brand-preflight.mjs` wherever execution is supported, and read every live reference named in `SKILL.md`. Do not proceed from packaged copies, conversation context, or memory alone. If the live repository, a required reference, or an integrity check is unavailable, stop and return a text-only `Hold` response.
 1. Define the audience, moment, and desired action.
 2. Choose one core promise that the available evidence can support.
 3. Select the channel and adapt the level of detail.
@@ -13,7 +13,7 @@
 8. Correct every failed check, then repeat the review until all applicable checks pass.
 9. Present or deliver the creative only after it passes the complete review. Never show failed drafts or non-compliant concepts.
 
-For visual work, this workflow does not authorise image-generation or image-editing tools. There is no generate-then-review path. Select an exact registered approved asset or place the visual deliverable on `Hold`. A production brief must be text only, begin with `Production brief — no visual preview rendered`, follow the contract in `SKILL.md`, and end with `No artwork has been generated or displayed.` Never attach, embed, render, or preview a concept alongside it.
+For visual work, first apply the capability gate in `SKILL.md`. Reuse an exact registered approved asset when it fits. Otherwise follow `visual-generation-protocol.md`: create an unbranded base privately, compose the real brand layer deterministically, inspect the exact final file, and expose only the passed final. If the gate fails, place the visual deliverable on `Hold` and provide the brand-bound production brief without artwork.
 
 ## Review an asset
 
@@ -26,7 +26,7 @@ Check:
 - Accessibility: contrast, heading order, focus, alt text, captions, and readable type.
 - Local fit: Philippines spelling, relevant context, and absence of stereotypes.
 - Destination: customer-facing links use `https://burstsms.com.ph/`; no invented path or customer-facing Kudosity branding appears.
-- Tool provenance: the image is an exact registered approved asset and was not generated, edited, approximated, or recomposed by an image model.
+- Tool provenance: the image is either an exact registered approved asset or was produced through the complete controlled visual-generation protocol. No image model created or modified logos, typography, UI, message content, icons, CTAs, URLs, or brand graphics.
 - Prohibited visual signatures: no hot-pink Burst identity, no radiating pink symbol, no approximated lowercase `burst` wordmark, and no invented `SMS PHILIPPINES` sub-lockup.
 - Prohibited alternate signatures: no paper-plane logo, no approximated one-word blue `BurstSMS`, no widely spaced `PHILIPPINES` sub-line, no yellow highlight marks, and no royal-blue campaign palette.
 
@@ -43,7 +43,7 @@ Any failed check blocks presentation and delivery. Correct the issue and repeat 
 
 ## Social post deliverables
 
-For LinkedIn, Facebook, and other social post requests, create the finished caption and name an exact registered approved image when one is relevant. Honour an explicit copy-only request. If no approved asset fits, return the caption, alt-text intent, and text-only production brief, mark the image `Hold`, and do not generate, attach, embed, render, preview, or display a visual concept.
+For LinkedIn, Facebook, and other social post requests, create the finished caption and a supporting image by default. Use an exact registered approved image when relevant; otherwise use the complete controlled visual-generation protocol. Honour an explicit copy-only request. If the capability gate fails, return the caption, alt-text intent, and brand-bound production brief, and mark the image `Hold`.
 
 ## Claims and approval status
 

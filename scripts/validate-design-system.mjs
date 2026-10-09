@@ -1,4 +1,5 @@
 import fs from "node:fs";
+import crypto from "node:crypto";
 import path from "node:path";
 import process from "node:process";
 
@@ -13,6 +14,10 @@ const required = [
   "design-system/assets/photography/burst-sms-ph-commercial-team.jpg",
   "plugins/burst-sms-ph-marketing-lab/plugin.json",
   "plugins/burst-sms-ph-marketing-lab/.codex-plugin/plugin.json",
+  "plugins/burst-sms-ph-marketing-lab/brand-integrity.json",
+  "plugins/burst-sms-ph-marketing-lab/scripts/brand-preflight.mjs",
+  "plugins/burst-sms-ph-marketing-lab/scripts/prepare-facebook-ad.mjs",
+  "tests/brand-workflow.test.mjs",
   "plugins/burst-sms-ph-marketing-lab/assets/burst-sms-logo.png",
   "plugins/burst-sms-ph-marketing-lab/assets/burst-sms-ph-commercial-team.jpg",
   "plugins/burst-sms-ph-marketing-lab/assets/burst-sms-ph-lockup-light-reference.png",
@@ -26,7 +31,10 @@ const required = [
   "plugins/burst-sms-ph-marketing-lab/skills/burst-sms-ph-marketing-lab/SKILL.md",
   "plugins/burst-sms-ph-marketing-lab/skills/burst-sms-ph-marketing-lab/references/approved-assets.md",
   "plugins/burst-sms-ph-marketing-lab/skills/burst-sms-ph-marketing-lab/references/messaging-library-brief.md",
+  "plugins/burst-sms-ph-marketing-lab/skills/burst-sms-ph-marketing-lab/references/visual-generation-protocol.md",
   "design-system/docs/approved-assets.md",
+  "design-system/docs/visual-generation-protocol.md",
+  "design-system/docs/plugin-creative-workflow-audit.md",
   "design-system/briefs/burst-sms-ph-messaging-library-brief.docx",
   ".agents/plugins/marketplace.json"
 ];
@@ -37,6 +45,16 @@ for (const relative of required) {
 }
 
 const tokens = JSON.parse(fs.readFileSync(path.join(root, "design-system/tokens/tokens.json"), "utf8"));
+const integrity = JSON.parse(fs.readFileSync(path.join(root, "plugins/burst-sms-ph-marketing-lab/brand-integrity.json"), "utf8"));
+const sha256 = (buffer) => crypto.createHash("sha256").update(buffer).digest("hex");
+for (const [relative, expectedHash] of Object.entries(integrity.files)) {
+  const absolute = path.join(root, relative);
+  if (fs.existsSync(absolute) && sha256(fs.readFileSync(absolute)) !== expectedHash) {
+    errors.push(`Integrity hash mismatch: ${relative}`);
+  }
+}
+if (integrity.repository !== "https://github.com/toristarkey-eng/burstsmsphillpines") errors.push("Integrity manifest has the wrong repository");
+if (integrity.pluginVersion !== "0.1.6") errors.push("Integrity manifest has the wrong plugin version");
 const css = fs.readFileSync(path.join(root, "design-system/tokens/tokens.css"), "utf8").toLowerCase();
 for (const [name, token] of Object.entries(tokens.color.brand)) {
   if (!css.includes(token.$value.toLowerCase())) errors.push(`Brand colour ${name} is missing from tokens.css`);
@@ -48,7 +66,7 @@ for (const manifestPath of [
 ]) {
   const manifest = JSON.parse(fs.readFileSync(path.join(root, manifestPath), "utf8"));
   if (manifest.name !== "burst-sms-ph-marketing-lab") errors.push(`${manifestPath} has the wrong plugin name`);
-  if (manifest.version !== "0.1.5") errors.push(`${manifestPath} has an unexpected version`);
+  if (manifest.version !== "0.1.6") errors.push(`${manifestPath} has an unexpected version`);
 }
 
 const skill = fs.readFileSync(path.join(root, "plugins/burst-sms-ph-marketing-lab/skills/burst-sms-ph-marketing-lab/SKILL.md"), "utf8");
@@ -56,16 +74,19 @@ for (const requiredPolicy of [
   "Never generate, display, or deliver creative",
   "without exception",
   "Never expose a non-compliant draft",
-  "Do not call an image-generation or image-editing tool",
-  "exact, byte-unchanged files",
+  "Exact, byte-unchanged files",
   "radiating pink symbol",
-  "Production brief — no visual preview rendered",
-  "No artwork has been generated or displayed.",
   "paper-plane logo",
-  "Do not include an image attachment",
-  "read all five packaged references",
-  "There is no permitted `generate → review → display` workflow",
-  "runtime source of truth"
+  "Mandatory GitHub source of truth",
+  "https://github.com/toristarkey-eng/burstsmsphillpines",
+  "scripts/brand-preflight.mjs",
+  "scripts/prepare-facebook-ad.mjs",
+  "Completed visual creative plus recommended copy",
+  "No verified brand assets, no creative",
+  "No successful compliance checks, no delivery",
+  "Generated intermediate output can remain non-user-visible",
+  "deterministic compositor",
+  "references/visual-generation-protocol.md"
 ]) {
   if (!skill.includes(requiredPolicy)) errors.push(`Plugin skill is missing mandatory policy: ${requiredPolicy}`);
 }
