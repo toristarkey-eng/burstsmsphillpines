@@ -182,6 +182,19 @@ class RendererTests(unittest.TestCase):
                 self.assertIn((255,255,255),set(image.crop((tx,ty,tx+tw,ty+heading['used_height'])).get_flattened_data()))
                 self.assertTrue(r['checks']['text_contrast'])
 
+    def test_photo_and_sms_can_share_body_beside_without_overlap(self):
+        for strip in ('top','bottom'):
+            png,r=render(campaign('recognition','square','retail-messaging').model_copy(update={
+                'heading_style':'navy','composition':'hero','message_placement':'beside','brand_strip':strip,
+                'headline':'Keep customers informed.','accent':'','supporting':'',
+                'sender_name':'ACME SHOP','message':'Your order is ready to collect. Thank you!'}))
+            self.assertEqual(r['message_placement'],'beside')
+            x,y,w,h=r['photo_checks'][0]['frame']; mx,my,mw,mh=r['message_card']
+            self.assertLessEqual(x+w,mx)
+            self.assertGreaterEqual(my,y)
+            self.assertLessEqual(my+mh,y+h+2)
+            self.assertTrue(all(r['checks'].values()))
+
     def test_dynamic_photo_masks_and_source_scene_selection(self):
         for treatment in ('rounded','circle','cutout'):
             _,report=render(campaign('people-first','square','collaborating-colleagues').model_copy(update={'image_treatment':treatment}))

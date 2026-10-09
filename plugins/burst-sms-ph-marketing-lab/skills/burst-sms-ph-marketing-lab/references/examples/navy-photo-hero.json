@@ -11,5 +11,8 @@
   "heading_style": "navy",
   "photo_fit": "cover",
   "image_treatment": "panel",
-  "photo_backdrop": "none"
+  "photo_backdrop": "none",
+  "message_placement": "beside",
+  "sender_name": "ACME SHOP",
+  "message": "Your order is ready to collect. Thank you!"
 }
