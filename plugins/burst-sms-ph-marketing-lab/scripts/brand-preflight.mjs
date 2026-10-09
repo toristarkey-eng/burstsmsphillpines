@@ -17,7 +17,10 @@ const argument = (name) => {
 const rawBase = (argument("--repo-base") || process.env.BURST_SMS_PH_REPO_BASE_URL || integrity.rawBase).replace(/\/$/, "");
 const outputDir = argument("--output-dir");
 const timeoutMs = Number(argument("--timeout-ms") || 20000);
-const requiredPaths = [...new Set([...Object.keys(integrity.files), ...integrity.requiredLiveFiles])];
+const releaseLockPath = argument("--release-lock");
+const releaseFiles = releaseLockPath ? JSON.parse(await fs.readFile(releaseLockPath, "utf8")).files : {};
+const expectedFiles = { ...integrity.files, ...releaseFiles };
+const requiredPaths = [...new Set([...Object.keys(expectedFiles), ...integrity.requiredLiveFiles])];
 
 const sha256 = (buffer) => crypto.createHash("sha256").update(buffer).digest("hex");
 const fetched = new Map();
@@ -29,7 +32,7 @@ async function retrieve(relativePath) {
   try {
     const response = await fetch(`${rawBase}/${relativePath}`, {
       cache: "no-store",
-      headers: { "user-agent": "burst-sms-ph-brand-preflight/0.2.0" },
+      headers: { "user-agent": "burst-sms-ph-brand-preflight/0.3.0" },
       signal: controller.signal
     });
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
@@ -44,7 +47,7 @@ async function retrieve(relativePath) {
 
 await Promise.all(requiredPaths.map(retrieve));
 
-for (const [relativePath, expectedHash] of Object.entries(integrity.files)) {
+for (const [relativePath, expectedHash] of Object.entries(expectedFiles)) {
   const buffer = fetched.get(relativePath);
   if (buffer && sha256(buffer) !== expectedHash) failures.push(`${relativePath}: SHA-256 mismatch`);
 }
@@ -121,6 +124,6 @@ console.log(JSON.stringify({
   verifiedLogoSha256: integrity.files["plugins/burst-sms-ph-marketing-lab/assets/burst-sms-logo.png"],
   tokenValues,
   retrievedFiles: fetched.size,
-  verifiedFiles: Object.keys(integrity.files).length,
+  verifiedFiles: Object.keys(expectedFiles).length,
   outputDir: outputDir ? path.resolve(outputDir) : null
 }, null, 2));

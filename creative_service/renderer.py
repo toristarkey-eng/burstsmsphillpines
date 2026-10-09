@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import Literal
 
 from PIL import Image, ImageChops, ImageDraw, ImageFont, ImageOps
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
 
 ROOT = Path(__file__).resolve().parents[1]
 SERVICE = ROOT / "creative_service"
@@ -49,7 +49,7 @@ class Campaign(BaseModel):
     supporting: str = Field(default="", max_length=130)
     primary_text: str = Field(min_length=1, max_length=1200)
     cta: Literal["Talk to our team", "Explore SMS solutions", "Explore branded Sender IDs", "Book a coffee chat"] = "Talk to our team"
-    photo_id: str | None = None
+    photo_id: str | None = Field(default=None, max_length=64)
     message: str = Field(default="", max_length=85)
 
     @model_validator(mode="after")
@@ -75,7 +75,18 @@ class Campaign(BaseModel):
 def load_locks() -> dict:
     """Validate all renderer inputs and code against the committed release lock."""
     lock = json.loads((SERVICE / "release-lock.json").read_text())
+    if lock.get("schema_version") != 1 or not isinstance(lock.get("files"), dict):
+        raise Hold("Release lock is invalid")
+    required = {str(p.relative_to(ROOT)) for p in SERVICE.rglob("*")
+                if p.is_file() and (p.suffix in {".py", ".ttf"} or p.name in {"templates.json", "requirements.txt"}) and "__pycache__" not in p.parts}
+    required.update({"design-system/tokens/tokens.json", "plugins/burst-sms-ph-marketing-lab/scripts/brand-preflight.mjs", "plugins/burst-sms-ph-marketing-lab/brand-integrity.json"})
+    templates = json.loads((SERVICE / "templates.json").read_text())
+    required.update("plugins/burst-sms-ph-marketing-lab/" + photo["file"] for photo in templates["photos"].values())
+    if not required.issubset(lock["files"]):
+        raise Hold("Release lock omits a production input")
     for relative, expected in lock["files"].items():
+        if Path(relative).is_absolute() or ".." in Path(relative).parts or not isinstance(expected, str) or not re.fullmatch(r"[0-9a-f]{64}", expected):
+            raise Hold("Release lock entry is invalid")
         if digest((ROOT / relative).read_bytes()) != expected:
             raise Hold(f"Release integrity mismatch: {relative}")
     integrity = json.loads((PLUGIN / "brand-integrity.json").read_text())
@@ -105,11 +116,14 @@ class Canvas:
         self.image = Image.new("RGB", size, PALETTE["cloud"])
         self.draw = ImageDraw.Draw(self.image)
         self.text_checks = []
+        self.pending_text = []
 
     def text(self, text, box, size, colour="navy", bold=False, max_lines=3):
         if not text:
             return
         x, y, w, h = box
+        if min(x, y) < 0 or min(w, h) <= 0 or x + w > self.image.width or y + h > self.image.height:
+            raise Hold("Text box is outside the canvas")
         f = font(size, bold)
         lines, line = [], ""
         for word in text.split():
@@ -127,9 +141,29 @@ class Canvas:
         if len(lines) > max_lines or len(lines) * line_h > h:
             raise Hold("Copy overflows the template. Shorten it; font size will not be reduced")
         for i, line in enumerate(lines):
-            # anchor lt uses the actual visible glyph bounds at the chosen top edge.
-            self.draw.text((x, y + i * line_h), line, font=f, fill=PALETTE[colour], anchor="lt")
+            bounds = self.draw.textbbox((x, y + i * line_h), line, font=f, anchor="lt")
+            if bounds[0] < x or bounds[1] < y or bounds[2] > x + w or bounds[3] > y + h:
+                raise Hold("Visible glyphs overflow the locked text box")
+            self.pending_text.append(((x, y + i * line_h), line, f, colour))
         self.text_checks.append({"text": text, "box": box, "size": size, "lines": len(lines), "fits": True})
+
+    def finish_text(self):
+        """Check actual backgrounds after all shapes/photos, then paint text last."""
+        occupied = Image.new("L", self.image.size)
+        for position, text, face, colour in self.pending_text:
+            mask = Image.new("L", self.image.size)
+            ImageDraw.Draw(mask).text(position, text, font=face, fill=255, anchor="lt")
+            visible = mask.point(lambda value: 255 if value else 0)
+            if ImageChops.multiply(occupied, visible).getbbox():
+                raise Hold("Text overlaps other text")
+            bounds = visible.getbbox()
+            if bounds:
+                pixels = zip(self.image.crop(bounds).get_flattened_data(), visible.crop(bounds).get_flattened_data())
+                for rgb in {rgb for rgb, alpha in pixels if alpha}:
+                    if contrast(PALETTE[colour], "#%02x%02x%02x" % rgb) < 4.5:
+                        raise Hold("Text contrast fails against the actual rendered background")
+            occupied = ImageChops.lighter(occupied, visible)
+            self.draw.text(position, text, font=face, fill=PALETTE[colour], anchor="lt")
 
     def photo(self, photo, box):
         source = Image.open(PLUGIN / photo["file"]).convert("RGB")
@@ -148,10 +182,16 @@ class Canvas:
 
 
 def render(campaign: Campaign) -> tuple[bytes, dict]:
+    try:
+        campaign = Campaign.model_validate(campaign.model_dump())
+    except ValidationError as exc:
+        raise Hold("Campaign input is invalid") from exc
     lock = load_locks()
     config = catalog()
     template = config["templates"][campaign.template_id]
     photo = config["photos"].get(campaign.photo_id) if campaign.photo_id else None
+    if campaign.photo_id and not photo:
+        raise Hold("Photo is not registered")
     if template["photography"] != bool(photo):
         raise Hold("Choose a registered photo for this template, or omit it for a text template")
     if photo and campaign.template_id not in photo["templates"]:
@@ -165,17 +205,18 @@ def render(campaign: Campaign) -> tuple[bytes, dict]:
     # Fixed white header, original logo, separate divider and market descriptor.
     d.rectangle((0, 0, width, 150), fill=PALETTE["white"])
     logo = Image.open(PLUGIN / "assets/burst-sms-logo.png").convert("RGB")
-    scaled_logo = logo.resize((218, 90), Image.Resampling.LANCZOS)
-    c.image.paste(scaled_logo, (56, 30))
-    d.line((310, 48, 310, 107), fill=PALETTE["cyan"], width=2)
-    tx = 343
+    scaled_logo = logo.resize((logo.width * 2, logo.height * 2), Image.Resampling.LANCZOS)
+    c.image.paste(scaled_logo, (56, 15))
+    d.line((382, 48, 382, 107), fill=PALETTE["cyan"], width=2)
+    descriptor_font = ImageFont.truetype(str(SERVICE / "fonts/NotoSans-SemiBold.ttf"), 24)
+    tx = 415
     for letter in "PHILIPPINES":
-        d.text((tx, 65), letter, fill=PALETTE["navy"], font=font(24, True), anchor="lt")
-        tx += d.textlength(letter, font=font(24, True)) + 3
+        d.text((tx, 65), letter, fill=PALETTE["navy"], font=descriptor_font, anchor="lt")
+        tx += d.textlength(letter, font=descriptor_font) + 3
     layout = template["layout"]
     if layout == "statement":
         d.rectangle((0, 151, width, footer), fill=PALETTE["navy"])
-        d.ellipse((820, footer - 240, 1240, footer + 180), fill=PALETTE["cyan"])
+        d.ellipse((940, footer - 240, 1360, footer + 180), fill=PALETTE["cyan"])
         c.text(campaign.headline, (64, 215, 938, 285), 80, "white", True, 2)
         c.text(campaign.accent, (64, 490, 930, 140), 68, "cyan", True, 1)
         c.text(campaign.supporting, (68, 655 if height > 1080 else 650, 820, footer - 665), 32, "white", max_lines=3)
@@ -218,7 +259,8 @@ def render(campaign: Campaign) -> tuple[bytes, dict]:
     d.rounded_rectangle((64, footer + 28, 64 + button_width, footer + 100), 36, fill=PALETTE["violet"])
     d.text((96, footer + 48), campaign.cta, font=cta_font, fill=PALETTE["white"], anchor="lt")
     c.text("burstsms.com.ph", (68, footer + 121, 650, 45), 28, bold=True, max_lines=1)
-    logo_pixels = c.image.crop((56, 30, 274, 120))
+    c.finish_text()
+    logo_pixels = c.image.crop((56, 15, 56 + scaled_logo.width, 15 + scaled_logo.height))
     if ImageChops.difference(logo_pixels, scaled_logo).getbbox():
         raise Hold("Logo pixels changed after composition")
     buf = io.BytesIO()
@@ -237,7 +279,7 @@ def render(campaign: Campaign) -> tuple[bytes, dict]:
         "dimensions": [width, height], "destination": DESTINATION,
         "template_reference": template["reference"], "photography": photo,
         "logo_source": "assets/burst-sms-logo.png", "logo_sha256": digest((PLUGIN / "assets/burst-sms-logo.png").read_bytes()),
-        "palette": PALETTE, "typography": "Bundled Noto Sans Regular and Bold", "text_checks": c.text_checks,
+        "palette": PALETTE, "typography": "Bundled Noto Sans Regular, SemiBold and Bold", "text_checks": c.text_checks,
         "alt_text": "Burst SMS Philippines: " + campaign.headline + (". " + campaign.accent if campaign.accent else "") + (". " + photo["alt"] if photo else ""),
         "channel_copy": campaign.primary_text + "\n\n" + campaign.cta + ": " + DESTINATION,
         "contrast_ratios": contrasts,

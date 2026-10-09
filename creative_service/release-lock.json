@@ -4,17 +4,19 @@
     "creative_service/__init__.py": "09669890f35e722180a2a7001c66ff7c4f72e4bcaf57f381e71c4a1a61568955",
     "creative_service/fonts/NotoSans-Bold.ttf": "c976e4b1b99edc88775377fcc21692ca4bfa46b6d6ca6522bfda505b28ff9d6a",
     "creative_service/fonts/NotoSans-Regular.ttf": "b85c38ecea8a7cfb39c24e395a4007474fa5a4fc864f6ee33309eb4948d232d5",
-    "creative_service/lock_release.py": "1b8055607b34c064b8ac196b6131d2b6b5c569383a3c688efaa2df2d341b34d1",
-    "creative_service/renderer.py": "6da75633ce96cdb855d778e9d604f65a49efb22e501b4034868a6883cf5a49e9",
-    "creative_service/requirements.txt": "3b2a5caec2bc7b0fdf551ac062f8c20df70a3ef566c96f031f1a8b2ca9494c9e",
-    "creative_service/server.py": "b661aac9d97c3981d8251c18a4cbc29711f6cc192f8314be5561db484d1973ec",
-    "creative_service/store.py": "bf37a142d21ea142188bddf6269fcde81dc7c183d441512c42ff884f39c9a17d",
+    "creative_service/fonts/NotoSans-SemiBold.ttf": "87a8b90ece1e89746b544e4e086f85a3710e41485a8078f9be874837dfad45d5",
+    "creative_service/lock_release.py": "0d45af96358e91317ed0f1900b43f501eb8cb0b7b750a6b44e56cbf933976149",
+    "creative_service/renderer.py": "e4066ee30f4b81fd53a37cc3e8899f502f5e60a82515278470975bb38d756657",
+    "creative_service/requirements.txt": "968bf3fd1468c91e745650809e123373ba1804628e8165c6ea471b295712a10a",
+    "creative_service/server.py": "99e5f1334023a8922ffcbfb7af8416e517bdf31299026cc1be8c40016e2954e5",
+    "creative_service/store.py": "f237d033f6aa3eed6c7c673a23660ad12766ee3e6877dd87070aae0cca45b9f6",
     "creative_service/templates.json": "08cda60c3f126ffe84c59b372909afc66f8b69602cba69814cc6fb0e7c3747dc",
     "creative_service/wire_registered_app.py": "6e8da67a5cd4c95ef66ae137cac1ca2d7e0ff0d9224b3e18c5d0a7b38db8f553",
+    "design-system/tokens/tokens.json": "a7e0a4a6bca33ecc6184eff2bb5d85ef6c40f0b7902cc6ea9de0bad10a99d64b",
     "plugins/burst-sms-ph-marketing-lab/assets/burst-sms-ph-commercial-team.jpg": "0d5a3d8f4bcfb9b599c13590fe95d56aa0bc39e6df6b32519ff047528d1fccfe",
     "plugins/burst-sms-ph-marketing-lab/assets/photography/diverse-collaborative-work-portrait-grid.png": "b2b04f531f67667f4f08cb5171d577d91430238bb2e10fe56c1d1b1c482d595a",
     "plugins/burst-sms-ph-marketing-lab/assets/photography/everyday-connections-manila.png": "64283da37960e2d8dd66187f8eb43361f27fefc1a993f5ff7d48a7568cbb2153",
     "plugins/burst-sms-ph-marketing-lab/brand-integrity.json": "a3f6a677d63652866c90005b04c9c16139a209b958b19419ad38ad1b59251dca",
-    "plugins/burst-sms-ph-marketing-lab/scripts/brand-preflight.mjs": "af6e5e21daed4e6e747419ea8a8400da2495e4528aee8bff22a601b6908e784a"
+    "plugins/burst-sms-ph-marketing-lab/scripts/brand-preflight.mjs": "b50147ced87bbf9cc70c6a5ff8cbe6fa44866a794af88e379d7421c55bbdc04f"
   }
 }

@@ -5,7 +5,7 @@ WORKDIR /app
 COPY creative_service/requirements.txt /app/creative_service/requirements.txt
 RUN pip install --no-cache-dir -r creative_service/requirements.txt
 COPY . /app
-RUN useradd --system --uid 10001 --create-home renderer && mkdir -p /data && chown renderer:renderer /data
+RUN chmod -R a+rX /app && useradd --system --uid 10001 --create-home renderer && mkdir -p /data && chown renderer:renderer /data && chmod 700 /data
 USER renderer
 ENV BURST_PRIVATE_DATA=/data
 EXPOSE 8000

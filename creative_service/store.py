@@ -8,6 +8,8 @@ import re
 import secrets
 import subprocess
 import tempfile
+import threading
+from functools import wraps
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -16,10 +18,22 @@ from .renderer import Campaign, Hold, PLUGIN, ROOT, canonical, digest, load_lock
 REVIEW_CHECKS = ["wording_and_claims", "visual_composition", "local_fit_and_photography", "accessibility", "publication_authority"]
 
 
+def serialised(method):
+    @wraps(method)
+    def call(self, *args, **kwargs):
+        with self.lock:
+            return method(self, *args, **kwargs)
+    return call
+
+
 class Store:
-    def __init__(self, directory: Path, signing_key: str):
+    def __init__(self, directory: Path, signing_key: str, release_ref: str | None = None):
         if len(signing_key) < 32:
             raise ValueError("Review signing key must be at least 32 characters")
+        if release_ref is not None and not re.fullmatch(r"[0-9a-f]{40}", release_ref):
+            raise ValueError("Release ref must be a full reviewed Git commit SHA")
+        self.release_ref = release_ref
+        self.lock = threading.RLock()
         self.directory = directory.resolve()
         self.directory.mkdir(parents=True, exist_ok=True, mode=0o700)
         self.key = signing_key.encode()
@@ -33,7 +47,7 @@ class Store:
         return hmac.new(self.key, canonical(record), "sha256").hexdigest()
 
     def prepare(self, campaign: Campaign, creator: str) -> dict:
-        live_source_gate()
+        live_source_gate(self.release_ref)
         return self._prepare_verified(campaign, creator)
 
     def _prepare_verified(self, campaign: Campaign, creator: str) -> dict:
@@ -47,6 +61,7 @@ class Store:
         atomic_json(target / "record.json", {"report": report, "signature": self.sign(report)})
         return {"id": artifact_id, "status": "AWAITING_OWNER_REVIEW", "technical_status": "PASSED", "dimensions": report["dimensions"], "message": "Private candidate created. An authorised reviewer must inspect the separate review page. No image has been released."}
 
+    @serialised
     def candidate(self, artifact_id: str) -> tuple[bytes, dict]:
         load_locks()
         try:
@@ -61,16 +76,27 @@ class Store:
             if report["release_sha256"] != digest(canonical(load_locks())):
                 raise Hold("Renderer changed since review. Prepare a new candidate")
             return png, report
-        except (FileNotFoundError, KeyError, json.JSONDecodeError) as exc:
+        except (FileNotFoundError, KeyError, TypeError, AttributeError, json.JSONDecodeError) as exc:
             raise Hold("Creative not found or its record is invalid") from exc
 
-    def review(self, artifact_id: str, reviewer: str, checks: dict, evidence: str, approved: bool = True) -> dict:
+    @serialised
+    def review_token(self, artifact_id: str) -> str:
         _, report = self.candidate(artifact_id)
-        if not reviewer.strip() or reviewer == report["creator"]:
+        approval_path = self.path(artifact_id) / "approval.json"
+        revision = digest(approval_path.read_bytes()) if approval_path.exists() else None
+        return self.sign({"purpose": "review", "id": artifact_id, "png_sha256": report["png_sha256"], "revision": revision})
+
+    @serialised
+    def review(self, artifact_id: str, reviewer: str, checks: dict, evidence: str, approved: bool = True, *, review_token: str | None = None) -> dict:
+        _, report = self.candidate(artifact_id)
+        if review_token is not None and not hmac.compare_digest(review_token.encode(), self.review_token(artifact_id).encode()):
+            raise Hold("Review form is stale or invalid; reload before deciding")
+        reviewer = reviewer.strip()
+        if not reviewer or len(reviewer) > 100 or reviewer == report["creator"]:
             raise Hold("Review must be by an identified person independent of the drafting identity")
         if approved and (set(checks) != set(REVIEW_CHECKS) or any(v is not True for v in checks.values())):
             raise Hold("Every human review check must pass before approval")
-        if len(evidence.strip()) < 15:
+        if not 15 <= len(evidence.strip()) <= 4000:
             raise Hold("Record the approval basis and sources, or the reason for rejection")
         approval = {"id": artifact_id, "status": "APPROVED" if approved else "REJECTED", "reviewer": reviewer,
                     "reviewed_at": now(), "checks": checks, "evidence": evidence.strip(),
@@ -78,17 +104,28 @@ class Store:
         atomic_json(self.path(artifact_id) / "approval.json", {"approval": approval, "signature": self.sign(approval)})
         return approval
 
+    def signed_record(self, path: Path, kind: str) -> dict:
+        try:
+            record = json.loads(path.read_text())
+            payload, signature = record[kind], record["signature"]
+            if not isinstance(payload, dict) or not isinstance(signature, str) or not hmac.compare_digest(signature, self.sign(payload)):
+                raise Hold("Signed record integrity mismatch")
+            return payload
+        except (FileNotFoundError, KeyError, TypeError, ValueError) as exc:
+            raise Hold("Signed record unavailable or invalid; image withheld") from exc
+
+    @serialised
     def release(self, artifact_id: str) -> tuple[bytes, dict]:
         png, report = self.candidate(artifact_id)
-        try:
-            record = json.loads((self.path(artifact_id) / "approval.json").read_text())
-            approval = record["approval"]
-        except (FileNotFoundError, KeyError, json.JSONDecodeError) as exc:
-            raise Hold("Owner review is pending; image withheld") from exc
-        if not hmac.compare_digest(record["signature"], self.sign(approval)):
-            raise Hold("Approval signature is invalid")
-        if approval["status"] != "APPROVED" or any(approval.get(k) != report[k] for k in ["png_sha256", "campaign_sha256", "release_sha256"]):
+        approval = self.signed_record(self.path(artifact_id) / "approval.json", "approval")
+        if approval.get("status") != "APPROVED" or any(approval.get(k) != report[k] for k in ["png_sha256", "campaign_sha256", "release_sha256"]):
             raise Hold("Creative was rejected or changed after review")
+        if approval.get("id") != artifact_id or approval.get("reviewer") == report["creator"] or not approval.get("reviewer"):
+            raise Hold("Approval identity is invalid")
+        if approval.get("checks") != {key: True for key in REVIEW_CHECKS}:
+            raise Hold("Approval review checks are incomplete")
+        if report.get("technical_status") != "PASSED" or not report.get("checks") or any(value is not True for value in report["checks"].values()):
+            raise Hold("Technical checks are incomplete")
         return png, {**report, "publication_status": "APPROVED", "approval": approval}
 
 
@@ -107,17 +144,24 @@ def atomic_json(path, value):
             os.unlink(temp)
 
 
-def live_source_gate():
+def live_source_gate(release_ref: str | None = None):
     """Use deployed known code, a fixed source, and no model-controlled override."""
     load_locks()
     clean_env = {k: v for k, v in os.environ.items() if k not in {"BURST_SMS_PH_REPO_BASE_URL", "NODE_OPTIONS", "NODE_PATH"}}
+    if not release_ref or not re.fullmatch(r"[0-9a-f]{40}", release_ref):
+        raise Hold("A reviewed full Git release SHA is required; no image created")
+    source = f"https://raw.githubusercontent.com/toristarkey-eng/burstsmsphillpines/{release_ref}"
     try:
-        result = subprocess.run(["node", str(PLUGIN / "scripts/brand-preflight.mjs")], cwd=ROOT,
-                                env=clean_env, capture_output=True, text=True, timeout=45)
+        result = subprocess.run(["node", str(PLUGIN / "scripts/brand-preflight.mjs"),
+                                 "--repo-base", source, "--release-lock", str(ROOT / "creative_service/release-lock.json")],
+                                cwd=ROOT, env=clean_env, capture_output=True, text=True, timeout=45)
     except (subprocess.SubprocessError, OSError) as exc:
         raise Hold("Live brand preflight unavailable; no image created") from exc
     if result.returncode != 0:
         raise Hold("Live brand preflight failed; source unavailable or release differs. No image created")
-    receipt = json.loads(result.stdout)
-    if receipt.get("gate") != "PASSED" or receipt.get("allowed") is not True:
+    try:
+        receipt = json.loads(result.stdout)
+    except (ValueError, TypeError) as exc:
+        raise Hold("Live source gate returned an invalid receipt") from exc
+    if not isinstance(receipt, dict) or receipt.get("gate") != "PASSED" or receipt.get("allowed") is not True:
         raise Hold("Live source gate did not pass")

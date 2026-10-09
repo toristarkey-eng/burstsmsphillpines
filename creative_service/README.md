@@ -11,7 +11,7 @@ positions, sizes, links or arbitrary photography.
   updates, people first, team coffee, bold statement and offer focus.
 - Fixed 1080 × 1080 and 1080 × 1350 PNG exports.
 - Original byte-verified logo, separate horizontal Philippines descriptor,
-  bundled licensed Noto Sans fonts, locked palette and CTA destination.
+  bundled licensed Noto Sans Regular, SemiBold and Bold fonts, locked palette and CTA destination.
 - Registered photo crops only; containment preserves the full selected panel.
   Illustrative photography never becomes an employee/customer endorsement.
 - Live GitHub preflight, deployed-source hashes, exact logo pixel comparison,
@@ -58,6 +58,8 @@ Configure these environment variables in the host's secret/configuration store:
 
 | Variable | Meaning |
 | --- | --- |
+| `BURST_RELEASE_REF` | Full 40-character reviewed Git commit SHA matching the image; live source checks never follow a mutable branch |
+| `BURST_REVIEWER_ID` | Exact OAuth `sub` of the one designated reviewer; the review password is issued only to this person |
 | `BURST_PUBLIC_ORIGIN` | Actual HTTPS origin, without trailing slash |
 | `BURST_OAUTH_ISSUER` | Your OAuth issuer, with an exact issuer match |
 | `BURST_OAUTH_AUDIENCE` | Audience issued specifically for this service |
@@ -69,14 +71,12 @@ Configure these environment variables in the host's secret/configuration store:
 
 The OAuth application must issue RS256 JWT access tokens with `sub`, `exp`,
 `iss`, `aud` and the `creative:use` scope to authorised workspace users only.
-Configure the issuer for the ChatGPT OAuth client, including its supported
-registration and consent flow. This service verifies tokens and publishes MCP
+Configure the issuer for the ChatGPT OAuth client, including authorization-code with PKCE, discovery, registration (or approved pre-registration), exact redirect URI allowlisting, consent, token expiry and user removal. The configured audience may be a URI or another issuer-defined identifier; it must match the token exactly. This service verifies tokens and publishes MCP
 protected-resource metadata; it is not a replacement OAuth authorization server.
-Put TLS and request/body/rate limits at the ingress. Run one service worker with
+Put TLS and request/body/rate/time limits at the ingress. Preserve the public Host and Origin headers. POST bodies are also limited in the service (128 KiB for MCP, 10,000 bytes for review); only one composition runs at once, including after a caller disconnects. Apply per-user/IP rate limits and a private-volume quota/retention policy at the host to prevent authenticated storage abuse. Never expose the private volume through a web/static route. Permit outbound HTTPS to `raw.githubusercontent.com` and the configured issuer/JWKS host. A failed source or JWKS request must withhold production/authentication. Run one service worker with
 its durable volume; horizontal scaling needs shared transactional storage first.
 Scope this deployment to one workspace. Do not reuse it as a multi-tenant service.
-Review password access is an administrative role: record the reviewer's name on
-each decision and keep this credential outside the model's tool permissions.
+Review password access is an administrative role: issue this credential only to the designated reviewer and keep it outside the model's tool permissions. The server records `BURST_REVIEWER_ID`, not a form-supplied name, and rejects approval of candidates drafted by that same OAuth subject. Shared credentials or aliases undermine this separation and are unsupported.
 
 Health: `/health`. MCP: `/mcp`. Human review: `/review/<candidate-id>`.
 The review page uses browser Basic authentication with username `brand-reviewer`
@@ -122,7 +122,7 @@ Maintain the templates and approval rules in code review. After intentional
 source/font/template changes, run `python -m creative_service.lock_release`,
 review the lock diff and run both test suites before deployment. This command is
 for maintainers and is never exposed as a tool. Deploy from a reviewed commit.
-Old candidate approvals are invalidated by a new locked renderer release.
+Old candidate approvals are invalidated by a new locked renderer release. Refresh the lock after binding manifests if renderer inputs change, then set `BURST_RELEASE_REF` to the reviewed commit used to build the image. The live gate compares every locked source/font/photo with that exact GitHub commit, in addition to the approved-asset checks. Merely updating `main` does not change a deployed release.
 
 Automated checks prove technical constraints, not truth or creative quality.
 They cannot establish pricing, route availability, consent, local cultural fit,
@@ -131,3 +131,15 @@ must approve those aspects. The logo master supplied in the repository is only
 145 × 60 pixels; this implementation retains it and scales proportionally. A
 higher-resolution approved master would improve large-format output, but must
 be registered through the same integrity process before use.
+
+## Validation and operational boundaries
+
+CI builds the production Dockerfile and smoke-tests the non-root runtime, then runs the four brand-workflow tests and the renderer/security suite, including all six templates in both sizes, actual text/background contrast, proportional logo pixels, real RSA JWT signature/claim rejection, bounded streamed bodies, authenticated drafting identity, stale review rejection and MCP image withholding. The HTTP authentication tests use a local verifier; they do not prove a hosted issuer or a registered ChatGPT app works.
+
+Python dependencies, including transitive dependencies, are pinned in `requirements.txt`. Review upgrades and vulnerability advisories routinely. MCP 1.28.1 replaces 1.26.0, which had known advisories at review. Production requires one workspace, one service process and one designated reviewer; multiple replicas or reviewers require a different identity/storage design. Use a non-root container with a read-only application filesystem and a writable `/data` volume owned by UID 10001. Provide backups, disk monitoring, request timeouts and audit access restricted to the publication owner. Health reports process availability; it does not certify OAuth, GitHub availability or release readiness.
+
+The SemiBold font is licensed under the bundled OFL, sourced unchanged from the official Noto repository at:
+`https://raw.githubusercontent.com/notofonts/noto-fonts/ffebf8c1ee449e544955a7e813c54f9b73848eac/hinted/ttf/NotoSans/NotoSans-SemiBold.ttf`
+SHA-256: `87a8b90ece1e89746b544e4e086f85a3710e41485a8078f9be874837dfad45d5`.
+
+Before enabling live use, test the real HTTPS protected-resource metadata and `/mcp` endpoint with valid, expired, wrong-audience and wrong-scope tokens. Confirm that unauthenticated review access fails, self-review is blocked, a reviewed candidate releases identical bytes, rejected/tampered candidates remain withheld, and the durable volume survives a restart. Then complete app registration/binding, workspace role permissions, and three fresh conversations with three real users. Obtain publication-owner review of the revised header and all templates; technical tests cannot grant brand approval.

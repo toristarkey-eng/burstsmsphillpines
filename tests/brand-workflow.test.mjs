@@ -11,6 +11,7 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 let server;
 let baseUrl;
 let corruptLogo = false;
+let corruptRenderer = false;
 
 function run(args) {
   return new Promise((resolve) => {
@@ -33,6 +34,7 @@ before(async () => {
       if (corruptLogo && relative === "plugins/burst-sms-ph-marketing-lab/assets/burst-sms-logo.png") {
         content = Buffer.from("not-the-approved-logo");
       }
+      if (corruptRenderer && relative === "creative_service/renderer.py") content = Buffer.from("modified-renderer");
       response.writeHead(200);
       response.end(content);
     } catch {
@@ -91,4 +93,19 @@ test("preflight fails closed when the exact approved logo cannot be verified", a
   assert.equal(receipt.allowed, false);
   assert.equal(receipt.gate, "BLOCKED");
   assert.ok(receipt.failures.some((failure) => failure.includes("SHA-256 mismatch")));
+});
+
+test("release preflight verifies renderer sources and rejects remote source tampering", async () => {
+  const args = ["plugins/burst-sms-ph-marketing-lab/scripts/brand-preflight.mjs", "--repo-base", baseUrl, "--release-lock", "creative_service/release-lock.json"];
+  const good = await run(args);
+  assert.equal(good.code, 0, good.stderr);
+  assert.ok(JSON.parse(good.stdout).verifiedFiles > 15);
+  corruptRenderer = true;
+  try {
+    const changed = await run(args);
+    assert.notEqual(changed.code, 0);
+    assert.match(changed.stderr, /creative_service\/renderer.py: SHA-256 mismatch/);
+  } finally {
+    corruptRenderer = false;
+  }
 });
