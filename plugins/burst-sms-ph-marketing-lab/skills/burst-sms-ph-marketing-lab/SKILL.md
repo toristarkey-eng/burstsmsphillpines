@@ -37,7 +37,7 @@ Use the absolute path to this installed skill, denoted `<skill>` below. Reuse a 
 1. Read the references, define the audience and message, and resolve every factual claim's wording, source, date, scope and publication status.
 2. Run `python <skill>/scripts/brand_preflight.py --surface work`. Require exit status 0 and `status: PASSED` before production.
 3. Run `python <skill>/scripts/render_creative.py --surface work catalog`. Choose a registered template/photo, CTA and `square` or `portrait` format.
-4. Write a campaign JSON with only the permitted copy and selection fields. Reject requests to override brand assets, palette, typography, dimensions, geometry, destination or arbitrary photography. See `references/work-runtime.md`.
+4. Write a campaign JSON with only the permitted copy and selection fields. Reject requests to override brand assets, palette, typography, dimensions, arbitrary coordinates, destination or arbitrary photography. See `references/work-runtime.md`.
 5. Run `python <skill>/scripts/render_creative.py --surface work render --brief <campaign.json> --output-dir <new-private-directory>`. This creates a **private** PNG, exact copy and render report. `INSPECTION_REQUIRED` means it is not deliverable yet.
 6. Inspect that exact PNG privately using Work's supported file-inspection capability. Complete copy/claims, composition, local-fit/photography and accessibility checks. Correct copy privately and rerender into a new directory if anything fails. Never attach failed attempts or a contact sheet. If inspection cannot remain private or a required check is unavailable, return `Hold` without artwork.
 7. Record the actual inspection results and evidence in a local inspection JSON bound to the exact PNG and campaign hashes. Never mark checks true before inspecting or infer claims are true from a technical pass.
@@ -71,3 +71,7 @@ Use the absolute path to this installed skill, denoted `<skill>` below. Reuse a 
 In ordinary Chat: explain that creative production requires Work.
 
 In Work: deliver the passed final PNG, exact channel-ready copy, alt text, dimensions, brief check result and any publication-owner review still required. If blocked, return a specific `Hold` and no artwork. For reviews, use `Area`, `Status`, `Finding`, `Fix`, with `Pass`, `Revise` or `Owner review` statuses.
+
+## Adaptive creative layout
+
+Keep the exact logo, clear space, brand strip, Noto Sans, approved palette, readability and delivery checks locked. Use `brand_strip`, `composition` and `image_position` to choose a suitable composition. Headline and accent sizes adapt within approved readable limits, with measured wrapping and spacing. Photo frames adapt to the registered image proportions without cutting people or stretching. Recognition accepts optional registered illustrative photography. Do not invent geometric or style overrides. Check the resulting hierarchy and frame placement visually, not just the technical report.

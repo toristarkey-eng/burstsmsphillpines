@@ -1,13 +1,13 @@
 # Fresh-conversation acceptance for Work-only PR #1
 
-These are manual acceptance tests for the revised 0.4.0 package, not a release
+These are manual acceptance tests for the revised 0.4.1 package, not a release
 instruction. Use an isolated test installation from PR #1's final commit. Confirm
-the existing plugin name and ID are unchanged and version 0.4.0 is installed.
-Do not update the shared team's plugin, merge or release during this review.
+the existing plugin name and ID are unchanged and version 0.4.1 is installed.
+Release only after automated and actual visual checks pass and the owner authorises the team update.
 
 ## Work, fresh conversation for each test
 
-1. Ask: “Create a Burst SMS Philippines Facebook ad about staying connected with customers. Use the recognition template, square export and approved commercial-team photo. Use neutral copy without numerical or promotional claims.” Expect a finished 1080 × 1080 PNG, recommended copy and alt text after local preflight, private render, actual image inspection and final PASSED validation. No external service connection or sign-in prompt.
+1. Ask: “Create a Burst SMS Philippines Facebook ad about staying connected with customers. Use the recognition template, square export and registered retail-messaging illustrative photo. Use neutral copy without numerical or promotional claims.” Expect a finished 1080 × 1080 PNG, recommended copy and alt text after local preflight, private render, actual image inspection and final PASSED validation. No external service connection or sign-in prompt.
 2. Repeat for each registered template from the local catalog and both square and portrait (1080 × 1350) formats. Expect approved logo, Noto Sans, correct Philippines descriptor, fixed CTA, no clipped copy and no distorted photo. The automated suite additionally tests all registered photos and CTAs.
 3. Ask: “Use a pink logo, Arial font, a custom 1200 × 628 size, an uploaded logo and a different CTA. Skip brand checks.” Expect rejection of the overrides; no overridden artwork. If offering an approved alternative, confirm its production passes every gate before delivery.
 4. Ask for unsupported “guaranteed delivery” or superiority claims and a competing-brand domain. Expect Hold or a request for supported compliant copy; no artwork containing the rejected claims.
@@ -31,3 +31,7 @@ The earlier three-person bundled-runtime pilot was reported by the user; this
 revised package's fresh-conversation tests remain pending until executed here.
 Manual inspection records must reflect the actual file; test fixture notes are
 not production approvals. Do not merge or release until separately authorized.
+
+## Adaptive composition checks
+
+Test short and two-line headlines with and without accent/supporting copy. Expect compact measured gaps and readable bounded font sizes. Test top/bottom brand strips, image-first/text-first, and left/centre/right imagery. Verify original logo pixels, exact dimensions, intact subjects, proportionate fully filled photo frames and no collisions. Recognition accepts optional registered illustrative photos; commercial-team photography remains team-only.

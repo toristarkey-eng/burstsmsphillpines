@@ -69,5 +69,12 @@ npm test
 npm run test:creative
 ```
 
-PR #1 is a review candidate. Do not merge, release or update the team's installed
-plugin until separately authorized.
+Version 0.4.1 adds measured headline/copy layout, bounded readable heading sizes,
+proportionate photo frames, top/bottom brand strips and image-first/text-first
+composition choices. Recognition accepts optional registered illustrative photos.
+The original logo, approved fonts/palette, safe margins, export sizes and mandatory
+private inspection plus delivery validation remain required.
+
+Owner authorisation for team release was given on 9 October 2026. Release follows
+passing automated, visual and CI checks. The existing Git-synced plugin identity
+remains unchanged; no external hosting or service credentials are needed.

@@ -64,6 +64,56 @@ class RendererTests(unittest.TestCase):
         self.assertIsNone(ImageChops.difference(image.crop((56,15,56+expected.width,15+expected.height)),expected).getbbox())
         self.assertEqual(report['logo_sha256'],'3b6bb8131d6ce1bf81d7f2481d8b3159058c8e71e87e0d6b5f1582efde3341f2')
 
+    def test_all_adaptive_variants_preserve_protected_regions(self):
+        for template in catalog()['templates']:
+            for fmt in ('square', 'portrait'):
+                for strip in ('top', 'bottom'):
+                    for composition in ('text-first', 'image-first'):
+                        _,report=render(campaign(template,fmt).model_copy(update={'brand_strip':strip,'composition':composition}))
+                        height=report['dimensions'][1]
+                        for check in report['text_checks']:
+                            x,y,w,h=check['box']
+                            self.assertGreaterEqual(y,150 if strip=='top' else 0)
+                            self.assertLessEqual(y+check['used_height'],height if strip=='top' else height-150)
+                        self.assertTrue(all(report['checks'].values()))
+
+    def test_adaptive_copy_uses_compact_measured_spacing(self):
+        _, report = render(campaign(fmt='square').model_copy(update={
+            'headline': 'Keep customers', 'accent': 'informed.', 'supporting': 'Discuss customer updates with our team.'}))
+        heading, accent, supporting = report['text_checks'][:3]
+        self.assertEqual(accent['box'][1] - (heading['box'][1] + heading['used_height']), 12)
+        self.assertEqual(supporting['box'][1] - (accent['box'][1] + accent['used_height']), 28)
+        self.assertLess(accent['box'][1], 330)
+
+    def test_photo_frames_fill_and_preserve_registered_panels(self):
+        for fmt in ('square', 'portrait'):
+            for placement in ('left', 'centre', 'right'):
+                _, report = render(campaign('people-first', fmt, 'collaborating-colleagues').model_copy(update={'image_position': placement}))
+                photo = report['photo_checks'][0]
+                x,y,w,h = photo['frame']; rx,ry,rw,rh = photo['region']
+                self.assertTrue(rx <= x and ry <= y and x+w <= rx+rw and y+h <= ry+rh)
+                crop = photo['registered_crop']
+                self.assertAlmostEqual(w/h, (crop[2]-crop[0])/(crop[3]-crop[1]), delta=0.01)
+                self.assertTrue(photo['frame_filled'] and photo['complete_panel_preserved'])
+
+    def test_bottom_strip_preserves_logo_and_image_first_reorders_sections(self):
+        original = Image.open(SKILL/'assets/burst-sms-logo.png').convert('RGB')
+        expected = original.resize((original.width*2, original.height*2), Image.Resampling.LANCZOS)
+        for fmt in ('square', 'portrait'):
+            png, report = render(campaign('people-first', fmt).model_copy(update={'brand_strip': 'bottom', 'composition': 'image-first'}))
+            image=Image.open(io.BytesIO(png)); x,y,w,h=report['logo_box']
+            self.assertIsNone(ImageChops.difference(image.crop((x,y,x+w,y+h)), expected).getbbox())
+            frame=report['photo_checks'][0]['frame']
+            self.assertLess(frame[1]+frame[3], report['text_checks'][0]['box'][1])
+            self.assertGreater(y, image.height-150)
+
+    def test_recognition_accepts_only_registered_illustrative_photography(self):
+        _, report = render(campaign(fmt='square', photo='retail-messaging'))
+        self.assertTrue(report['photo_checks'][0]['complete_panel_preserved'])
+        with self.assertRaises(Hold): render(campaign(photo='commercial-team'))
+        for key,value in [('brand_strip','middle'),('composition','freeform'),('image_position',[5,10])]:
+            with self.assertRaises(Hold): render(campaign().model_copy(update={key:value}))
+
     def test_brand_overrides_paths_links_dimensions_and_extra_fields_are_rejected(self):
         for name, value in [('colour','#ff00ff'),('logo_path','/tmp/logo.png'),('font','Arial'),('dimensions',[400,400]),('html','<script>'),('destination','https://evil.example'),('approved',True),('skip_validation',True)]:
             with self.subTest(field=name), self.assertRaises(ValidationError):

@@ -13,7 +13,7 @@ On Windows use the virtual environment's `Scripts/python.exe` path. Never overwr
 
 ## Campaign contract
 
-The only inputs are `template_id`, `format`, `headline`, `accent`, `supporting`, `primary_text`, `cta`, `photo_id` and `message`. Unknown fields, hidden/control characters, markup, URLs/bare domains, competing-brand copy and unsupported superiority claims are rejected. Templates are `recognition`, `customer-updates`, `people-first`, `team-coffee`, `bold-statement`, `offer-focus`. Sizes are square 1080 × 1080 and portrait 1080 × 1350. Text never shrinks automatically to fit. Use the catalog's photo/CTA registrations; do not submit paths or style instructions.
+The only inputs are `template_id`, `format`, `headline`, `accent`, `supporting`, `primary_text`, `cta`, `photo_id` , `message`, `brand_strip`, `composition` and `image_position`. Unknown fields, hidden/control characters, markup, URLs/bare domains, competing-brand copy and unsupported superiority claims are rejected. Templates are `recognition`, `customer-updates`, `people-first`, `team-coffee`, `bold-statement`, `offer-focus`. Sizes are square 1080 × 1080 and portrait 1080 × 1350. Headings wrap and adapt within approved sizes (52–72px headline, 42–62px accent); supporting copy remains 30px. Copy that cannot fit at these readable limits is rejected. Use the catalog's photo/CTA registrations; do not submit paths or style instructions.
 
 Example structure, using an invitation without a product, price or performance claim:
 
@@ -73,3 +73,7 @@ Local checks enforce technical constraints, not claim truth or host-wide access 
 Maintainers update files in code review, run `python scripts/lock-work-package.py` from the repository and inspect the manifest diff. This helper is deliberately outside the shipped skill. Run all tests after intentional changes. Do not expose a hash-refresh or bypass command to creative users. Keep this existing plugin identity; update its package through the established marketplace release process only when authorised.
 
 The Noto Sans fonts use the bundled `runtime/fonts/OFL.txt`. SemiBold provenance: `https://raw.githubusercontent.com/notofonts/noto-fonts/ffebf8c1ee449e544955a7e813c54f9b73848eac/hinted/ttf/NotoSans/NotoSans-SemiBold.ttf`, SHA-256 `87a8b90ece1e89746b544e4e086f85a3710e41485a8078f9be874837dfad45d5`.
+
+## Adaptive composition (0.4.1)
+
+Optional fields: `brand_strip` is `top` (default) or `bottom`; `composition` is `text-first` (default) or `image-first`; `image_position` is `left`, `centre` or `right` (`centre` is the default). The renderer measures copy and allocates remaining space to imagery. The recognition template supports its phone illustration by default or registered illustrative photography. Team photography remains restricted to `team-coffee`. Photo frames follow the complete registered panel's aspect ratio and fill exactly; no stretching, additional subject crop or letterbox inside the frame is allowed. Natural white space within the approved source remains. These fields select controlled compositions, not arbitrary coordinates, styles or fonts. Inspect the actual final image before delivery.

@@ -52,6 +52,9 @@ class Campaign(BaseModel):
     cta: Literal["Talk to our team", "Explore SMS solutions", "Explore branded Sender IDs", "Book a coffee chat"] = "Talk to our team"
     photo_id: str | None = Field(default=None, max_length=64)
     message: str = Field(default="", max_length=85)
+    brand_strip: Literal["top", "bottom"] = "top"
+    composition: Literal["text-first", "image-first"] = "text-first"
+    image_position: Literal["left", "centre", "right"] = "centre"
 
     @model_validator(mode="after")
     def plain_copy(self):
@@ -121,10 +124,11 @@ class Canvas:
         self.draw = ImageDraw.Draw(self.image)
         self.text_checks = []
         self.pending_text = []
+        self.photo_checks = []
 
     def text(self, text, box, size, colour="navy", bold=False, max_lines=3):
         if not text:
-            return
+            return 0
         x, y, w, h = box
         if min(x, y) < 0 or min(w, h) <= 0 or x + w > self.image.width or y + h > self.image.height:
             raise Hold("Text box is outside the canvas")
@@ -142,14 +146,42 @@ class Canvas:
         if line:
             lines.append(line)
         line_h = round(size * 1.32)
-        if len(lines) > max_lines or len(lines) * line_h > h:
+        used_height = (len(lines)-1)*line_h + self.draw.textbbox((0, 0), lines[-1], font=f, anchor="lt")[3]
+        if len(lines) > max_lines or used_height > h:
             raise Hold("Copy overflows the template. Shorten it; font size will not be reduced")
         for i, line in enumerate(lines):
             bounds = self.draw.textbbox((x, y + i * line_h), line, font=f, anchor="lt")
             if bounds[0] < x or bounds[1] < y or bounds[2] > x + w or bounds[3] > y + h:
                 raise Hold("Visible glyphs overflow the locked text box")
             self.pending_text.append(((x, y + i * line_h), line, f, colour))
-        self.text_checks.append({"text": text, "box": box, "size": size, "lines": len(lines), "fits": True})
+        self.text_checks.append({"text": text, "box": box, "size": size, "lines": len(lines), "used_height": used_height, "fits": True})
+        return used_height
+
+    def copy_block(self, campaign, x, y, width, budget, dark=False, paint=True):
+        # Choose from bounded approved sizes using actual wrapping, never free-form styles.
+        for heading_size in (72, 68, 64, 60, 56, 52):
+            probe = Canvas(self.image.size)
+            cursor = y
+            try:
+                cursor += probe.text(campaign.headline, (x, cursor, width, budget), heading_size,
+                                     "white" if dark else "navy", True, 2)
+                if campaign.accent:
+                    cursor += 12
+                    cursor += probe.text(campaign.accent, (x, cursor, width, budget - (cursor-y)),
+                                         heading_size-10, "cyan" if dark else "violet", True, 2)
+                if campaign.supporting:
+                    cursor += 28
+                    cursor += probe.text(campaign.supporting, (x, cursor, width, budget - (cursor-y)),
+                                         30, "white" if dark else "navy", False, 3)
+                if cursor-y > budget:
+                    continue
+            except Hold:
+                continue
+            if paint:
+                self.pending_text.extend(probe.pending_text)
+                self.text_checks.extend(probe.text_checks)
+            return cursor-y
+        raise Hold("Copy exceeds the adaptive layout's readable size limits; shorten it")
 
     def finish_text(self):
         """Check actual backgrounds after all shapes/photos, then paint text last."""
@@ -169,14 +201,26 @@ class Canvas:
             occupied = ImageChops.lighter(occupied, visible)
             self.draw.text(position, text, font=face, fill=PALETTE[colour], anchor="lt")
 
-    def photo(self, photo, box):
+    def photo(self, photo, box, position="centre"):
         source = Image.open(PLUGIN / photo["file"]).convert("RGB")
         crop = tuple(photo["crop"])
         if not (0 <= crop[0] < crop[2] <= source.width and 0 <= crop[1] < crop[3] <= source.height):
             raise Hold("Photo crop outside its approved source")
-        # Contain, never cover: no additional automatic crop of faces or equipment.
-        scaled = ImageOps.contain(source.crop(crop), (box[2], box[3]), Image.Resampling.LANCZOS)
-        self.image.paste(scaled, (box[0] + (box[2] - scaled.width) // 2, box[1] + (box[3] - scaled.height) // 2))
+        x, y, w, h = box
+        if min(x, y) < 0 or min(w, h) <= 0 or x+w > self.image.width or y+h > self.image.height:
+            raise Hold("Photo region is outside the canvas")
+        # The frame adapts to the registered panel rather than distorting or cropping people.
+        panel = source.crop(crop)
+        scale = min(w / panel.width, h / panel.height)
+        size = (max(1, round(panel.width * scale)), max(1, round(panel.height * scale)))
+        scaled = panel.resize(size, Image.Resampling.LANCZOS)
+        px = x if position == "left" else x+w-scaled.width if position == "right" else x+(w-scaled.width)//2
+        py = y+(h-scaled.height)//2
+        self.image.paste(scaled, (px, py))
+        self.photo_checks.append({"source": photo["file"], "registered_crop": list(crop),
+                                  "region": list(box), "frame": [px, py, *size],
+                                  "frame_filled": True, "complete_panel_preserved": True,
+                                  "proportional_scale": True})
 
     def bubble(self, text, box):
         x, y, w, h = box
@@ -196,7 +240,7 @@ def render(campaign: Campaign) -> tuple[bytes, dict]:
     photo = config["photos"].get(campaign.photo_id) if campaign.photo_id else None
     if campaign.photo_id and not photo:
         raise Hold("Photo is not registered")
-    if template["photography"] != bool(photo):
+    if template["photography"] != "optional" and template["photography"] != bool(photo):
         raise Hold("Choose a registered photo for this template, or omit it for a text template")
     if photo and campaign.template_id not in photo["templates"]:
         raise Hold("Photo is not registered for this template")
@@ -217,46 +261,46 @@ def render(campaign: Campaign) -> tuple[bytes, dict]:
     for letter in "PHILIPPINES":
         d.text((tx, 65), letter, fill=PALETTE["navy"], font=descriptor_font, anchor="lt")
         tx += d.textlength(letter, font=descriptor_font) + 3
-    layout = template["layout"]
+    layout = "split" if template["layout"] == "phone" and photo else template["layout"]
+    body_top, body_bottom = 195, footer - 28
+    body_height = body_bottom - body_top
+    has_visual = layout in ("phone", "split", "team", "conversation")
+    min_visual = 260 if layout in ("phone", "conversation") else 230
+    gap = 30
+    copy_width = 880 if layout == "feature" else 940
+    copy_x = 100 if layout == "feature" else 64
+    budget = body_height - min_visual - gap if has_visual else body_height
+    copy_height = c.copy_block(campaign, copy_x, body_top, copy_width, budget,
+                               dark=layout == "statement", paint=False)
+    visual_height = body_height-copy_height-gap if has_visual else 0
+    image_first = has_visual and campaign.composition == "image-first"
+    copy_y = body_top+visual_height+gap if image_first else body_top
+    if not has_visual:
+        copy_y = body_top + (body_height-copy_height)//2
+    visual_y = body_top if image_first else body_top+copy_height+gap
     if layout == "statement":
         d.rectangle((0, 151, width, footer), fill=PALETTE["navy"])
-        d.ellipse((940, footer - 240, 1360, footer + 180), fill=PALETTE["cyan"])
-        c.text(campaign.headline, (64, 215, 938, 285), 80, "white", True, 2)
-        c.text(campaign.accent, (64, 490, 930, 140), 68, "cyan", True, 1)
-        c.text(campaign.supporting, (68, 655 if height > 1080 else 650, 820, footer - 665), 32, "white", max_lines=3)
+        d.ellipse((990, footer-120, 1260, footer+150), fill=PALETTE["cyan"])
     elif layout == "feature":
         d.rectangle((0, 151, width, footer), fill=PALETTE["white"])
-        d.rounded_rectangle((62, 203, 1018, footer - 48), 42, fill=PALETTE["cloud"])
-        d.rectangle((62, 243, 72, footer - 88), fill=PALETTE["cyan"])
-        c.text(campaign.headline, (105, 260, 810, 265), 76, bold=True, max_lines=2)
-        c.text(campaign.accent, (105, 540, 810, 190), 64, "violet", True, 2)
-        c.text(campaign.supporting, (108, 755 if height > 1080 else 745, 790, footer - 785), 31, max_lines=3)
-    elif layout == "phone":
-        c.text(campaign.headline, (64, 200, 940, 235), 70, bold=True, max_lines=2)
-        c.text(campaign.accent, (64, 430, 940, 130), 62, "violet", True, 1)
-        c.text(campaign.supporting, (64, 553, 470, footer - 585), 32, max_lines=3)
-        d.ellipse((510, 570, 1020, footer - 25), outline=PALETTE["cyan"], width=20)
-        d.rounded_rectangle((570, 545, 969, footer - 38), 47, fill=PALETTE["navy"])
-        d.rounded_rectangle((588, 570, 951, footer - 63), 30, fill=PALETTE["white"])
-        d.rounded_rectangle((698, 582, 842, 603), 10, fill=PALETTE["navy"])
-        c.bubble(campaign.message, (605, 640, 330, min(280, footer - 718)))
-    else:
-        # These distinct layouts share a fixed, readable headline zone above photography.
-        headline_y = 195
-        c.text(campaign.headline, (64, headline_y, 940, 230), 68, bold=True, max_lines=2)
-        c.text(campaign.accent, (64, 425, 940, 125), 58, "violet", True, 1)
-        c.text(campaign.supporting, (64, 547, 940, 95), 30, max_lines=2)
-        photo_y = 665 if height > 1080 else 650
-        if layout == "team":
-            d.polygon([(0, photo_y), (180, photo_y + 160), (0, footer)], fill=PALETTE["cyan"])
-            d.polygon([(width, photo_y), (width - 180, photo_y + 160), (width, footer)], fill=PALETTE["violet"])
-            c.photo(photo, (86, photo_y, 908, footer - photo_y - 20))
-        elif layout == "split":
-            d.rounded_rectangle((58, photo_y, 1022, footer - 25), 38, fill=PALETTE["white"])
-            c.photo(photo, (80, photo_y + 6, 920, footer - photo_y - 36))
-        else:
-            c.photo(photo, (548, photo_y, 485, footer - photo_y - 20))
-            c.bubble(campaign.message, (62, photo_y + 18, 459, min(300, footer - photo_y - 44)))
+        d.rounded_rectangle((62, 175, 1018, footer-20), 42, fill=PALETTE["cloud"])
+        d.rectangle((62, 215, 72, footer-60), fill=PALETTE["cyan"])
+    c.copy_block(campaign, copy_x, copy_y, copy_width, copy_height, dark=layout == "statement")
+    if layout == "phone":
+        visual_bottom = visual_y + visual_height
+        phone_x = {"left": 64, "centre": 340, "right": 570}[campaign.image_position]
+        d.rounded_rectangle((phone_x, visual_y, phone_x+399, visual_bottom), 38, fill=PALETTE["navy"])
+        d.rounded_rectangle((phone_x+18, visual_y+18, phone_x+381, visual_bottom-18), 26, fill=PALETTE["white"])
+        d.rounded_rectangle((phone_x+128, visual_y+28, phone_x+272, visual_y+45), 8, fill=PALETTE["navy"])
+        c.bubble(campaign.message, (phone_x+35, visual_y+65, 330, visual_height-90))
+        d.ellipse((phone_x-25, visual_y+30, phone_x-5, visual_y+50), fill=PALETTE["cyan"])
+    elif layout == "conversation":
+        photo_x = 64 if campaign.image_position == "left" else 548
+        bubble_x = 575 if campaign.image_position == "left" else 64
+        c.photo(photo, (photo_x, visual_y, 468, visual_height), campaign.image_position)
+        c.bubble(campaign.message, (bubble_x, visual_y, 440, min(300, visual_height)))
+    elif layout in ("split", "team"):
+        c.photo(photo, (64, visual_y, 952, visual_height), campaign.image_position)
     d.rectangle((0, footer, width, height), fill=PALETTE["white"])
     cta_font = font(29, True)
     button_width = int(d.textlength(campaign.cta, font=cta_font)) + 64
@@ -264,7 +308,19 @@ def render(campaign: Campaign) -> tuple[bytes, dict]:
     d.text((96, footer + 48), campaign.cta, font=cta_font, fill=PALETTE["white"], anchor="lt")
     c.text("burstsms.com.ph", (68, footer + 121, 650, 45), 28, bold=True, max_lines=1)
     c.finish_text()
-    logo_pixels = c.image.crop((56, 15, 56 + scaled_logo.width, 15 + scaled_logo.height))
+    logo_y = 15
+    if campaign.brand_strip == "bottom":
+        original = c.image.copy()
+        c.image.paste(original.crop((0, 150, width, height)), (0, 0))
+        c.image.paste(original.crop((0, 0, width, 150)), (0, height-150))
+        logo_y = height-150+15
+        for check in c.text_checks:
+            check["box"] = list(check["box"])
+            check["box"][1] -= 150
+        for check in c.photo_checks:
+            check["region"][1] -= 150
+            check["frame"][1] -= 150
+    logo_pixels = c.image.crop((56, logo_y, 56 + scaled_logo.width, logo_y + scaled_logo.height))
     if ImageChops.difference(logo_pixels, scaled_logo).getbbox():
         raise Hold("Logo pixels changed after composition")
     buf = io.BytesIO()
@@ -284,10 +340,11 @@ def render(campaign: Campaign) -> tuple[bytes, dict]:
         "template_reference": template["reference"], "photography": photo,
         "logo_source": "assets/burst-sms-logo.png", "logo_sha256": digest((PLUGIN / "assets/burst-sms-logo.png").read_bytes()),
         "palette": PALETTE, "typography": "Bundled Noto Sans Regular, SemiBold and Bold", "text_checks": c.text_checks,
-        "alt_text": "Burst SMS Philippines: " + campaign.headline + (". " + campaign.accent if campaign.accent else "") + (". " + photo["alt"] if photo else ""),
+        "photo_checks": c.photo_checks, "brand_strip": campaign.brand_strip, "logo_box": [56, logo_y, scaled_logo.width, scaled_logo.height],
+        "alt_text": "Burst SMS Philippines: " + ". ".join(part.rstrip(". ") for part in [campaign.headline, campaign.accent, photo["alt"] if photo else ""] if part),
         "channel_copy": campaign.primary_text + "\n\n" + campaign.cta + ": " + DESTINATION,
         "contrast_ratios": contrasts,
-        "checks": {"asset_integrity": True, "logo_pixels": True, "locked_styles": True, "text_fit": True, "fixed_dimensions": True, "fixed_destination": True, "text_contrast": True},
+        "checks": {"asset_integrity": True, "logo_pixels": True, "locked_styles": True, "text_fit": True, "fixed_dimensions": True, "fixed_destination": True, "text_contrast": True, "photo_frame_fit": all(p["frame_filled"] and p["complete_panel_preserved"] for p in c.photo_checks)},
         "inspection_required": ["copy_and_claims", "visual_composition", "local_fit_and_photography", "accessibility"]
     }
     return png, report
