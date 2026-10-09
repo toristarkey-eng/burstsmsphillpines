@@ -1,0 +1,4 @@
+interface:
+  display_name: "Burst Work Runtime Check"
+  short_description: "Check bundled code and brand assets in Work"
+  default_prompt: "Use $check-burst-work-runtime to check whether this Work conversation can execute the bundled renderer prerequisites."
