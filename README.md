@@ -82,3 +82,5 @@ remains unchanged; no external hosting or service credentials are needed.
 Version 0.4.2 makes balanced side-by-side body composition the automatic default for copy/phone/photo layouts. Brand/CTA bars stay unchanged; meaningful visible message cards and visual composition review are mandatory for every user.
 
 Explicitly requested landscape (1200 × 628), static Story/Reel cover (1080 × 1920) and custom PNG dimensions are supported. Square/portrait remain default. Custom sizes are 600–4096px per side, aspect ratio 1:2 through 2:1, with body recomposition and unchanged delivery checks. Narrow banners and print/video/vector exports need dedicated capabilities.
+
+Release 0.4.3 makes CTA/terms follow brand placement, groups photography with content-sized SMS cards, removes automatic cyan backdrops and destructive white-key cutouts, and requires explicit edge/balance/CTA visual checks. Current opaque photos retain their original backgrounds for cutout requests; approved native subject-alpha sources can be registered later.

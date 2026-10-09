@@ -9,7 +9,7 @@ import sys
 from pathlib import Path
 
 SKILL = Path(__file__).resolve().parents[1]
-INSPECTION_CHECKS = ("copy_and_claims", "visual_composition", "local_fit_and_photography", "accessibility")
+INSPECTION_CHECKS = ("copy_and_claims", "visual_composition", "local_fit_and_photography", "accessibility", "photo_edges", "body_balance", "cta_and_terms", "campaign_effectiveness")
 
 
 def read_json(path: Path, limit=131072):
@@ -127,7 +127,7 @@ def main(argv=None):
         engine.load_locks()
         versions = check_dependencies()
         if args.action == "preflight":
-            result = {"status": "PASSED", "plugin": "burst-sms-ph-marketing-lab", "version": "0.4.2", "runtime_versions": versions, "logo_sha256": engine.APPROVED_LOGO_SHA256}
+            result = {"status": "PASSED", "plugin": "burst-sms-ph-marketing-lab", "version": "0.4.3", "runtime_versions": versions, "logo_sha256": engine.APPROVED_LOGO_SHA256}
         elif args.action == "catalog":
             result = engine.catalog()
         elif args.action == "render":

@@ -11,7 +11,7 @@ test('both manifests retain existing plugin identity and declare Work production
   for (const relative of ['plugin.json', '.codex-plugin/plugin.json']) {
     const manifest = JSON.parse(await fs.readFile(path.join(plugin, relative), 'utf8'));
     assert.equal(manifest.name, 'burst-sms-ph-marketing-lab');
-    assert.equal(manifest.version, '0.4.2');
+    assert.equal(manifest.version, '0.4.3');
     assert.match(manifest.description, /Work/);
     assert.equal(manifest.apps, undefined);
     assert.equal(manifest.mcpServers, undefined);

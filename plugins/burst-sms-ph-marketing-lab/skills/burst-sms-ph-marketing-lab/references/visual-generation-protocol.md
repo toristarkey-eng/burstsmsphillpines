@@ -15,3 +15,7 @@ See `work-runtime.md` for commands and file formats. Technical checks do not est
 ## Art direction acceptance
 
 Visual composition requires a clear campaign idea, a strong focal point, deliberate hierarchy, balanced visual weight, purposeful whitespace, relevant photography, finished mask edges and readability at feed size. Technical fit is necessary but does not establish creative quality. Inspect the actual phone message and selected photo subject. Reject poor wraps, placeholder screens, unexplained empty halves and irrelevant filler; improve the body and rerender privately. Preserve brand and CTA bars through every variation.
+
+For release 0.4.3, inspect full resolution and feed size explicitly for photo halos, backdrop slivers, subject damage and excessive whitespace. Require separate `photo_edges`, `body_balance` and `cta_and_terms` results. Bottom-brand CTA and terms belong in the coloured body; the white brand bar contains identity only. Failed visual checks always block delivery despite technical success. Preserve original backgrounds whenever trustworthy cutouts are unavailable.
+
+Require `campaign_effectiveness` inspection: state the audience/need, objective, substantiated reason to choose Burst SMS and next action, and confirm they read immediately at feed size. Use compliance positioning only for a relevant campaign. A technical pass does not predict effectiveness and cannot waive any visual failure.

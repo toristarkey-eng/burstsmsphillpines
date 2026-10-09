@@ -1,0 +1,16 @@
+{
+  "template_id": "customer-updates",
+  "format": "square",
+  "headline": "Keep customers informed.",
+  "accent": "Stay connected.",
+  "supporting": "Explore business messaging.",
+  "primary_text": "Discuss customer updates with the Burst SMS Philippines team.",
+  "photo_id": "workplace-portrait",
+  "message": "Your order is ready. Thank you!",
+  "sender_name": "ACME SHOP",
+  "brand_strip": "bottom",
+  "composition": "auto",
+  "image_treatment": "rounded",
+  "photo_backdrop": "none",
+  "offer_terms": ""
+}

@@ -9,7 +9,7 @@ manifest = {
     "schema_version": 1,
     "plugin_name": "burst-sms-ph-marketing-lab",
     "plugin_id": "Plugin_f128b9ca740081918b32107ab5b22124",
-    "plugin_version": "0.4.2",
+    "plugin_version": "0.4.3",
     "repository": "https://github.com/toristarkey-eng/burstsmsphillpines",
     "runtime": "Work",
     "files": {str(p.relative_to(skill)): hashlib.sha256(p.read_bytes()).hexdigest()

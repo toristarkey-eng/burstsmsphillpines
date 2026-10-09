@@ -10,7 +10,7 @@ const sha = bytes => crypto.createHash('sha256').update(bytes).digest('hex');
 const json = file => JSON.parse(fs.readFileSync(file, 'utf8'));
 try {
   const lock = json(path.join(skill, 'brand-integrity.json'));
-  if (lock.plugin_name !== 'burst-sms-ph-marketing-lab' || lock.plugin_version !== '0.4.2' || lock.runtime !== 'Work') errors.push('Wrong Work package identity/version');
+  if (lock.plugin_name !== 'burst-sms-ph-marketing-lab' || lock.plugin_version !== '0.4.3' || lock.runtime !== 'Work') errors.push('Wrong Work package identity/version');
   for (const [relative, expected] of Object.entries(lock.files)) {
     const target = path.resolve(skill, relative);
     if (!target.startsWith(skill + path.sep) || !fs.realpathSync(target).startsWith(skill + path.sep)) errors.push(`Unsafe package path: ${relative}`);
