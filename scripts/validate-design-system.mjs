@@ -10,8 +10,11 @@ const required = [
   "design-system/tokens/tokens.json",
   "design-system/tokens/tokens.css",
   "design-system/assets/brand/burst-sms-logo-primary.png",
+  "design-system/assets/photography/burst-sms-ph-commercial-team.jpg",
   "plugins/burst-sms-ph-marketing-lab/plugin.json",
   "plugins/burst-sms-ph-marketing-lab/.codex-plugin/plugin.json",
+  "plugins/burst-sms-ph-marketing-lab/assets/burst-sms-logo.png",
+  "plugins/burst-sms-ph-marketing-lab/assets/burst-sms-ph-commercial-team.jpg",
   "plugins/burst-sms-ph-marketing-lab/skills/burst-sms-ph-marketing-lab/SKILL.md",
   ".agents/plugins/marketplace.json"
 ];

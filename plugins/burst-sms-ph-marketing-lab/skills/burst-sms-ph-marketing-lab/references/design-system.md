@@ -40,6 +40,10 @@ Use the supplied primary logo on white and the supplied dark-background version 
 
 The Philippines market descriptor may sit beside the logo as a separate text element. Do not merge it into or reconstruct the logo artwork.
 
+## Packaged imagery
+
+The plugin includes `assets/burst-sms-ph-commercial-team.jpg` for suitable Philippines marketing compositions. Use it without changing the people or implying an endorsement, role, or result that has not been approved. Recommended alt text is `Three members of the Burst SMS Philippines commercial team` when the image conveys content; use empty alt text when it is decorative.
+
 ## Accessibility
 
 - Use white on navy or violet for high-emphasis surfaces.
@@ -47,4 +51,3 @@ The Philippines market descriptor may sit beside the logo as a separate text ele
 - Do not use white body copy on Burst cyan.
 - Keep keyboard focus visible and do not rely on colour alone.
 - Provide alt text for meaningful images and mark decoration as decorative.
-
