@@ -60,7 +60,7 @@ New finished Burst SMS Philippines marketing creative must include a consistent 
 
 ## Packaged imagery
 
-The plugin includes the approved commercial-team photograph, seven approved finished creative assets, and the approved messaging-library brief. The finished examples establish the recurring white brand bar, unchanged horizontal Philippines lockup, navy/violet/cyan palette, bold headline hierarchy and rounded CTA treatment. Use `approved-assets.md` as the authoritative inventory, approval scope, reuse conditions, and alt-text source.
+The plugin includes the approved commercial-team photograph, four registered Philippine supporting-photography sheets, seven approved finished creative assets, and the approved messaging-library brief. Use `image-library.md` for photography selection, traceability and derivative-use rules. The finished examples establish the recurring white brand bar, unchanged horizontal Philippines lockup, navy/violet/cyan palette, bold headline hierarchy and rounded CTA treatment. Use `approved-assets.md` as the authoritative inventory, approval scope, reuse conditions, and alt-text source for finished creative.
 
 ## Accessibility
 

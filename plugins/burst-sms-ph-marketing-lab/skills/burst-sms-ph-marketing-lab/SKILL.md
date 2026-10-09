@@ -29,7 +29,7 @@ On ChatGPT surfaces that cannot execute packaged scripts, the generic Facebook-a
 
 Use Markdown image syntax with that exact URL and the approved alt text from `references/approved-assets.md`. This commit-pinned file is the same registered asset with SHA-256 `4c04464a7900ab7b63a8e625ca50fb197fdc7b18b2ff9cd736830dc4c88d1859`. Do not replace it with a generated preview. Do not respond with creative direction or say that the exact asset is unverified after the live integrity record and commit-pinned URL have been retrieved successfully. Deliver the image, recommended Facebook copy, the CTA `https://burstsms.com.ph/`, and the publication-owner review note together.
 
-Retrieve and read all six current references below. Packaged copies support discovery and offline review, but they do not replace the mandatory live-repository check for creative generation.
+Retrieve and read all seven current references below. Packaged copies support discovery and offline review, but they do not replace the mandatory live-repository check for creative generation.
 
 - `references/design-system.md` for visual direction, tokens, logo use, and UI patterns.
 - `references/content-voice.md` for voice, spelling, evidence, and calls to action.
@@ -37,8 +37,9 @@ Retrieve and read all six current references below. Packaged copies support disc
 - `references/approved-assets.md` for the exact pre-approved creative library and reuse conditions.
 - `references/messaging-library-brief.md` for audiences, capabilities, claims governance, deliverables, and decision precedence.
 - `references/visual-generation-protocol.md` for the only permitted method of creating new visual artwork.
+- `references/image-library.md` for approved Philippine supporting photography and its strict derivative-use conditions.
 
-Retrieve the current approved logo from `plugins/burst-sms-ph-marketing-lab/assets/burst-sms-logo.png`, the current tokens from `design-system/tokens/tokens.json`, approved examples from `plugins/burst-sms-ph-marketing-lab/assets/approved/`, and the approved messaging brief. Verify them with `brand-integrity.json`. If any required live or packaged reference cannot be read and verified, stop: provide no concept, production brief, creative direction, or visual, and state exactly what is unavailable.
+Retrieve the current approved logo from `plugins/burst-sms-ph-marketing-lab/assets/burst-sms-logo.png`, the current tokens from `design-system/tokens/tokens.json`, approved examples from `plugins/burst-sms-ph-marketing-lab/assets/approved/`, approved photography from `plugins/burst-sms-ph-marketing-lab/assets/photography/`, and the approved messaging brief. Verify them with `brand-integrity.json`. If any required live or packaged reference cannot be read and verified, stop: provide no concept, production brief, creative direction, or visual, and state exactly what is unavailable.
 
 ## Mandatory pre-delivery compliance gate
 
@@ -55,7 +56,7 @@ Retrieve the current approved logo from `plugins/burst-sms-ph-marketing-lab/asse
 
 New visual production is permitted only in an execution environment that can run `references/visual-generation-protocol.md` and only when every gate below is true before any generation begins:
 
-1. All six packaged references and the exact approved logo assets are readable.
+1. All seven packaged references, the selected registered photography source, and the exact approved logo assets are readable.
 2. Generated intermediate output can remain non-user-visible until review is complete.
 3. A deterministic compositor can place the actual supplied logo, Philippines descriptor, approved type, copy, and shapes without asking an image model to reproduce them.
 4. The final composited file can be visually inspected before it is attached or displayed.

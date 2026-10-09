@@ -12,6 +12,10 @@ const required = [
   "design-system/tokens/tokens.css",
   "design-system/assets/brand/burst-sms-logo-primary.png",
   "design-system/assets/photography/burst-sms-ph-commercial-team.jpg",
+  "design-system/assets/photography/library/diverse-filipino-workforce-portrait-collage.png",
+  "design-system/assets/photography/library/everyday-connections-manila.png",
+  "design-system/assets/photography/library/good-coffee-good-people-montage.png",
+  "design-system/assets/photography/library/diverse-collaborative-work-portrait-grid.png",
   "plugins/burst-sms-ph-marketing-lab/plugin.json",
   "plugins/burst-sms-ph-marketing-lab/.codex-plugin/plugin.json",
   "plugins/burst-sms-ph-marketing-lab/brand-integrity.json",
@@ -30,11 +34,17 @@ const required = [
   "plugins/burst-sms-ph-marketing-lab/assets/approved/approved-be-recognised-facebook.png",
   "plugins/burst-sms-ph-marketing-lab/assets/approved/approved-keep-customers-in-loop.png",
   "plugins/burst-sms-ph-marketing-lab/assets/approved/burst-sms-ph-messaging-library-brief.docx",
+  "plugins/burst-sms-ph-marketing-lab/assets/photography/diverse-filipino-workforce-portrait-collage.png",
+  "plugins/burst-sms-ph-marketing-lab/assets/photography/everyday-connections-manila.png",
+  "plugins/burst-sms-ph-marketing-lab/assets/photography/good-coffee-good-people-montage.png",
+  "plugins/burst-sms-ph-marketing-lab/assets/photography/diverse-collaborative-work-portrait-grid.png",
   "plugins/burst-sms-ph-marketing-lab/skills/burst-sms-ph-marketing-lab/SKILL.md",
   "plugins/burst-sms-ph-marketing-lab/skills/burst-sms-ph-marketing-lab/references/approved-assets.md",
   "plugins/burst-sms-ph-marketing-lab/skills/burst-sms-ph-marketing-lab/references/messaging-library-brief.md",
   "plugins/burst-sms-ph-marketing-lab/skills/burst-sms-ph-marketing-lab/references/visual-generation-protocol.md",
+  "plugins/burst-sms-ph-marketing-lab/skills/burst-sms-ph-marketing-lab/references/image-library.md",
   "design-system/docs/approved-assets.md",
+  "design-system/docs/image-library.md",
   "design-system/docs/visual-generation-protocol.md",
   "design-system/docs/plugin-creative-workflow-audit.md",
   "design-system/briefs/burst-sms-ph-messaging-library-brief.docx",
@@ -56,7 +66,7 @@ for (const [relative, expectedHash] of Object.entries(integrity.files)) {
   }
 }
 if (integrity.repository !== "https://github.com/toristarkey-eng/burstsmsphillpines") errors.push("Integrity manifest has the wrong repository");
-if (integrity.pluginVersion !== "0.1.9") errors.push("Integrity manifest has the wrong plugin version");
+if (integrity.pluginVersion !== "0.2.0") errors.push("Integrity manifest has the wrong plugin version");
 const css = fs.readFileSync(path.join(root, "design-system/tokens/tokens.css"), "utf8").toLowerCase();
 for (const [name, token] of Object.entries(tokens.color.brand)) {
   if (!css.includes(token.$value.toLowerCase())) errors.push(`Brand colour ${name} is missing from tokens.css`);
@@ -68,7 +78,7 @@ for (const manifestPath of [
 ]) {
   const manifest = JSON.parse(fs.readFileSync(path.join(root, manifestPath), "utf8"));
   if (manifest.name !== "burst-sms-ph-marketing-lab") errors.push(`${manifestPath} has the wrong plugin name`);
-  if (manifest.version !== "0.1.9") errors.push(`${manifestPath} has an unexpected version`);
+  if (manifest.version !== "0.2.0") errors.push(`${manifestPath} has an unexpected version`);
 }
 
 const skill = fs.readFileSync(path.join(root, "plugins/burst-sms-ph-marketing-lab/skills/burst-sms-ph-marketing-lab/SKILL.md"), "utf8");
@@ -90,6 +100,7 @@ for (const requiredPolicy of [
   "Generated intermediate output can remain non-user-visible",
   "deterministic compositor",
   "references/visual-generation-protocol.md"
+  ,"references/image-library.md"
 ]) {
   if (!skill.includes(requiredPolicy)) errors.push(`Plugin skill is missing mandatory policy: ${requiredPolicy}`);
 }
@@ -114,6 +125,17 @@ for (const name of [
   const pluginAsset = fs.readFileSync(path.join(root, "plugins/burst-sms-ph-marketing-lab/assets/approved", name));
   const designAsset = fs.readFileSync(path.join(root, "design-system/assets/approved", name));
   if (!pluginAsset.equals(designAsset)) errors.push(`Approved asset copies differ: ${name}`);
+}
+
+for (const name of [
+  "diverse-filipino-workforce-portrait-collage.png",
+  "everyday-connections-manila.png",
+  "good-coffee-good-people-montage.png",
+  "diverse-collaborative-work-portrait-grid.png"
+]) {
+  const pluginAsset = fs.readFileSync(path.join(root, "plugins/burst-sms-ph-marketing-lab/assets/photography", name));
+  const designAsset = fs.readFileSync(path.join(root, "design-system/assets/photography/library", name));
+  if (!pluginAsset.equals(designAsset)) errors.push(`Photography library copies differ: ${name}`);
 }
 
 const html = fs.readFileSync(path.join(root, "design-system/index.html"), "utf8");
