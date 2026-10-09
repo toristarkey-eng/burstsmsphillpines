@@ -43,6 +43,9 @@ def contrast(a: str, b: str) -> float:
 
 class Campaign(BaseModel):
     model_config = ConfigDict(extra="forbid", strict=True)
+    creative_style: Literal["default", "high-energy-casual"] = "default"
+    energy_treatment: Literal["diagonal", "bands", "none"] = "diagonal"
+    prop_id: str | None = Field(default=None, max_length=64)
     template_id: Literal["recognition", "customer-updates", "people-first", "team-coffee", "bold-statement", "offer-focus"]
     format: Literal["square", "portrait", "landscape", "story", "custom"] = "portrait"
     dimensions: list[int] | None = Field(default=None, min_length=2, max_length=2)
@@ -209,6 +212,24 @@ class Canvas:
                 self.text_checks.extend(probe.text_checks)
             return cursor-y
         raise Hold("Copy exceeds the adaptive layout's readable size limits; shorten it")
+
+    def energy_copy(self, campaign, x, y, width, budget, paint=True):
+        for size in ((60,56,52) if self.compact else (96,88,80)):
+            probe=Canvas(self.image.size); cursor=y
+            try:
+                cursor+=probe.text(campaign.headline,(x,cursor,width,budget),size,"navy",True,2)
+                if campaign.accent:
+                    cursor+=12
+                    cursor+=probe.text(campaign.accent,(x,cursor,width,budget-(cursor-y)),36 if self.compact else 52,"violet",True,2)
+                if campaign.supporting:
+                    cursor+=16
+                    cursor+=probe.text(campaign.supporting,(x,cursor,width,budget-(cursor-y)),24 if self.compact else 28,"navy",False,2)
+            except Hold:
+                continue
+            if paint:
+                self.pending_text.extend(probe.pending_text);self.text_checks.extend(probe.text_checks)
+            return cursor-y
+        raise Hold("High-energy copy exceeds readable limits; shorten the headline/supporting copy or change format")
 
     def finish_text(self):
         """Check actual backgrounds after all shapes/photos, then paint text last."""
@@ -416,6 +437,39 @@ def render(campaign: Campaign) -> tuple[bytes, dict]:
         raise Hold("Sender/device options require a messaging template")
     if campaign.message and template["layout"] not in ["phone", "conversation"]:
         raise Hold("Message copy is only supported in messaging templates")
+    energy=campaign.creative_style == "high-energy-casual"
+    prop=None
+    if not energy and (campaign.prop_id is not None or campaign.energy_treatment != "diagonal"):
+        raise Hold("Props and energy treatments require explicit high-energy-casual selection")
+    if energy:
+        if not photo:
+            raise Hold("High-energy-casual requires a registered professionally prepared transparent people asset")
+        if campaign.composition != "auto" or campaign.heading_style != "light" or campaign.message or campaign.phone_view != "auto" or campaign.photo_crop is not None or campaign.photo_backdrop != "none" or campaign.photo_fit != "contain" or campaign.image_treatment not in ("panel","cutout") or campaign.message_placement != "below" or campaign.sms_position != "lower-left":
+            raise Hold("High-energy-casual uses its controlled people/copy composition; remove conflicting layout/device/crop options")
+        if len(campaign.headline.split()) > 8:
+            raise Hold("High-energy-casual requires a short headline of up to eight words")
+        def require_prepared_alpha(asset,label):
+            image=Image.open(PLUGIN/asset["file"])
+            if asset.get("approved_subject_alpha") is not True or "A" not in image.getbands() or image.getchannel("A").getextrema() != (0,255):
+                raise Hold(label+" requires a registered professionally prepared transparent asset; no white-background removal or invented substitute is allowed")
+            if not asset.get("crop"):
+                raise Hold(label+" requires a registered complete-subject crop")
+            bbox=image.getchannel("A").getbbox();crop=asset["crop"]
+            if not bbox or bbox[0]<crop[0] or bbox[1]<crop[1] or bbox[2]>crop[2] or bbox[3]>crop[3]:
+                raise Hold(label+" registered crop clips its approved alpha subject")
+        require_prepared_alpha(photo,"Team/people imagery")
+        if campaign.prop_id:
+            prop=config.get("props",{}).get(campaign.prop_id)
+            if not prop or campaign.template_id not in prop.get("templates",[]):
+                raise Hold("Prop is not registered for this campaign template")
+            require_prepared_alpha(prop,"Campaign prop")
+        if campaign.template_id == "team-coffee":
+            if photo.get("identity") != "philippines-team":
+                raise Hold("Use a registered authentic Philippines team asset, never illustrative or invented team imagery")
+            if not prop or prop.get("category") != "coffee":
+                raise Hold("High-energy coffee invitation requires a registered professionally prepared coffee prop")
+        elif prop and prop.get("category") == "coffee":
+            raise Hold("Coffee props are reserved for deliberate team coffee invitations")
     output_width, output_height = campaign.dimensions if campaign.format == "custom" else config["formats"][campaign.format]
     # Recompose at a common design width using the requested aspect ratio.
     # Only the completed, recomposed canvas is uniformly rasterised to export size.
@@ -455,7 +509,25 @@ def render(campaign: Campaign) -> tuple[bytes, dict]:
     if campaign.phone_view != "auto" and layout != "phone":
         raise Hold("Device view requires phone imagery; use auto for a photographic SMS card")
     subject_regions=[]
-    if background:
+    if energy:
+        side=False;image_first=False;copy_x=64;copy_width=952;copy_y=(125 if compact else 190) if campaign.brand_strip=="top" else 32
+        body_top=copy_y;body_bottom=footer-24;body_height=body_bottom-body_top
+        copy_height=c.energy_copy(campaign,copy_x,copy_y,copy_width,body_height-(150 if compact else 260)-24,paint=False)
+        visual_y=copy_y+copy_height+24;visual_height=body_bottom-visual_y
+        # Decorations live only in the visual region, behind protected native-alpha subjects.
+        if campaign.energy_treatment=="diagonal":
+            d.polygon([(0,visual_y+round(visual_height*.18)),(width,visual_y+round(visual_height*.48)),(width,body_bottom),(0,visual_y+round(visual_height*.73))],fill=PALETTE["cyan"])
+            d.polygon([(0,visual_y+round(visual_height*.55)),(width,visual_y+round(visual_height*.75)),(width,body_bottom),(0,body_bottom)],fill=PALETTE["violet"])
+        elif campaign.energy_treatment=="bands":
+            d.rectangle((0,visual_y+visual_height//3,width,body_bottom),fill=PALETTE["cyan"])
+            d.rectangle((0,visual_y+2*visual_height//3,width,body_bottom),fill=PALETTE["violet"])
+        subject_width=752 if prop else 952
+        c.photo(photo,(64,visual_y,subject_width,visual_height),campaign.image_position,"cutout","none","contain")
+        if prop:
+            frame=c.photo(prop,(840,body_bottom-min(180,visual_height),176,min(180,visual_height)),"right","cutout","none","contain")
+            c.photo_checks[-1]["role"]="prop"
+        c.energy_copy(campaign,copy_x,copy_y,copy_width,copy_height)
+    elif background:
         side=False; image_first=False; copy_x=64; copy_width=952; copy_y=24 if compact else 32
         budget=(110 if compact else 90)+(60 if campaign.accent else 0)+(70 if campaign.supporting else 0)
         copy_height=c.copy_block(campaign,copy_x,copy_y,copy_width,budget,dark=True,paint=False,heading_sizes=(60,56,52))
@@ -660,7 +732,10 @@ def render(campaign: Campaign) -> tuple[bytes, dict]:
         "message_placement": campaign.message_placement,
         "heading_style": campaign.heading_style,
         "heading_region": ([0,0,output_width,round(heading_bottom*export_scale)] if background else [0,round(max(0,copy_y-20)*export_scale),output_width,round((copy_height+40)*export_scale)]) if campaign.heading_style == "navy" else None,
-        "body_layout": "photo-background" if background else "side-by-side" if side else "image-first" if image_first else "stacked" if has_visual else "statement",
+        "creative_style": campaign.creative_style,
+        "energy_treatment": campaign.energy_treatment if energy else None,
+        "prop_id": campaign.prop_id,
+        "body_layout": "high-energy-casual" if energy else "photo-background" if background else "side-by-side" if side else "image-first" if image_first else "stacked" if has_visual else "statement",
         "brand_region": protected_brand, "cta_region": cta_region, "cta_button": button_box,
         "terms_box": terms_box, "website_box": website_box, "cta_alignment": "same-line" if same_line else "stacked", "message_card": getattr(c,"message_card",None),
         "phone_check": getattr(c, "phone_check", None),
@@ -670,7 +745,7 @@ def render(campaign: Campaign) -> tuple[bytes, dict]:
         "alt_text": "Burst SMS Philippines: " + ". ".join(part.rstrip(". ") for part in [campaign.headline, campaign.accent, photo["alt"] if photo else "", ("Illustrative SMS from "+campaign.sender_name+": "+(campaign.message or "Your order is ready for collection. Thank you!")) if layout in ("phone","conversation") else ""] if part),
         "channel_copy": campaign.primary_text + "\n\n" + campaign.cta + ": " + DESTINATION + ("\n\nTerms: "+campaign.offer_terms if campaign.offer_terms else ""),
         "contrast_ratios": contrasts,
-        "checks": {**({"photo_coverage":True,"overlay_bounds":True,"overlay_collisions":True,"registered_subject_preservation":True} if background else {}),"asset_integrity": True, "logo_pixels": True, "locked_styles": True, "text_fit": True, "fixed_dimensions": True, "fixed_destination": True, "text_contrast": True, "message_visible": layout not in ("phone", "conversation") or any(t["text"] == (campaign.message or "Your order is ready for collection. Thank you!") for t in c.text_checks), "cta_placement": True, "brand_bar_separation": True, "terms_placement": True, "text_collisions": True, "mask_bounds": all(p["mask_bounds_match"] for p in c.photo_checks), "photo_frame_fit": all(p["frame_filled"] and p["proportional_scale"] for p in c.photo_checks)},
+        "checks": {**({"prepared_subject_alpha":True,"registered_prop":not prop or prop.get("approved_subject_alpha") is True,"decorations_behind_subjects":True} if energy else {}),**({"photo_coverage":True,"overlay_bounds":True,"overlay_collisions":True,"registered_subject_preservation":True} if background else {}),"asset_integrity": True, "logo_pixels": True, "locked_styles": True, "text_fit": True, "fixed_dimensions": True, "fixed_destination": True, "text_contrast": True, "message_visible": layout not in ("phone", "conversation") or any(t["text"] == (campaign.message or "Your order is ready for collection. Thank you!") for t in c.text_checks), "cta_placement": True, "brand_bar_separation": True, "terms_placement": True, "text_collisions": True, "mask_bounds": all(p["mask_bounds_match"] for p in c.photo_checks), "photo_frame_fit": all(p["frame_filled"] and p["proportional_scale"] for p in c.photo_checks)},
         "inspection_required": ["copy_and_claims", "visual_composition", "local_fit_and_photography", "accessibility", "photo_edges", "body_balance", "cta_and_terms", "campaign_effectiveness"]
     }
     return png, report

@@ -232,6 +232,58 @@ class RendererTests(unittest.TestCase):
                        {'message_placement':'beside'}):
             with self.assertRaises(Hold):render(brief.model_copy(update=fields))
 
+    def test_optional_style_preserves_default_png_and_current_asset_hold(self):
+        png,r=render(campaign())
+        self.assertEqual(hashlib.sha256(png).hexdigest(),'c82cf47db92590965f601608a58616a2a5543f049ca07a60bbc1f1f77f04b011')
+        self.assertEqual(r['creative_style'],'default')
+        brief=Campaign(**json.loads((SKILL/'references/examples/high-energy-coffee.json').read_text()))
+        with self.assertRaisesRegex(Hold,'professionally prepared transparent'):render(brief)
+        with self.assertRaises(Hold):render(campaign().model_copy(update={'prop_id':'coffee-cup'}))
+        with tempfile.TemporaryDirectory() as temp:
+            out=Path(temp)/'must-not-exist'
+            result=subprocess.run([sys.executable,str(SKILL/'scripts/render_creative.py'),'--surface','work','render',
+                '--brief',str(SKILL/'references/examples/high-energy-coffee.json'),'--output-dir',str(out)],capture_output=True,text=True)
+            self.assertEqual(result.returncode,1);self.assertFalse(out.exists())
+            self.assertIn('professionally prepared transparent',result.stdout+result.stderr)
+
+    def test_prepared_alpha_composition_and_prop_gates_with_nonphotographic_fixtures(self):
+        # Geometry-only alpha fixtures are never campaign assets, delivered artwork or identity approval.
+        from PIL import ImageDraw
+        with tempfile.TemporaryDirectory() as temp:
+            subject=Path(temp)/'unit-alpha-subject.png';cup=Path(temp)/'unit-alpha-prop.png'
+            for path,size in ((subject,(300,180)),(cup,(100,100))):
+                image=Image.new('RGBA',size,(0,0,0,0));ImageDraw.Draw(image).rectangle((5,5,size[0]-6,size[1]-6),fill=(0,42,102,255));image.save(path)
+            config=catalog();config['photos']['commercial-team']={**config['photos']['commercial-team'],
+                'file':str(subject),'crop':[0,0,300,180],'approved_subject_alpha':True,'identity':'philippines-team'}
+            config['props']={'coffee-cup':{'file':str(cup),'crop':[0,0,100,100],'approved_subject_alpha':True,
+                'category':'coffee','templates':['team-coffee']}}
+            brief=Campaign(**json.loads((SKILL/'references/examples/high-energy-coffee.json').read_text()))
+            with patch('runtime.renderer.catalog',return_value=config):
+                for treatment in ('diagonal','bands','none'):
+                    for strip in ('top','bottom'):
+                        png,r=render(brief.model_copy(update={'energy_treatment':treatment,'brand_strip':strip}))
+                        self.assertEqual(r['creative_style'],'high-energy-casual')
+                        self.assertTrue(all(r['checks'].values()))
+                        self.assertEqual(r['cta_alignment'],'same-line')
+                        self.assertEqual([x['image_treatment'] for x in r['photo_checks']],['cutout','cutout'])
+                        self.assertEqual(r['photo_checks'][1]['role'],'prop')
+                        self.assertIsNone(r['photo_checks'][0]['cutout_fallback'])
+                        self.assertGreater(r['photo_checks'][0]['frame'][2],r['photo_checks'][1]['frame'][2])
+                for update in ({'prop_id':None},{'prop_id':'unregistered'},{'composition':'photo-background'},
+                               {'photo_crop':[5,5,290,170]}):
+                    with self.assertRaises(Hold):render(brief.model_copy(update=update))
+                config['props']['coffee-cup']['category']='unrelated'
+                with self.assertRaisesRegex(Hold,'coffee prop'):render(brief)
+                config['props']['coffee-cup']['category']='coffee'
+                config['props']['coffee-cup']['approved_subject_alpha']=False
+                with self.assertRaisesRegex(Hold,'transparent asset'):render(brief)
+                config['props']['coffee-cup']['approved_subject_alpha']=True
+                config['photos']['commercial-team']['identity']='illustrative'
+                with self.assertRaisesRegex(Hold,'authentic Philippines team'):render(brief)
+                config['photos']['commercial-team']['identity']='philippines-team'
+                config['photos']['commercial-team']['crop']=[20,20,280,160]
+                with self.assertRaisesRegex(Hold,'clips its approved alpha subject'):render(brief)
+
     def test_dynamic_photo_masks_and_source_scene_selection(self):
         for treatment in ('rounded','circle','cutout'):
             _,report=render(campaign('people-first','square','collaborating-colleagues').model_copy(update={'image_treatment':treatment}))

@@ -74,7 +74,8 @@
       "alt": "Three members of the Burst SMS Philippines commercial team",
       "templates": [
         "team-coffee"
-      ]
+      ],
+      "identity": "philippines-team"
     },
     "workplace-portrait": {
       "file": "assets/photography/diverse-collaborative-work-portrait-grid.png",
@@ -263,5 +264,25 @@
     "image_treatment": "panel",
     "photo_backdrop": "none",
     "message_required": true
+  },
+  "props": {},
+  "creative_styles": {
+    "default": {
+      "selection": "default",
+      "existing_compositions_preserved": true
+    },
+    "high-energy-casual": {
+      "selection": "explicit user request only",
+      "composition": "auto",
+      "heading_style": "light",
+      "prepared_subject_alpha_required": true,
+      "energy_treatments": [
+        "diagonal",
+        "bands",
+        "none"
+      ],
+      "coffee_prop_required_for": "team-coffee",
+      "registered_assets_available": false
+    }
   }
 }
