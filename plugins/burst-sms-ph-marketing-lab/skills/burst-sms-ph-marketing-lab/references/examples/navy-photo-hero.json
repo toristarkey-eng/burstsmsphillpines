@@ -1,0 +1,18 @@
+{
+  "template_id": "recognition",
+  "format": "portrait",
+  "headline": "Keep your customers",
+  "accent": "in the loop.",
+  "supporting": "Explore messaging for customer updates.",
+  "primary_text": "Talk to Burst SMS Philippines about messaging for customer updates.",
+  "photo_id": "retail-messaging",
+  "brand_strip": "bottom",
+  "composition": "hero",
+  "heading_style": "navy",
+  "photo_fit": "cover",
+  "image_treatment": "panel",
+  "photo_backdrop": "none",
+  "message_placement": "beside",
+  "sender_name": "ACME SHOP",
+  "message": "Your order is ready to collect. Thank you!"
+}

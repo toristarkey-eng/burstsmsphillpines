@@ -54,10 +54,13 @@ class Campaign(BaseModel):
     photo_id: str | None = Field(default=None, max_length=64)
     message: str = Field(default="", max_length=85)
     brand_strip: Literal["top", "bottom"] = "top"
-    composition: Literal["auto", "side-by-side", "text-first", "image-first"] = "auto"
+    composition: Literal["auto", "side-by-side", "text-first", "image-first", "hero"] = "auto"
     image_position: Literal["left", "centre", "right"] = "centre"
     sender_name: str = Field(default="BURST SMS", min_length=1, max_length=11)
-    phone_view: Literal["auto", "full", "detail"] = "auto"
+    phone_view: Literal["auto", "full", "detail", "card"] = "auto"
+    heading_style: Literal["light", "navy"] = "light"
+    photo_fit: Literal["contain", "cover"] = "contain"
+    message_placement: Literal["below", "beside"] = "below"
     photo_backdrop: Literal["none", "cyan-ellipse"] = "none"
     offer_terms: str = Field(default="", max_length=160)
     image_treatment: Literal["panel", "rounded", "circle", "cutout"] = "panel"
@@ -224,7 +227,7 @@ class Canvas:
             occupied = ImageChops.lighter(occupied, visible)
             self.draw.text(position, text, font=face, fill=PALETTE[colour], anchor="lt")
 
-    def photo(self, photo, box, position="centre", treatment="panel", backdrop="none"):
+    def photo(self, photo, box, position="centre", treatment="panel", backdrop="none", fit="contain"):
         source = Image.open(PLUGIN / photo["file"]).convert("RGBA")
         crop = tuple(photo["crop"])
         if not (0 <= crop[0] < crop[2] <= source.width and 0 <= crop[1] < crop[3] <= source.height):
@@ -233,6 +236,20 @@ class Canvas:
         if min(x, y) < 0 or min(w, h) <= 0 or x+w > self.image.width or y+h > self.image.height:
             raise Hold("Photo region is outside the canvas")
         panel = source.crop(crop)
+        effective_crop = list(crop)
+        if fit == "cover":
+            # A deliberate photographic crop fills the region; never warp subjects.
+            ratio = w/h
+            if panel.width/panel.height > ratio:
+                crop_width = max(1,round(panel.height*ratio))
+                offset = 0 if position == "left" else panel.width-crop_width if position == "right" else (panel.width-crop_width)//2
+                panel=panel.crop((offset,0,offset+crop_width,panel.height))
+                effective_crop[0]+=offset; effective_crop[2]=effective_crop[0]+crop_width
+            else:
+                crop_height=max(1,round(panel.width/ratio))
+                # Top anchoring preserves faces; actual hands/equipment/framing still require inspection.
+                panel=panel.crop((0,0,panel.width,crop_height))
+                effective_crop[3]=effective_crop[1]+crop_height
         requested_treatment = treatment
         fallback = None
         native_alpha = panel.getchannel("A")
@@ -268,6 +285,7 @@ class Canvas:
             self.image.paste(backing, (px,py), backing_mask)
         self.image.paste(scaled, (px,py), mask)
         self.photo_checks.append({"source": photo["file"], "registered_crop": list(crop),
+            "effective_crop": effective_crop, "photo_fit": fit, "additional_crop_inspection_required": fit == "cover",
             "region": list(box), "frame": [px,py,*size], "frame_filled": True,
             "complete_panel_preserved": treatment == "panel", "requested_treatment": requested_treatment,
             "image_treatment": treatment, "cutout_fallback": fallback, "photo_backdrop": backdrop,
@@ -295,7 +313,15 @@ class Canvas:
     def phone(self, campaign, box):
         """Proportional device or intentionally cropped close-up, with readable SMS UI."""
         x, y, region_width, region_height = box
-        view = "full" if campaign.phone_view == "full" else "detail"
+        view = "full" if campaign.phone_view == "auto" else campaign.phone_view
+        if view == "card" or view == "full" and campaign.phone_view == "auto" and region_height < 520:
+            used = self.bubble(campaign.message,(x,y,region_width,min(region_height,300)),campaign.sender_name,paint=False)
+            py=y+(region_height-used)//2
+            self.bubble(campaign.message,(x,py,region_width,used),campaign.sender_name)
+            self.phone_check={"view":"card","device_dimensions":None,"visible_frame":[x,py,region_width,used],
+                "sender_header":campaign.sender_name,"message_bubble":True,"proportional_device":True,
+                "message_fully_visible":True,"unintended_device_crop":False}
+            return
         device_height = min(680, region_height) if view == "full" else min(region_width, 370 if self.compact else 520)*2
         device_width = round(device_height*0.50)
         if device_width > region_width:
@@ -311,7 +337,7 @@ class Canvas:
         d.rounded_rectangle((rim,rim,device_width-rim-1,device_height-rim-1), 32, fill=PALETTE["white"])
         d.rounded_rectangle((device_width//2-42,20,device_width//2+42,34),7,fill=PALETTE["navy"])
         # Sender navigation is separate from the conversation, not placeholder copy in its body.
-        ui_size = (24 if self.compact else 28) if view == "detail" else 22
+        ui_size = (24 if self.compact else 28) if view == "detail" else 24
         d.line((24,65,18,72,24,79),fill=PALETTE["navy"],width=2)
         component.text(campaign.sender_name,(40,59,device_width-64,40),ui_size,bold=True,max_lines=1)
         d.line((rim+1,104,device_width-rim-2,104),fill=PALETTE["cloud"],width=2)
@@ -336,7 +362,7 @@ class Canvas:
         self.phone_check={"view":view,"device_dimensions":[device_width,device_height],
                           "visible_frame":[px,py,device_width,visible_height],
                           "sender_header":campaign.sender_name,"message_bubble":True,
-                          "proportional_device":True,"message_fully_visible":True}
+                          "proportional_device":True,"message_fully_visible":True,"unintended_device_crop":False}
 
 
 
@@ -365,7 +391,7 @@ def render(campaign: Campaign) -> tuple[bytes, dict]:
         if not photo:
             raise Hold("Photo description requires photography")
         photo = {**photo, "alt": campaign.photo_description}
-    if (campaign.image_treatment != "panel" or campaign.photo_backdrop != "none") and not photo:
+    if (campaign.image_treatment != "panel" or campaign.photo_backdrop != "none" or campaign.photo_fit != "contain" or campaign.composition == "hero" or campaign.heading_style == "navy") and not photo:
         raise Hold("Photo treatment requires photography")
     if (campaign.phone_view != "auto" or campaign.sender_name != "BURST SMS") and template["layout"] not in ["phone", "conversation"]:
         raise Hold("Sender/device options require a messaging template")
@@ -398,20 +424,22 @@ def render(campaign: Campaign) -> tuple[bytes, dict]:
         brand_draw.text((tx, 40 if compact else 65), letter, fill=PALETTE["navy"], font=descriptor_font, anchor="lt")
         tx += brand_draw.textlength(letter, font=descriptor_font) + 3
     layout = ("conversation" if campaign.message or campaign.sender_name != "BURST SMS" else "split") if template["layout"] == "phone" and photo else template["layout"]
+    if campaign.message_placement == "beside" and layout != "conversation":
+        raise Hold("Beside message placement requires registered photography and an SMS message")
     if campaign.phone_view != "auto" and layout != "phone":
         raise Hold("Device view requires phone imagery; use auto for a photographic SMS card")
     body_top = (125 if compact else 195) if campaign.brand_strip == "top" else (25 if compact else 45)
     body_bottom = footer-(20 if compact else 28)
     body_height = body_bottom - body_top
     has_visual = layout in ("phone", "split", "team", "conversation")
-    side = layout in ("phone", "split", "team", "conversation") and (campaign.composition == "side-by-side" or campaign.composition == "auto" and height <= 1500)
+    side = layout in ("phone", "split", "team", "conversation") and campaign.heading_style != "navy" and (campaign.composition == "side-by-side" or campaign.composition == "auto" and height <= 1500)
     copy_width = 455 if side else 880 if layout == "feature" else 940
     copy_x = 561 if side and campaign.image_position == "left" else 100 if layout == "feature" else 64
     gap = 20 if compact else 30
-    budget = body_height if side or not has_visual else body_height-(350 if layout == "phone" else 260 if layout == "conversation" else 230)-gap
+    budget = body_height if side or not has_visual else body_height-(350 if layout == "phone" else 260 if layout == "conversation" else (130 if compact else 230))-gap
     try:
         copy_height = c.copy_block(campaign, copy_x, body_top, copy_width, budget,
-                                  dark=layout == "statement", paint=False, column=side)
+                                  dark=layout == "statement" or campaign.heading_style == "navy", paint=False, column=side)
     except Hold:
         if not side or campaign.composition != "auto" or compact:
             raise
@@ -423,7 +451,7 @@ def render(campaign: Campaign) -> tuple[bytes, dict]:
     visual_height = body_height if side else body_height-copy_height-gap if has_visual else 0
     copy_y = body_top+(budget-copy_height)//2 if side else body_top+(body_height-copy_height)//2 if not has_visual else body_top+visual_height+gap if image_first else body_top
     visual_y = body_top if side or image_first else body_top+copy_height+gap
-    if layout == "conversation" and not side:
+    if layout == "conversation" and not side and campaign.message_placement == "below":
         # Centre the actual copy/photo/card group, not a large empty visual allocation.
         group_width = 952
         measured_card = c.bubble(campaign.message,(64,visual_y,group_width,min(300,visual_height)),campaign.sender_name,paint=False)
@@ -438,13 +466,15 @@ def render(campaign: Campaign) -> tuple[bytes, dict]:
             copy_y += spare//2
             visual_y += spare//2
         visual_height = group_height
+    if campaign.heading_style == "navy":
+        d.rectangle((0,max(0,copy_y-20),width,copy_y+copy_height+20),fill=PALETTE["navy"])
     if layout == "statement":
         d.rectangle((0,header_height if campaign.brand_strip == "top" else 0,width,height if campaign.brand_strip == "top" else brand_y),fill=PALETTE["navy"])
     elif layout == "feature":
         d.rectangle((0,header_height if campaign.brand_strip == "top" else 0,width,footer),fill=PALETTE["cloud"] if campaign.brand_strip == "bottom" else PALETTE["white"])
         d.rounded_rectangle((62,body_top-20,1018,footer-20), 42, fill=PALETTE["cloud"])
         d.rectangle((62,body_top+20,72,footer-60), fill=PALETTE["cyan"])
-    c.copy_block(campaign, copy_x, copy_y, copy_width, copy_height, dark=layout == "statement", column=side)
+    c.copy_block(campaign, copy_x, copy_y, copy_width, copy_height, dark=layout == "statement" or campaign.heading_style == "navy", column=side)
     if layout == "phone":
         c.phone(campaign, (64 if side and campaign.image_position == "left" else 548 if side else 64,
                            visual_y, 468 if side else 952, visual_height))
@@ -452,15 +482,23 @@ def render(campaign: Campaign) -> tuple[bytes, dict]:
         # Photo and SMS share one aligned group in the visual column.
         group_width = 468 if side else 952
         group_x = (64 if campaign.image_position == "left" else 548) if side else (width-group_width)//2
-        card_height = c.bubble(campaign.message,(group_x,visual_y,group_width,min(300,visual_height)),campaign.sender_name,paint=False)
-        photo_budget = visual_height-card_height-16
-        if photo_budget < 100:
-            raise Hold("Photograph and SMS need more body space; shorten copy or change composition")
-        frame = c.photo(photo,(group_x,visual_y,group_width,photo_budget),"centre",campaign.image_treatment,campaign.photo_backdrop)
-        c.bubble(campaign.message,(group_x,frame[1]+frame[3]+16,group_width,card_height),campaign.sender_name)
+        if campaign.message_placement == "beside":
+            if group_width < 700:
+                raise Hold("Photo and SMS beside one another require a stacked heading composition")
+            half = (group_width-24)//2
+            card_height = c.bubble(campaign.message,(group_x+half+24,visual_y,half,min(300,visual_height)),campaign.sender_name,paint=False)
+            frame = c.photo(photo,(group_x,visual_y,half,visual_height),"centre",campaign.image_treatment,campaign.photo_backdrop,"cover" if campaign.composition == "hero" else campaign.photo_fit)
+            c.bubble(campaign.message,(group_x+half+24,visual_y+(visual_height-card_height)//2,half,card_height),campaign.sender_name)
+        else:
+            card_height = c.bubble(campaign.message,(group_x,visual_y,group_width,min(300,visual_height)),campaign.sender_name,paint=False)
+            photo_budget = visual_height-card_height-16
+            if photo_budget < 100:
+                raise Hold("Photograph and SMS need more body space; shorten copy or change composition")
+            frame = c.photo(photo,(group_x,visual_y,group_width,photo_budget),"centre",campaign.image_treatment,campaign.photo_backdrop,"cover" if campaign.composition == "hero" else campaign.photo_fit)
+            c.bubble(campaign.message,(group_x,frame[1]+frame[3]+16,group_width,card_height),campaign.sender_name)
     elif layout in ("split", "team"):
         photo_x = 64 if campaign.image_position == "left" else 548
-        c.photo(photo, (photo_x if side else 64, visual_y, 468 if side else 952, visual_height), "centre" if side else campaign.image_position, campaign.image_treatment,campaign.photo_backdrop)
+        c.photo(photo, (photo_x if side else 64, visual_y, 468 if side else 952, visual_height), "centre" if side else campaign.image_position, campaign.image_treatment,campaign.photo_backdrop,"cover" if campaign.composition == "hero" else campaign.photo_fit)
     if campaign.brand_strip == "top":
         d.rectangle((0,footer,width,height),fill=PALETTE["white"])
     cta_font = font(24 if compact else 29,True)
@@ -518,7 +556,8 @@ def render(campaign: Campaign) -> tuple[bytes, dict]:
                 check[name] = [round(v*export_scale) for v in check[name]]
         if hasattr(c, "phone_check"):
             for name in ("device_dimensions", "visible_frame"):
-                c.phone_check[name] = [round(v*export_scale) for v in c.phone_check[name]]
+                if c.phone_check[name] is not None:
+                    c.phone_check[name] = [round(v*export_scale) for v in c.phone_check[name]]
         for box in (button_box,website_box,protected_brand,cta_region,terms_box,getattr(c,"message_card",None)):
             if box is not None:
                 box[:] = [round(v*export_scale) for v in box]
@@ -545,6 +584,10 @@ def render(campaign: Campaign) -> tuple[bytes, dict]:
         "template_reference": template["reference"], "photography": photo,
         "logo_source": "assets/burst-sms-logo.png", "logo_sha256": digest((PLUGIN / "assets/burst-sms-logo.png").read_bytes()),
         "palette": PALETTE, "typography": "Bundled Noto Sans Regular, SemiBold and Bold", "text_checks": c.text_checks,
+        "body_region": [round(v*export_scale) for v in (64,body_top,952,body_height)],
+        "message_placement": campaign.message_placement,
+        "heading_style": campaign.heading_style,
+        "heading_region": [0,round(max(0,copy_y-20)*export_scale),output_width,round((copy_height+40)*export_scale)] if campaign.heading_style == "navy" else None,
         "body_layout": "side-by-side" if side else "image-first" if image_first else "stacked" if has_visual else "statement",
         "brand_region": protected_brand, "cta_region": cta_region, "cta_button": button_box,
         "terms_box": terms_box, "website_box": website_box, "cta_alignment": "same-line" if same_line else "stacked", "message_card": getattr(c,"message_card",None),
