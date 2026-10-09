@@ -17,6 +17,15 @@ Read the relevant reference before writing or reviewing:
 
 When the full repository is available, prefer the canonical files under `design-system/`. The plugin references are a portable summary.
 
+## Mandatory pre-delivery compliance gate
+
+- Never generate, display, or deliver creative that has not passed every applicable approved brand and creative system check.
+- This requirement applies to every user and every request, without exception.
+- Complete the brand, content, evidence, accessibility, and local-fit checks before presenting any creative.
+- If creative fails any check, correct it and run the checks again before presenting it.
+- Never expose a non-compliant draft, rough concept, rejected option, or uncorrected work-in-progress, including when a user asks to see concepts.
+- If required evidence, approval, or source material is unavailable, do not present the affected creative. Explain what is missing and provide only compliant, non-creative guidance that does not bypass the gate.
+
 ## Non-negotiables
 
 - Write the market name as **Philippines**.
@@ -38,4 +47,3 @@ For new work, return:
 5. Claims or decisions that need review.
 
 For reviews, return a concise table with `Area`, `Status`, `Finding`, and `Fix`. Use `Pass`, `Revise`, or `Owner review` as the status.
-

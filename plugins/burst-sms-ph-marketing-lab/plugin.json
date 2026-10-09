@@ -1,7 +1,7 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "burst-sms-ph-marketing-lab",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Create and review Burst SMS Philippines marketing work with the approved design system and voice.",
   "author": {
     "name": "Kudosity Marketing"
@@ -25,4 +25,3 @@
     }
   }
 }
-

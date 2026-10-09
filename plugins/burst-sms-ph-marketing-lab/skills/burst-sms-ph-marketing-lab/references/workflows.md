@@ -9,6 +9,8 @@
 5. Apply the design system and use the approved logo asset.
 6. List every factual claim and its source or owner.
 7. Run the review checklist below.
+8. Correct every failed check, then repeat the review until all applicable checks pass.
+9. Present or deliver the creative only after it passes the complete review. Never show failed drafts or non-compliant concepts.
 
 ## Review an asset
 
@@ -20,6 +22,8 @@ Check:
 - Accessibility: contrast, heading order, focus, alt text, captions, and readable type.
 - Local fit: Philippines spelling, relevant context, and absence of stereotypes.
 
+Any failed check blocks presentation and delivery. Correct the issue and repeat the full review before showing the creative. If a required check cannot be completed, withhold the creative and state what evidence, approval, or source material is missing.
+
 ## Channel guidance
 
 - Landing pages: one job per page, a direct headline, evidence near the claim, and one primary action.
@@ -28,4 +32,3 @@ Check:
 - Paid social: make the outcome and audience clear immediately; avoid unverified superlatives.
 - SMS examples: identify the sender, keep the action clear, use realistic placeholders, and include opt-out language when required.
 - Video: use clean, typography-led openings; minimise visual clutter; caption speech; keep product recordings free of personal information.
-
