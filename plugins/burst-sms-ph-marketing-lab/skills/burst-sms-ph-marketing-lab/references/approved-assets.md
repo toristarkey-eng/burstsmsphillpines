@@ -13,6 +13,8 @@ Any edit, crop that changes meaning, copy change, offer update, compositing, or 
 | `../../../assets/approved/approved-grace-briones-country-manager.png` | Square announcement identifying Grace Briones as Country Manager Philippines | Grace Briones announced as Country Manager Philippines | Title is approved in this exact asset. Reconfirm if reused after a role change. |
 | `../../../assets/approved/approved-sender-id-free-offer.png` | Portrait Branded Sender ID limited-time offer | Burst SMS Philippines Branded Sender ID limited-time offer | Reconfirm offer dates, eligibility, terms, and operational availability before a new campaign flight. |
 | `../../../assets/approved/approved-sender-id-great-offer.png` | Portrait Sender ID awareness concept | Branded Sender ID creative asking customers to recognise who an SMS is from | Exact artwork is approved. Confirm current Sender ID route and approval conditions before publishing a new campaign. |
+| `../../../assets/approved/approved-be-recognised-facebook.png` | Portrait Sender ID awareness creative using the approved white brand bar | Burst SMS Philippines creative encouraging businesses to be recognised and remembered | Approved unchanged as supplied. Confirm current Sender ID route and approval conditions before campaign flight. |
+| `../../../assets/approved/approved-keep-customers-in-loop.png` | Portrait customer updates creative using the approved lower white brand bar | Burst SMS Philippines creative encouraging businesses to keep customers informed with promotions, updates and reminders | Approved unchanged as supplied. Confirm the selected use case and product claims before campaign flight. |
 
 For no-execution ChatGPT delivery, the byte-locked `approved-sender-id-great-offer.png` is available at the commit-pinned URL below. Display it unchanged; do not use it as an image-generation reference:
 
@@ -28,3 +30,17 @@ For no-execution ChatGPT delivery, the byte-locked `approved-sender-id-great-off
 ## Approval boundary
 
 Approval applies to the exact registered files and wording. It does not automatically approve newly generated variants, current availability of a time-sensitive offer, or new product, pricing, compliance, security, carrier, route, performance, or partner claims. Those items require current scoped evidence and owner review.
+
+## Approved recurring visual system
+
+These examples establish a reusable Burst SMS Philippines art direction:
+
+- a clean white brand bar at the top or bottom, separated from the campaign field;
+- the unchanged Burst SMS logo, thin vertical divider and uppercase `PHILIPPINES` descriptor;
+- navy, violet, cyan and white as the dominant palette;
+- large, short headlines with a single violet or cyan emphasis line;
+- rounded violet CTA pills, restrained message UI and generous white space;
+- one clear phone, person or local-team focal point rather than a dense collage;
+- `burstsms.com.ph` presented clearly in navy or white.
+
+Use this as a composition system, not permission to redraw the logo or copy a person into a new context. New derivatives still require the controlled compositor and complete validation.

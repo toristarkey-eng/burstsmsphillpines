@@ -1,7 +1,7 @@
 {
   "repository": "https://github.com/toristarkey-eng/burstsmsphillpines",
   "rawBase": "https://raw.githubusercontent.com/toristarkey-eng/burstsmsphillpines/main",
-  "pluginVersion": "0.1.8",
+  "pluginVersion": "0.1.9",
   "requiredColours": {
     "navy": "#002A66",
     "violet": "#4C23CC",
@@ -20,6 +20,8 @@
     "plugins/burst-sms-ph-marketing-lab/assets/approved/approved-grace-briones-country-manager.png": "c0c45c569f9a0301d0d2ccab2093571815fc48772ec9aebe26e41da59f4e2038",
     "plugins/burst-sms-ph-marketing-lab/assets/approved/approved-sender-id-free-offer.png": "e6f4547937c94ce1440dd40f1cc059f765261d83abdbb506d6e078b447dded05",
     "plugins/burst-sms-ph-marketing-lab/assets/approved/approved-sender-id-great-offer.png": "4c04464a7900ab7b63a8e625ca50fb197fdc7b18b2ff9cd736830dc4c88d1859",
+    "plugins/burst-sms-ph-marketing-lab/assets/approved/approved-be-recognised-facebook.png": "d11a25d5b8c082eb7c52f58b62699d019e4fe1c8f50db3c6bcdff7cbf4c9a4af",
+    "plugins/burst-sms-ph-marketing-lab/assets/approved/approved-keep-customers-in-loop.png": "c311708da4b80bccdf043a234fff61406cd8cea250c2ccf251c79a057ef515af",
     "plugins/burst-sms-ph-marketing-lab/assets/approved/burst-sms-ph-messaging-library-brief.docx": "edd3cf584da5d8485e5240637423518d4ed58a749fb5ddccf23056e90f340996"
   },
   "requiredLiveFiles": [

@@ -7,5 +7,7 @@ The exact files in `../assets/approved/` were approved by Tori on 9 October 2026
 - `approved-grace-briones-country-manager.png`
 - `approved-sender-id-free-offer.png`
 - `approved-sender-id-great-offer.png`
+- `approved-be-recognised-facebook.png`
+- `approved-keep-customers-in-loop.png`
 
 Reuse exact files unchanged. An edit or derivative is new creative and must pass the complete brand, content, evidence, accessibility, and local-fit checks. Time-sensitive offers and role titles must be reconfirmed before a new campaign flight without revoking the archived asset's approval status.

@@ -27,6 +27,8 @@ const required = [
   "plugins/burst-sms-ph-marketing-lab/assets/approved/approved-grace-briones-country-manager.png",
   "plugins/burst-sms-ph-marketing-lab/assets/approved/approved-sender-id-free-offer.png",
   "plugins/burst-sms-ph-marketing-lab/assets/approved/approved-sender-id-great-offer.png",
+  "plugins/burst-sms-ph-marketing-lab/assets/approved/approved-be-recognised-facebook.png",
+  "plugins/burst-sms-ph-marketing-lab/assets/approved/approved-keep-customers-in-loop.png",
   "plugins/burst-sms-ph-marketing-lab/assets/approved/burst-sms-ph-messaging-library-brief.docx",
   "plugins/burst-sms-ph-marketing-lab/skills/burst-sms-ph-marketing-lab/SKILL.md",
   "plugins/burst-sms-ph-marketing-lab/skills/burst-sms-ph-marketing-lab/references/approved-assets.md",
@@ -54,7 +56,7 @@ for (const [relative, expectedHash] of Object.entries(integrity.files)) {
   }
 }
 if (integrity.repository !== "https://github.com/toristarkey-eng/burstsmsphillpines") errors.push("Integrity manifest has the wrong repository");
-if (integrity.pluginVersion !== "0.1.8") errors.push("Integrity manifest has the wrong plugin version");
+if (integrity.pluginVersion !== "0.1.9") errors.push("Integrity manifest has the wrong plugin version");
 const css = fs.readFileSync(path.join(root, "design-system/tokens/tokens.css"), "utf8").toLowerCase();
 for (const [name, token] of Object.entries(tokens.color.brand)) {
   if (!css.includes(token.$value.toLowerCase())) errors.push(`Brand colour ${name} is missing from tokens.css`);
@@ -66,7 +68,7 @@ for (const manifestPath of [
 ]) {
   const manifest = JSON.parse(fs.readFileSync(path.join(root, manifestPath), "utf8"));
   if (manifest.name !== "burst-sms-ph-marketing-lab") errors.push(`${manifestPath} has the wrong plugin name`);
-  if (manifest.version !== "0.1.8") errors.push(`${manifestPath} has an unexpected version`);
+  if (manifest.version !== "0.1.9") errors.push(`${manifestPath} has an unexpected version`);
 }
 
 const skill = fs.readFileSync(path.join(root, "plugins/burst-sms-ph-marketing-lab/skills/burst-sms-ph-marketing-lab/SKILL.md"), "utf8");
@@ -106,6 +108,8 @@ for (const name of [
   "approved-grace-briones-country-manager.png",
   "approved-sender-id-free-offer.png",
   "approved-sender-id-great-offer.png"
+  ,"approved-be-recognised-facebook.png"
+  ,"approved-keep-customers-in-loop.png"
 ]) {
   const pluginAsset = fs.readFileSync(path.join(root, "plugins/burst-sms-ph-marketing-lab/assets/approved", name));
   const designAsset = fs.readFileSync(path.join(root, "design-system/assets/approved", name));
