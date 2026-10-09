@@ -85,6 +85,8 @@ Explicitly requested landscape (1200 × 628), static Story/Reel cover (1080 × 1
 
 Release 0.4.3 makes CTA/terms follow brand placement, groups photography with content-sized SMS cards, removes automatic cyan backdrops and destructive white-key cutouts, and requires explicit edge/balance/CTA visual checks. Current opaque photos retain their original backgrounds for cutout requests; approved native subject-alpha sources can be registered later.
 
-Release 0.4.5 removes automatic cropped phone details, adds full-device/SMS-card selection and deliberate hero/cover photo presentation with effective-crop reporting, and requires comparing relevant private compositions. Organic caption hashtag guidance is distinct from paid-ad copy.
+Release 0.4.6 removes automatic cropped phone details, adds full-device/SMS-card selection and deliberate hero/cover photo presentation with effective-crop reporting, and requires comparing relevant private compositions. Organic caption hashtag guidance is distinct from paid-ad copy.
 
 Version 0.4.5 adds full-middle photographic composition with compact SMS overlays, lower-image CTA scrim, measured navy heading and protected bottom white identity bar. Explicit controlled positions and registered subject exclusion boxes reject clipping/obscuring of known faces/hands/action; actual full/feed inspection remains mandatory.
+
+Version 0.4.6 adds explicitly selected high-energy-casual composition while preserving default artwork. Uses only registered professionally prepared native-alpha people and deliberate props. Current approved team source is opaque and no coffee prop is registered, so that acceptance example correctly Holds with no artwork. No near-white keying or invented substitutes.
