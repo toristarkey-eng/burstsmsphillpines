@@ -6,6 +6,7 @@
   "plugins": [
     {
       "name": "burst-sms-ph-marketing-lab",
+      "pluginId": "Plugin_f128b9ca740081918b32107ab5b22124",
       "source": {
         "source": "local",
         "path": "./plugins/burst-sms-ph-marketing-lab"
