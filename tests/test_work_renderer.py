@@ -20,6 +20,10 @@ from runtime.renderer import Campaign, Hold, Canvas, PALETTE, render, catalog, l
 
 
 def campaign(template='recognition', fmt='portrait', photo=None):
+    if template == 'person-plus-message':
+        fields=json.loads((SKILL/'references/examples/person-plus-message.json').read_text());fields['format']=fmt
+        if photo is not None:fields['photo_id']=photo
+        return Campaign(**fields)
     if photo is None:
         photo = 'commercial-team' if template == 'team-coffee' else 'workplace-portrait' if template in ['people-first', 'customer-updates'] else None
     return Campaign(template_id=template, format=fmt, headline='Make every message count.', accent='Stay connected.', supporting='Explore messaging for your business.', primary_text='Talk to Burst SMS Philippines about messaging for your business.', photo_id=photo)
@@ -51,6 +55,7 @@ class RendererTests(unittest.TestCase):
         master=Image.open(SKILL/'assets/burst-sms-logo.png').convert('RGB')
         for fmt, dims, size in requests:
             for template in catalog()['templates']:
+                if template=='person-plus-message':continue # This optional composition supports square and portrait only.
                 for strip in ('top','bottom'):
                     with self.subTest(format=fmt, dimensions=dims, template=template, strip=strip):
                         brief=campaign(template,'portrait' if fmt=='custom' else fmt).model_copy(update={'format':fmt, **{'dimensions':dims,'brand_strip':strip,
@@ -81,7 +86,7 @@ class RendererTests(unittest.TestCase):
         for photo_id, photo in config['photos'].items():
             if photo.get('requires_crop'): continue
             for template in photo['templates']:
-                for fmt in config['formats']:
+                for fmt in (('square','portrait') if template=='person-plus-message' else config['formats']):
                     with self.subTest(photo=photo_id, template=template, format=fmt):
                         _, report = render(campaign(template, fmt, photo_id))
                         self.assertEqual(report['photography'], photo)
@@ -100,6 +105,7 @@ class RendererTests(unittest.TestCase):
 
     def test_all_adaptive_variants_preserve_protected_regions(self):
         for template in catalog()['templates']:
+            if template=='person-plus-message':continue # Dedicated composition has its own protected-region tests.
             for fmt in ('square', 'portrait'):
                 for strip in ('top', 'bottom'):
                     for composition in ('auto', 'side-by-side', 'text-first', 'image-first'):
@@ -283,6 +289,50 @@ class RendererTests(unittest.TestCase):
                 config['photos']['commercial-team']['identity']='philippines-team'
                 config['photos']['commercial-team']['crop']=[20,20,280,160]
                 with self.assertRaisesRegex(Hold,'clips its approved alpha subject'):render(brief)
+
+    def test_person_plus_message_recomposition_and_safe_group(self):
+        for fmt in ('square','portrait'):
+            for position in ('left','right'):
+                for decoration in ('none','cyan-band'):
+                    brief=campaign('person-plus-message',fmt).model_copy(update={'image_position':position,'graphic_decoration':decoration})
+                    png,r=render(brief)
+                    self.assertEqual(r['body_layout'],'person-plus-message')
+                    self.assertEqual(r['brand_strip'],'bottom')
+                    self.assertEqual(r['cta_alignment'],'same-line')
+                    self.assertEqual(r['photo_checks'][0]['registered_crop'],r['photo_checks'][0]['effective_crop'])
+                    self.assertTrue(all(r['checks'].values()))
+                    self.assertEqual(r['photo_checks'][0]['image_treatment'],'panel')
+                    self.assertEqual(r['phone_message'],'Your order is ready to collect.')
+                    x,y,w,h=r['message_card'];px,py,pw,ph=r['photo_checks'][0]['frame']
+                    self.assertFalse(x<px+pw and x+w>px and y<py+ph and y+h>py)
+                    self.assertLessEqual(y+h,r['cta_region'][1])
+        brief=campaign('person-plus-message')
+        png,r=render(brief.model_copy(update={'phone_view':'full','accent':'','supporting':''}))
+        self.assertEqual(r['phone_check']['view'],'full')
+        self.assertTrue(r['phone_check']['message_fully_visible'])
+        for change in ({'brand_strip':'top'},{'heading_style':'light'},{'photo_id':None},{'message':''},
+                       {'sender_name':'BURST SMS'},{'image_position':'centre'},{'format':'landscape'},
+                       {'phone_view':'detail'},{'graphic_placement':'layered'},{'photo_fit':'cover'},{'creative_style':'high-energy-casual'},
+                       {'supporting':'A supporting line that is much too long to remain visible on a single readable line in this heading panel.'}):
+            with self.assertRaises(Hold):render(brief.model_copy(update=change))
+        with self.assertRaises(Hold):render(campaign().model_copy(update={'graphic_decoration':'cyan-band'}))
+
+    def test_layered_graphic_only_uses_registered_alpha_negative_space(self):
+        from PIL import ImageDraw
+        with tempfile.TemporaryDirectory() as temp:
+            path=Path(temp)/'geometry-only-alpha.png'
+            image=Image.new('RGBA',(572,400),(0,0,0,0))
+            ImageDraw.Draw(image).rectangle((10,10,250,390),fill=(0,42,102,255));image.save(path)
+            cfg=catalog();cfg['photos']['retail-messaging']={**cfg['photos']['retail-messaging'],
+                'file':str(path),'crop':[0,0,572,400],'approved_subject_alpha':True}
+            brief=campaign('person-plus-message').model_copy(update={'image_treatment':'cutout','graphic_placement':'layered'})
+            with patch('runtime.renderer.catalog',return_value=cfg):
+                _,r=render(brief)
+                self.assertEqual(r['graphic_placement'],'layered')
+                self.assertTrue(r['checks']['person_graphic_separation'])
+                with self.assertRaisesRegex(Hold,'clips'):render(brief.model_copy(update={'photo_crop':[20,20,572,400]}))
+                ImageDraw.Draw(image).rectangle((10,10,561,390),fill=(0,42,102,255));image.save(path)
+                with self.assertRaisesRegex(Hold,'collide'):render(brief)
 
     def test_dynamic_photo_masks_and_source_scene_selection(self):
         for treatment in ('rounded','circle','cutout'):

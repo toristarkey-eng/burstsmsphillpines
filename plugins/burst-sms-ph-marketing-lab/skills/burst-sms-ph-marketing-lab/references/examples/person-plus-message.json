@@ -1,0 +1,17 @@
+{
+  "template_id": "person-plus-message",
+  "format": "portrait",
+  "headline": "Keep them informed.",
+  "accent": "One timely message.",
+  "supporting": "Make the next step clear.",
+  "primary_text": "Keep customers informed with relevant order updates. Talk to Burst SMS Philippines about messaging for your business.",
+  "cta": "Talk to our team",
+  "photo_id": "retail-messaging",
+  "message": "Your order is ready to collect.",
+  "sender_name": "ACME SHOP",
+  "brand_strip": "bottom",
+  "heading_style": "navy",
+  "composition": "person-plus-message",
+  "image_position": "left",
+  "phone_view": "card"
+}

@@ -36,6 +36,17 @@
       "layout": "feature",
       "reference": "approved-sender-id-free-offer.png",
       "photography": false
+    },
+    "person-plus-message": {
+      "title": "A person and a meaningful message",
+      "layout": "conversation",
+      "reference": "approved-keep-customers-in-loop.png",
+      "photography": true,
+      "formats": [
+        "square",
+        "portrait"
+      ],
+      "optional": true
     }
   },
   "formats": {
@@ -75,7 +86,13 @@
       "templates": [
         "team-coffee"
       ],
-      "identity": "philippines-team"
+      "identity": "philippines-team",
+      "members": [
+        "Edgardo Abaan Jr (Eds)",
+        "Grace Briones",
+        "Jenny Go"
+      ],
+      "identity_source": "Tori confirmation, 10 October 2026; positions not identified"
     },
     "workplace-portrait": {
       "file": "assets/photography/diverse-collaborative-work-portrait-grid.png",
@@ -89,7 +106,8 @@
       "templates": [
         "people-first",
         "customer-updates",
-        "recognition"
+        "recognition",
+        "person-plus-message"
       ],
       "clean_background": true
     },
@@ -105,7 +123,8 @@
       "templates": [
         "people-first",
         "customer-updates",
-        "recognition"
+        "recognition",
+        "person-plus-message"
       ],
       "clean_background": true
     },
@@ -121,7 +140,8 @@
       "templates": [
         "people-first",
         "customer-updates",
-        "recognition"
+        "recognition",
+        "person-plus-message"
       ],
       "clean_background": true
     },
@@ -137,7 +157,8 @@
       "templates": [
         "people-first",
         "customer-updates",
-        "recognition"
+        "recognition",
+        "person-plus-message"
       ]
     },
     "source-workforce": {
@@ -149,7 +170,8 @@
       "templates": [
         "recognition",
         "customer-updates",
-        "people-first"
+        "people-first",
+        "person-plus-message"
       ]
     },
     "source-connections": {
@@ -161,7 +183,8 @@
       "templates": [
         "recognition",
         "customer-updates",
-        "people-first"
+        "people-first",
+        "person-plus-message"
       ]
     },
     "source-coffee": {
@@ -173,7 +196,8 @@
       "templates": [
         "recognition",
         "customer-updates",
-        "people-first"
+        "people-first",
+        "person-plus-message"
       ]
     },
     "source-collaborative": {
@@ -185,7 +209,8 @@
       "templates": [
         "recognition",
         "customer-updates",
-        "people-first"
+        "people-first",
+        "person-plus-message"
       ]
     },
     "two-shoppers": {
@@ -200,7 +225,8 @@
       "templates": [
         "recognition",
         "customer-updates",
-        "people-first"
+        "people-first",
+        "person-plus-message"
       ],
       "protected_subject_regions": [
         {
@@ -246,7 +272,8 @@
     "text-first",
     "image-first",
     "hero",
-    "photo-background"
+    "photo-background",
+    "person-plus-message"
   ],
   "photo_background": {
     "heading_style": "navy",
@@ -284,5 +311,32 @@
       "coffee_prop_required_for": "team-coffee",
       "registered_assets_available": false
     }
+  },
+  "person_plus_message": {
+    "selection": "requested or clearly suited to the brief; never default",
+    "heading_style": "navy",
+    "brand_strip": "bottom",
+    "formats": [
+      "square",
+      "portrait"
+    ],
+    "subject_positions": [
+      "left",
+      "right"
+    ],
+    "graphic_views": [
+      "card",
+      "full"
+    ],
+    "graphic_decorations": [
+      "none",
+      "cyan-band"
+    ],
+    "message_required": true,
+    "overlap_policy": "Layered requires approved native alpha; overlay must intersect only transparent negative space, never subject opacity.",
+    "graphic_placements": [
+      "adjacent",
+      "layered"
+    ]
   }
 }
