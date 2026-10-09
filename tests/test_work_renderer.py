@@ -68,7 +68,7 @@ class RendererTests(unittest.TestCase):
         for template in catalog()['templates']:
             for fmt in ('square', 'portrait'):
                 for strip in ('top', 'bottom'):
-                    for composition in ('text-first', 'image-first'):
+                    for composition in ('auto', 'side-by-side', 'text-first', 'image-first'):
                         _,report=render(campaign(template,fmt).model_copy(update={'brand_strip':strip,'composition':composition}))
                         height=report['dimensions'][1]
                         for check in report['text_checks']:
@@ -77,9 +77,26 @@ class RendererTests(unittest.TestCase):
                             self.assertLessEqual(y+check['used_height'],height if strip=='top' else height-150)
                         self.assertTrue(all(report['checks'].values()))
 
+    def test_auto_body_balances_copy_and_phone_with_a_real_message(self):
+        png, report = render(campaign(fmt='square').model_copy(update={
+            'headline': 'Your next business move?', 'accent': 'White Label SMS.',
+            'supporting': "Looking to offer SMS under your own brand? Let's talk.",
+            'message': 'Your order is ready for collection. Thank you!', 'image_position': 'right'}))
+        self.assertEqual(report['body_layout'], 'side-by-side')
+        headline = report['text_checks'][0]
+        message = next(t for t in report['text_checks'] if t['text'] == report['phone_message'])
+        self.assertLess(headline['box'][0]+headline['box'][2], message['box'][0])
+        self.assertTrue(report['checks']['message_visible'])
+        # Check the actual rendered message card, not just a declared flag.
+        image=Image.open(io.BytesIO(png)).convert('RGB')
+        x,y,w,h=message['box']
+        self.assertIn((0,42,102), set(image.crop((x,y,x+w,y+message['used_height'])).get_flattened_data()))
+        for placeholder in ('Your brand here','Your message here','Lorem ipsum'):
+            with self.assertRaises(Hold): render(campaign().model_copy(update={'message':placeholder}))
+
     def test_adaptive_copy_uses_compact_measured_spacing(self):
         _, report = render(campaign(fmt='square').model_copy(update={
-            'headline': 'Keep customers', 'accent': 'informed.', 'supporting': 'Discuss customer updates with our team.'}))
+            'headline': 'Keep customers', 'accent': 'informed.', 'supporting': 'Discuss customer updates with our team.', 'composition': 'text-first'}))
         heading, accent, supporting = report['text_checks'][:3]
         self.assertEqual(accent['box'][1] - (heading['box'][1] + heading['used_height']), 12)
         self.assertEqual(supporting['box'][1] - (accent['box'][1] + accent['used_height']), 28)

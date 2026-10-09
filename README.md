@@ -78,3 +78,5 @@ private inspection plus delivery validation remain required.
 Owner authorisation for team release was given on 9 October 2026. Release follows
 passing automated, visual and CI checks. The existing Git-synced plugin identity
 remains unchanged; no external hosting or service credentials are needed.
+
+Version 0.4.2 makes balanced side-by-side body composition the automatic default for copy/phone/photo layouts. Brand/CTA bars stay unchanged; meaningful visible message cards and visual composition review are mandatory for every user.

@@ -75,3 +75,9 @@ In Work: deliver the passed final PNG, exact channel-ready copy, alt text, dimen
 ## Adaptive creative layout
 
 Keep the exact logo, clear space, brand strip, Noto Sans, approved palette, readability and delivery checks locked. Use `brand_strip`, `composition` and `image_position` to choose a suitable composition. Headline and accent sizes adapt within approved readable limits, with measured wrapping and spacing. Photo frames adapt to the registered image proportions without cutting people or stretching. Recognition accepts optional registered illustrative photography. Do not invent geometric or style overrides. Check the resulting hierarchy and frame placement visually, not just the technical report.
+
+## Body art direction for every user
+
+Lock the brand bar, unchanged logo, approved Noto Sans/palette, CTA bar and destination. Allow the campaign body to adapt: choose side-by-side, text-first or image-first composition, measured heading hierarchy, copy position and registered imagery. Prefer `auto`, which balances copy beside a phone/photo when readable; choose another composition when it serves the brief better. Approved examples are references, not a whitelist of campaign subjects or exact finished files. New campaigns, including reseller/white-label concepts, use the renderer with the normal claim-evidence rules.
+
+Write a meaningful fictional SMS example in `message`; never deliver “Your brand here”, “Your message here” or placeholder content. Inspect the actual phone screen and require a visible, readable message card. Reject awkward empty halves, stranded imagery, excessive blank phone interiors, weak hierarchy and irrelevant filler. Rerender privately with a better composition/copy selection before delivery. Do not mark visual composition passed just because technical checks passed. Apply this to every user and fresh conversation.

@@ -53,7 +53,7 @@ class Campaign(BaseModel):
     photo_id: str | None = Field(default=None, max_length=64)
     message: str = Field(default="", max_length=85)
     brand_strip: Literal["top", "bottom"] = "top"
-    composition: Literal["text-first", "image-first"] = "text-first"
+    composition: Literal["auto", "side-by-side", "text-first", "image-first"] = "auto"
     image_position: Literal["left", "centre", "right"] = "centre"
 
     @model_validator(mode="after")
@@ -69,6 +69,8 @@ class Campaign(BaseModel):
             # Narrow character repertoire is deliberate: no silent missing glyphs.
             if any(ord(c) > 0x024F and c not in "\u2018\u2019\u201c\u201d\u2013" for c in text):
                 raise ValueError(f"{name}: unsupported character; use plain English text")
+            if name == "message" and re.search(r"your (?:brand|message) here|placeholder|lorem ipsum|sample message", text, re.I):
+                raise ValueError("Use a meaningful fictional SMS example, not placeholder message copy")
             if re.search(r"kudosity|[a-z][a-z0-9+.-]*://|mailto:|tel:|www\.|\b(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z]{2,63}\b|\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b|\b(?:best|number one|guaranteed)\b", text, re.I):
                 raise ValueError(f"{name}: prohibited brand, link or unsupported superiority claim")
         if "\n" in self.headline or "\n" in self.accent or "\n" in self.supporting or "\n" in self.message:
@@ -157,22 +159,22 @@ class Canvas:
         self.text_checks.append({"text": text, "box": box, "size": size, "lines": len(lines), "used_height": used_height, "fits": True})
         return used_height
 
-    def copy_block(self, campaign, x, y, width, budget, dark=False, paint=True):
+    def copy_block(self, campaign, x, y, width, budget, dark=False, paint=True, column=False):
         # Choose from bounded approved sizes using actual wrapping, never free-form styles.
-        for heading_size in (72, 68, 64, 60, 56, 52):
+        for heading_size in ((64, 60, 56, 52, 48) if column else (80, 76, 72, 68, 64, 60, 56, 52)):
             probe = Canvas(self.image.size)
             cursor = y
             try:
                 cursor += probe.text(campaign.headline, (x, cursor, width, budget), heading_size,
-                                     "white" if dark else "navy", True, 2)
+                                     "white" if dark else "navy", True, 4 if column else 2)
                 if campaign.accent:
                     cursor += 12
                     cursor += probe.text(campaign.accent, (x, cursor, width, budget - (cursor-y)),
-                                         heading_size-10, "cyan" if dark else "violet", True, 2)
+                                         max(42, heading_size-10), "cyan" if dark else "violet", True, 3 if column else 2)
                 if campaign.supporting:
                     cursor += 28
                     cursor += probe.text(campaign.supporting, (x, cursor, width, budget - (cursor-y)),
-                                         30, "white" if dark else "navy", False, 3)
+                                         30, "white" if dark else "navy", False, 5 if column else 3)
                 if cursor-y > budget:
                     continue
             except Hold:
@@ -226,7 +228,8 @@ class Canvas:
         x, y, w, h = box
         self.draw.rounded_rectangle((x, y, x + w, y + h), 30, fill=PALETTE["white"])
         self.text("YOUR BRAND", (x + 28, y + 25, w - 56, 40), 25, bold=True, max_lines=1)
-        self.text(text or "Your update is here. Thank you!", (x + 28, y + 80, w - 56, h - 100), 29, max_lines=3)
+        message_height = self.text(text or "Your order is ready for collection. Thank you!", (x + 28, y + 80, w - 56, h - 100), 29, max_lines=4)
+        self.draw.rounded_rectangle((x+15, y+65, x+w-15, y+80+message_height+15), 20, fill=PALETTE["cloud"])
 
 
 def render(campaign: Campaign) -> tuple[bytes, dict]:
@@ -265,42 +268,50 @@ def render(campaign: Campaign) -> tuple[bytes, dict]:
     body_top, body_bottom = 195, footer - 28
     body_height = body_bottom - body_top
     has_visual = layout in ("phone", "split", "team", "conversation")
-    min_visual = 260 if layout in ("phone", "conversation") else 230
+    side = layout in ("phone", "split", "team", "conversation") and campaign.composition in ("auto", "side-by-side")
+    copy_width = 455 if side else 880 if layout == "feature" else 940
+    copy_x = 561 if side and campaign.image_position == "left" else 100 if layout == "feature" else 64
     gap = 30
-    copy_width = 880 if layout == "feature" else 940
-    copy_x = 100 if layout == "feature" else 64
-    budget = body_height - min_visual - gap if has_visual else body_height
-    copy_height = c.copy_block(campaign, copy_x, body_top, copy_width, budget,
-                               dark=layout == "statement", paint=False)
-    visual_height = body_height-copy_height-gap if has_visual else 0
-    image_first = has_visual and campaign.composition == "image-first"
-    copy_y = body_top+visual_height+gap if image_first else body_top
-    if not has_visual:
-        copy_y = body_top + (body_height-copy_height)//2
-    visual_y = body_top if image_first else body_top+copy_height+gap
+    budget = body_height-250 if side and layout == "conversation" else body_height if side or not has_visual else body_height-(350 if layout == "phone" else 260 if layout == "conversation" else 230)-gap
+    try:
+        copy_height = c.copy_block(campaign, copy_x, body_top, copy_width, budget,
+                                  dark=layout == "statement", paint=False, column=side)
+    except Hold:
+        if not side or campaign.composition != "auto":
+            raise
+        side = False
+        copy_width, copy_x = 940, 64
+        budget = body_height-(350 if layout == "phone" else 260)-gap
+        copy_height = c.copy_block(campaign, copy_x, body_top, copy_width, budget, paint=False)
+    image_first = has_visual and campaign.composition == "image-first" and not side
+    visual_height = body_height if side else body_height-copy_height-gap if has_visual else 0
+    copy_y = body_top+(budget-copy_height)//2 if side else body_top+(body_height-copy_height)//2 if not has_visual else body_top+visual_height+gap if image_first else body_top
+    visual_y = body_top if side or image_first else body_top+copy_height+gap
     if layout == "statement":
         d.rectangle((0, 151, width, footer), fill=PALETTE["navy"])
-        d.ellipse((990, footer-120, 1260, footer+150), fill=PALETTE["cyan"])
     elif layout == "feature":
         d.rectangle((0, 151, width, footer), fill=PALETTE["white"])
         d.rounded_rectangle((62, 175, 1018, footer-20), 42, fill=PALETTE["cloud"])
         d.rectangle((62, 215, 72, footer-60), fill=PALETTE["cyan"])
-    c.copy_block(campaign, copy_x, copy_y, copy_width, copy_height, dark=layout == "statement")
+    c.copy_block(campaign, copy_x, copy_y, copy_width, copy_height, dark=layout == "statement", column=side)
     if layout == "phone":
-        visual_bottom = visual_y + visual_height
-        phone_x = {"left": 64, "centre": 340, "right": 570}[campaign.image_position]
-        d.rounded_rectangle((phone_x, visual_y, phone_x+399, visual_bottom), 38, fill=PALETTE["navy"])
-        d.rounded_rectangle((phone_x+18, visual_y+18, phone_x+381, visual_bottom-18), 26, fill=PALETTE["white"])
-        d.rounded_rectangle((phone_x+128, visual_y+28, phone_x+272, visual_y+45), 8, fill=PALETTE["navy"])
-        c.bubble(campaign.message, (phone_x+35, visual_y+65, 330, visual_height-90))
-        d.ellipse((phone_x-25, visual_y+30, phone_x-5, visual_y+50), fill=PALETTE["cyan"])
+        # Keep a realistic phone shape; a stacked phone is centred, never stranded at one side.
+        phone_height = min(560, visual_height)
+        phone_width = min(399, max(325, round(phone_height*0.70)))
+        phone_x = (64 if campaign.image_position == "left" else 580) if side else (width-phone_width)//2
+        phone_y = visual_y+(visual_height-phone_height)//2
+        d.rounded_rectangle((phone_x, phone_y, phone_x+phone_width, phone_y+phone_height), 38, fill=PALETTE["navy"])
+        d.rounded_rectangle((phone_x+18, phone_y+18, phone_x+phone_width-18, phone_y+phone_height-18), 26, fill=PALETTE["white"])
+        d.rounded_rectangle((phone_x+phone_width//2-60, phone_y+28, phone_x+phone_width//2+60, phone_y+45), 8, fill=PALETTE["navy"])
+        c.bubble(campaign.message, (phone_x+28, phone_y+65, phone_width-56, phone_height-90))
     elif layout == "conversation":
         photo_x = 64 if campaign.image_position == "left" else 548
         bubble_x = 575 if campaign.image_position == "left" else 64
         c.photo(photo, (photo_x, visual_y, 468, visual_height), campaign.image_position)
-        c.bubble(campaign.message, (bubble_x, visual_y, 440, min(300, visual_height)))
+        c.bubble(campaign.message, (copy_x if side else bubble_x, body_bottom-220 if side else visual_y, 455 if side else 440, 220 if side else min(300, visual_height)))
     elif layout in ("split", "team"):
-        c.photo(photo, (64, visual_y, 952, visual_height), campaign.image_position)
+        photo_x = 64 if campaign.image_position == "left" else 548
+        c.photo(photo, (photo_x if side else 64, visual_y, 468 if side else 952, visual_height), "centre" if side else campaign.image_position)
     d.rectangle((0, footer, width, height), fill=PALETTE["white"])
     cta_font = font(29, True)
     button_width = int(d.textlength(campaign.cta, font=cta_font)) + 64
@@ -340,11 +351,13 @@ def render(campaign: Campaign) -> tuple[bytes, dict]:
         "template_reference": template["reference"], "photography": photo,
         "logo_source": "assets/burst-sms-logo.png", "logo_sha256": digest((PLUGIN / "assets/burst-sms-logo.png").read_bytes()),
         "palette": PALETTE, "typography": "Bundled Noto Sans Regular, SemiBold and Bold", "text_checks": c.text_checks,
+        "body_layout": "side-by-side" if side else "image-first" if image_first else "stacked" if has_visual else "statement",
+        "phone_message": (campaign.message or "Your order is ready for collection. Thank you!") if layout in ("phone", "conversation") else None,
         "photo_checks": c.photo_checks, "brand_strip": campaign.brand_strip, "logo_box": [56, logo_y, scaled_logo.width, scaled_logo.height],
         "alt_text": "Burst SMS Philippines: " + ". ".join(part.rstrip(". ") for part in [campaign.headline, campaign.accent, photo["alt"] if photo else ""] if part),
         "channel_copy": campaign.primary_text + "\n\n" + campaign.cta + ": " + DESTINATION,
         "contrast_ratios": contrasts,
-        "checks": {"asset_integrity": True, "logo_pixels": True, "locked_styles": True, "text_fit": True, "fixed_dimensions": True, "fixed_destination": True, "text_contrast": True, "photo_frame_fit": all(p["frame_filled"] and p["complete_panel_preserved"] for p in c.photo_checks)},
+        "checks": {"asset_integrity": True, "logo_pixels": True, "locked_styles": True, "text_fit": True, "fixed_dimensions": True, "fixed_destination": True, "text_contrast": True, "message_visible": layout not in ("phone", "conversation") or any(t["text"] == (campaign.message or "Your order is ready for collection. Thank you!") for t in c.text_checks), "photo_frame_fit": all(p["frame_filled"] and p["complete_panel_preserved"] for p in c.photo_checks)},
         "inspection_required": ["copy_and_claims", "visual_composition", "local_fit_and_photography", "accessibility"]
     }
     return png, report
