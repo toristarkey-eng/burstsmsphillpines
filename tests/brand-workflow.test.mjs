@@ -77,6 +77,9 @@ test("acceptance request produces finished artwork, copy and a passed validation
   assert.match(copy, /https:\/\/burstsms\.com\.ph\//);
   assert.doesNotMatch(copy, /Kudosity/i);
   assert.ok(artwork.length > 100000);
+  const skill = await fs.readFile(path.join(root, "plugins/burst-sms-ph-marketing-lab/skills/burst-sms-ph-marketing-lab/SKILL.md"), "utf8");
+  assert.match(skill, /raw\.githubusercontent\.com\/toristarkey-eng\/burstsmsphillpines\/c188b54\/plugins\/burst-sms-ph-marketing-lab\/assets\/approved\/approved-sender-id-great-offer\.png/);
+  assert.match(skill, /Do not respond with creative direction/);
 });
 
 test("preflight fails closed when the exact approved logo cannot be verified", async () => {

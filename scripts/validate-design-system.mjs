@@ -54,7 +54,7 @@ for (const [relative, expectedHash] of Object.entries(integrity.files)) {
   }
 }
 if (integrity.repository !== "https://github.com/toristarkey-eng/burstsmsphillpines") errors.push("Integrity manifest has the wrong repository");
-if (integrity.pluginVersion !== "0.1.6") errors.push("Integrity manifest has the wrong plugin version");
+if (integrity.pluginVersion !== "0.1.7") errors.push("Integrity manifest has the wrong plugin version");
 const css = fs.readFileSync(path.join(root, "design-system/tokens/tokens.css"), "utf8").toLowerCase();
 for (const [name, token] of Object.entries(tokens.color.brand)) {
   if (!css.includes(token.$value.toLowerCase())) errors.push(`Brand colour ${name} is missing from tokens.css`);
@@ -66,7 +66,7 @@ for (const manifestPath of [
 ]) {
   const manifest = JSON.parse(fs.readFileSync(path.join(root, manifestPath), "utf8"));
   if (manifest.name !== "burst-sms-ph-marketing-lab") errors.push(`${manifestPath} has the wrong plugin name`);
-  if (manifest.version !== "0.1.6") errors.push(`${manifestPath} has an unexpected version`);
+  if (manifest.version !== "0.1.7") errors.push(`${manifestPath} has an unexpected version`);
 }
 
 const skill = fs.readFileSync(path.join(root, "plugins/burst-sms-ph-marketing-lab/skills/burst-sms-ph-marketing-lab/SKILL.md"), "utf8");

@@ -14,6 +14,10 @@ Any edit, crop that changes meaning, copy change, offer update, compositing, or 
 | `../../../assets/approved/approved-sender-id-free-offer.png` | Portrait Branded Sender ID limited-time offer | Burst SMS Philippines Branded Sender ID limited-time offer | Reconfirm offer dates, eligibility, terms, and operational availability before a new campaign flight. |
 | `../../../assets/approved/approved-sender-id-great-offer.png` | Portrait Sender ID awareness concept | Branded Sender ID creative asking customers to recognise who an SMS is from | Exact artwork is approved. Confirm current Sender ID route and approval conditions before publishing a new campaign. |
 
+For no-execution ChatGPT delivery, the byte-locked `approved-sender-id-great-offer.png` is available at the commit-pinned URL below. Display it unchanged; do not use it as an image-generation reference:
+
+`https://raw.githubusercontent.com/toristarkey-eng/burstsmsphillpines/c188b54/plugins/burst-sms-ph-marketing-lab/assets/approved/approved-sender-id-great-offer.png`
+
 ## Approved supporting material
 
 - `../../../assets/burst-sms-ph-commercial-team.jpg`: approved local team photography. Alt text: `Three members of the Burst SMS Philippines commercial team`.

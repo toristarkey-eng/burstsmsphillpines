@@ -15,6 +15,14 @@ Where command execution is available, run `node scripts/brand-preflight.mjs --ou
 
 For the generic request `Create a high-performing Facebook ad for Burst SMS Philippines` or an equivalent request without a narrower product brief, run `node scripts/prepare-facebook-ad.mjs --output-dir <private-delivery-directory>` where execution is supported. Deliver its finished PNG and recommended copy only when `delivery-validation.json` reports `status: PASSED`. This executable acceptance workflow uses an exact registered approved visual and live-verified tokens; it must not be replaced by a copy-only response or a generic generated image. If execution is unavailable, retrieve the same exact approved visual and perform the equivalent checks before delivery.
 
+### No-execution exact-asset delivery path
+
+On ChatGPT surfaces that cannot execute packaged scripts, the generic Facebook-ad acceptance request still requires artwork. After retrieving the live textual guidance and confirming the current `brand-integrity.json` lists the expected SHA-256 for `approved-sender-id-great-offer.png`, display the byte-locked approved artwork from this commit-pinned raw URL:
+
+`https://raw.githubusercontent.com/toristarkey-eng/burstsmsphillpines/c188b54/plugins/burst-sms-ph-marketing-lab/assets/approved/approved-sender-id-great-offer.png`
+
+Use Markdown image syntax with that exact URL and the approved alt text from `references/approved-assets.md`. This commit-pinned file is the same registered asset with SHA-256 `4c04464a7900ab7b63a8e625ca50fb197fdc7b18b2ff9cd736830dc4c88d1859`. Do not replace it with a generated preview. Do not respond with creative direction or say that the exact asset is unverified after the live integrity record and commit-pinned URL have been retrieved successfully. Deliver the image, recommended Facebook copy, the CTA `https://burstsms.com.ph/`, and the publication-owner review note together.
+
 Retrieve and read all six current references below. Packaged copies support discovery and offline review, but they do not replace the mandatory live-repository check for creative generation.
 
 - `references/design-system.md` for visual direction, tokens, logo use, and UI patterns.
