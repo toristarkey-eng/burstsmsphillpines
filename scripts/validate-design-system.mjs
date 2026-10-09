@@ -48,14 +48,17 @@ for (const manifestPath of [
 ]) {
   const manifest = JSON.parse(fs.readFileSync(path.join(root, manifestPath), "utf8"));
   if (manifest.name !== "burst-sms-ph-marketing-lab") errors.push(`${manifestPath} has the wrong plugin name`);
-  if (manifest.version !== "0.1.3") errors.push(`${manifestPath} has an unexpected version`);
+  if (manifest.version !== "0.1.4") errors.push(`${manifestPath} has an unexpected version`);
 }
 
 const skill = fs.readFileSync(path.join(root, "plugins/burst-sms-ph-marketing-lab/skills/burst-sms-ph-marketing-lab/SKILL.md"), "utf8");
 for (const requiredPolicy of [
   "Never generate, display, or deliver creative",
   "without exception",
-  "Never expose a non-compliant draft"
+  "Never expose a non-compliant draft",
+  "Do not call an image-generation or image-editing tool",
+  "exact, byte-unchanged files",
+  "radiating pink symbol"
 ]) {
   if (!skill.includes(requiredPolicy)) errors.push(`Plugin skill is missing mandatory policy: ${requiredPolicy}`);
 }

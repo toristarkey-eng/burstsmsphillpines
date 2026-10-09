@@ -45,13 +45,14 @@ New finished Burst SMS Philippines marketing creative must include a consistent 
 - Keep the logo, divider, and descriptor vertically balanced as one horizontal unit. The divider and descriptor remain separate elements; never merge them into or alter the logo artwork.
 - Maintain outer clear space at least equal to the height of the `S` in `SMS`. Scale proportionally and keep the descriptor readable.
 - Never stretch, redraw, rotate, recolour, outline, shadow, or place the lockup on a busy image.
+- The navy-and-hot-pink lowercase `burst` wordmark with a radiating pink symbol is prohibited. A small `SMS PHILIPPINES` line beneath an invented wordmark is not an approved market lockup.
 
 ### Reference examples and production
 
 - `../../../assets/burst-sms-ph-lockup-light-reference.png` shows the approved light-layout direction.
 - `../../../assets/burst-sms-ph-lockup-dark-reference.png` shows the approved dark-layout direction.
 - These files are visual references, not production logo masters. Use the actual approved logo artwork and assemble the divider and descriptor deterministically.
-- Generate backgrounds or illustrations with a clean brand area, then place the actual logo or lockup unchanged. Never ask an image model to render the Burst SMS logo.
+- Do not use image-generation or image-editing tools for Burst SMS Philippines visual creative because their unreviewed result may be shown before compliance review. Use exact registered approved assets or a separate controlled production process that does not expose work before approval.
 - Exact pre-approved creative listed in `approved-assets.md` may be reused unchanged even where an older composition differs from the current lockup rule. Any edit or derivative must follow the current rule and pass review.
 
 ## Packaged imagery

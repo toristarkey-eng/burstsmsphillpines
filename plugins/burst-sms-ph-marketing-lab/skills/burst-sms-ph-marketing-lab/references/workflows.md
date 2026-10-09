@@ -12,6 +12,8 @@
 8. Correct every failed check, then repeat the review until all applicable checks pass.
 9. Present or deliver the creative only after it passes the complete review. Never show failed drafts or non-compliant concepts.
 
+For visual work, this workflow does not authorise image-generation or image-editing tools. Select an exact registered approved asset or place the visual deliverable on `Hold`. A written production brief is not visual creative and may be provided while the image is withheld.
+
 ## Review an asset
 
 Check:
@@ -23,6 +25,8 @@ Check:
 - Accessibility: contrast, heading order, focus, alt text, captions, and readable type.
 - Local fit: Philippines spelling, relevant context, and absence of stereotypes.
 - Destination: customer-facing links use `https://burstsms.com.ph/`; no invented path or customer-facing Kudosity branding appears.
+- Tool provenance: the image is an exact registered approved asset and was not generated, edited, approximated, or recomposed by an image model.
+- Prohibited visual signatures: no hot-pink Burst identity, no radiating pink symbol, no approximated lowercase `burst` wordmark, and no invented `SMS PHILIPPINES` sub-lockup.
 
 Any failed check blocks presentation and delivery. Correct the issue and repeat the full review before showing the creative. If a required check cannot be completed, withhold the creative and state what evidence, approval, or source material is missing.
 
@@ -37,7 +41,7 @@ Any failed check blocks presentation and delivery. Correct the issue and repeat 
 
 ## Social post deliverables
 
-For LinkedIn, Facebook, and other social post requests, create both the finished caption and a supporting branded image by default. A visual direction alone does not complete the request. Honour an explicit copy-only request. Use one core message, check legibility at mobile feed size, include appropriate alt text, and provide a usable image file.
+For LinkedIn, Facebook, and other social post requests, create the finished caption and select an exact registered approved image when one is relevant. Honour an explicit copy-only request. If no approved asset fits, return the caption, alt-text intent, and production brief, mark the image `Hold`, and do not generate or display a visual concept.
 
 ## Claims and approval status
 
