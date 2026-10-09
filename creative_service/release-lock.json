@@ -6,7 +6,7 @@
     "creative_service/fonts/NotoSans-Regular.ttf": "b85c38ecea8a7cfb39c24e395a4007474fa5a4fc864f6ee33309eb4948d232d5",
     "creative_service/fonts/NotoSans-SemiBold.ttf": "87a8b90ece1e89746b544e4e086f85a3710e41485a8078f9be874837dfad45d5",
     "creative_service/lock_release.py": "0d45af96358e91317ed0f1900b43f501eb8cb0b7b750a6b44e56cbf933976149",
-    "creative_service/renderer.py": "e4066ee30f4b81fd53a37cc3e8899f502f5e60a82515278470975bb38d756657",
+    "creative_service/renderer.py": "d71070f6f28fa9d31441e6cf05634d683f69310e511dc7929a9bf23735e3f32b",
     "creative_service/requirements.txt": "968bf3fd1468c91e745650809e123373ba1804628e8165c6ea471b295712a10a",
     "creative_service/server.py": "99e5f1334023a8922ffcbfb7af8416e517bdf31299026cc1be8c40016e2954e5",
     "creative_service/store.py": "f237d033f6aa3eed6c7c673a23660ad12766ee3e6877dd87070aae0cca45b9f6",

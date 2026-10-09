@@ -65,7 +65,7 @@ class Campaign(BaseModel):
             # Narrow character repertoire is deliberate: no silent missing glyphs.
             if any(ord(c) > 0x024F and c not in "\u2018\u2019\u201c\u201d\u2013" for c in text):
                 raise ValueError(f"{name}: unsupported character; use plain English text")
-            if re.search(r"kudosity|https?://|www\.|burstsms\.com(?!\.ph)|\b(?:best|number one|guaranteed)\b", text, re.I):
+            if re.search(r"kudosity|[a-z][a-z0-9+.-]*://|mailto:|tel:|www\.|\b(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z]{2,63}\b|\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b|\b(?:best|number one|guaranteed)\b", text, re.I):
                 raise ValueError(f"{name}: prohibited brand, link or unsupported superiority claim")
         if "\n" in self.headline or "\n" in self.accent or "\n" in self.supporting or "\n" in self.message:
             raise ValueError("Artwork fields must be single paragraphs; wrapping belongs to the renderer")

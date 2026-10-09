@@ -42,7 +42,7 @@ class RendererTests(unittest.TestCase):
         for field, value in [("colour", "#ff00ff"), ("logo_path", "/tmp/logo.png"), ("font", "Arial"), ("dimensions", [400, 400]), ("approval", True), ("html", "<script>")]:
             with self.subTest(field=field), self.assertRaises(ValidationError):
                 Campaign.model_validate({**campaign().model_dump(), field: value})
-        for text in ["Use Kudosity", "Try https://evil.example", "Hello\u202eevil", "Hello \u2014 world", "Guaranteed best results"]:
+        for text in ["Use Kudosity", "Try evil.example", "Try 192.0.2.1", "Try ftp://evil.example", "Try https://evil.example", "Hello\u202eevil", "Hello \u2014 world", "Guaranteed best results"]:
             with self.subTest(text=text), self.assertRaises(ValidationError):
                 Campaign.model_validate({**campaign().model_dump(), "headline": text})
         with self.assertRaises(Hold):
