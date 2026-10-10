@@ -2,11 +2,11 @@
   "schema_version": 1,
   "plugin_name": "burst-sms-ph-marketing-lab",
   "plugin_id": "Plugin_f128b9ca740081918b32107ab5b22124",
-  "plugin_version": "0.4.9",
+  "plugin_version": "0.4.8",
   "repository": "https://github.com/toristarkey-eng/burstsmsphillpines",
   "runtime": "Work",
   "files": {
-    "SKILL.md": "d6351988d0cfb9832aa6bc80e1ded1e32f45e157fa99ed2323b5cc8110a26595",
+    "SKILL.md": "fa8551af6ff757ef75226d1462515c75147821c4ebf8a1f32be1e4d529cc7df6",
     "assets/approved/approved-be-recognised-facebook.png": "d11a25d5b8c082eb7c52f58b62699d019e4fe1c8f50db3c6bcdff7cbf4c9a4af",
     "assets/approved/approved-coffee-chat-team-with-lockup.png": "cd4990dca151f7cfc44b9ae5fad73fe4f082c8352af18d0486941295380ae7a3",
     "assets/approved/approved-coffee-chat-team.png": "00ed9c029ce37224de907449d405bf3f756624e27c4406fa0133bc3080904f24",
