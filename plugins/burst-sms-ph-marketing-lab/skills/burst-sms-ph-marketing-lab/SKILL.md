@@ -92,6 +92,16 @@ Before rendering, define the audience, one campaign idea, the useful customer ou
 
 Inspect the final artwork at full resolution and reduced feed size. Require a clear focal point, fast message comprehension, balanced visual weight, readable type, relevant imagery, finished edges and a coherent next step. Reject placeholder UI, unexplained empty areas, arbitrary decorative elements, generic filler, awkward wraps and layouts that merely fill slots. Privately try a better composition/treatment/copy hierarchy and rerender when the idea is weak. Never report “world class”, professionally approved or ready for delivery on technical checks alone. If the available renderer cannot realise the intended concept well, explain the specific missing capability rather than presenting a weak layout as final.
 
+## Visual cohesion and two-line headers
+
+Apply this standard to every user and template. Compose each ad as one connected visual story, with one dominant focal point and a clear reading order: headline, visual/example, CTA. Choose the layout to suit the campaign.
+
+Keep a two-line header in one cohesive block, on the same background with consistent alignment and close, deliberate spacing. For a navy header where the wording suits this treatment, use white for the first line and the approved lighter Burst blue (Burst cyan, `#00AEC4`) for the second line. Use the existing `accent` field for that second-line emphasis. Keep it short and readable at feed size; do not create a separate coloured tile, oversized heading panel or competing headline. Preserve approved Noto Sans, measured wrapping and contrast checks. This treatment is a preferred option, not a requirement to force every headline into two lines.
+
+For photographic messaging ads, favour one continuous image area with the SMS example integrated into the scene. Keep the example secondary, readable and clear of faces, hands and equipment. Use adjacent panels only when they visibly strengthen the idea. Avoid detached photo tiles, equally prominent elements and empty gaps between sections. When the brand bar is below, keep CTA and website together within the body above it, following the existing CTA and terms rules.
+
+Visual cohesion is a mandatory delivery check within `visual_composition`, `body_balance` and `campaign_effectiveness`. Inspect the exact final PNG at full resolution and representative feed size, recording the observed focal point, reading order, header grouping and relationship between image, SMS and CTA. Reject and privately recompose any ad that feels fragmented or makes elements compete, even when brand and technical checks pass. Do not mark these checks passed without inspecting the actual artwork.
+
 ## Explicitly requested formats
 
 Keep square (1080 × 1080) and portrait (1080 × 1350) as the normal social options. Only when the user specifically requests another format, select `landscape` (1200 × 628), `story` (1080 × 1920, static Story/Reel cover artwork) or `custom` with `dimensions: [width, height]` in pixels. If a custom size is ambiguous, resolve its dimensions before rendering. Custom PNGs support 600–4096 pixels per side and width:height ratios between 1:2 and 2:1. Narrow banners, print bleed/CMYK, video and vector exports require separate capabilities; explain the specific missing layout/export rather than claiming they are supported.
