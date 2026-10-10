@@ -1,0 +1,134 @@
+[
+  {
+    "file": "01_Platform_overview.png",
+    "title": "Platform overview",
+    "size": [
+      1440,
+      828
+    ],
+    "transparent": false,
+    "source": "https://a-us.storyblok.com/f/1001817/1440x828/12fe571ab9/platform_overview-cropped.png",
+    "note": "Historical product screenshot. Messaging activity and overview."
+  },
+  {
+    "file": "02_Sender_management.png",
+    "title": "Sender management",
+    "size": [
+      1440,
+      612
+    ],
+    "transparent": true,
+    "source": "https://a-us.storyblok.com/f/1001817/1440x612/38f8b87342/platform_senders-cropped.png",
+    "note": "Historical product screenshot. Sender table predates the April 2026 redesign; use for internal reference, not current-feature advertising."
+  },
+  {
+    "file": "03_SMS_conversation.png",
+    "title": "SMS conversation",
+    "size": [
+      1000,
+      1284
+    ],
+    "transparent": true,
+    "source": "https://a-us.storyblok.com/f/1001817/356x457/540a540340/phone-all-in-one.svg",
+    "note": "Published example message exchange. Gadget Central is a sample brand."
+  },
+  {
+    "file": "04_Branded_sender_ID.png",
+    "title": "Branded sender ID",
+    "size": [
+      508,
+      500
+    ],
+    "transparent": true,
+    "source": "https://a-us.storyblok.com/f/1001817/508x500/33705dd2a9/alpha-tag-sms-image1c.png",
+    "note": "Historical real message comparison showing Kudosity versus a number. Contains legacy Burst SMS support text; archival reference only."
+  },
+  {
+    "file": "05_RCS_rich_message.png",
+    "title": "RCS rich message",
+    "size": [
+      1200,
+      1540
+    ],
+    "transparent": true,
+    "source": "https://a-us.storyblok.com/f/1001817/356x457/72a4e8d9d0/phone-rcs.svg",
+    "note": "Published travel-message illustration. Example brand and message; availability depends on market/device/network."
+  },
+  {
+    "file": "06_WhatsApp_delivery.png",
+    "title": "WhatsApp delivery update",
+    "size": [
+      1200,
+      1086
+    ],
+    "transparent": true,
+    "source": "https://a-us.storyblok.com/f/1001817/608x550/d522a061c3/utility1.svg",
+    "note": "Published illustrative WhatsApp utility message. Example content."
+  },
+  {
+    "file": "07_WhatsApp_authentication.png",
+    "title": "WhatsApp authentication",
+    "size": [
+      1200,
+      1086
+    ],
+    "transparent": true,
+    "source": "https://a-us.storyblok.com/f/1001817/608x550/5cf79eeb51/authentication1.svg",
+    "note": "Published illustrative WhatsApp authentication message. Example content."
+  },
+  {
+    "file": "08_WhatsApp_service.png",
+    "title": "WhatsApp customer service",
+    "size": [
+      1200,
+      1086
+    ],
+    "transparent": true,
+    "source": "https://a-us.storyblok.com/f/1001817/608x550/7a24eaee41/service2.svg",
+    "note": "Published illustrative WhatsApp customer-service conversation. Example content."
+  },
+  {
+    "file": "09_WhatsApp_promotion.png",
+    "title": "WhatsApp promotion",
+    "size": [
+      1200,
+      1086
+    ],
+    "transparent": true,
+    "source": "https://a-us.storyblok.com/f/1001817/608x550/e38890adfb/marketing1.svg",
+    "note": "Published illustrative WhatsApp marketing message. Example offer, not a Kudosity promotion."
+  },
+  {
+    "file": "10_WhatsApp_channel.png",
+    "title": "WhatsApp channel icon",
+    "size": [
+      1000,
+      983
+    ],
+    "transparent": true,
+    "source": "https://a-us.storyblok.com/f/1001817/60x59/fbe45ac044/icon-whatsapp.svg",
+    "note": "Existing channel artwork from Kudosity website. Preserve WhatsApp identity."
+  },
+  {
+    "file": "11_RCS_channel.png",
+    "title": "RCS channel graphic",
+    "size": [
+      1000,
+      1000
+    ],
+    "transparent": true,
+    "source": "https://a-us.storyblok.com/f/1001817/46x46/c57d9b8ce2/icon-rcs.svg",
+    "note": "Existing website RCS illustration. Decorative channel identifier, not a security certification."
+  },
+  {
+    "file": "12_SMS_components.png",
+    "title": "SMS workflow components",
+    "size": [
+      688,
+      1024
+    ],
+    "transparent": true,
+    "source": "https://a-us.storyblok.com/f/1001817/688x1024/32682cb50d/sms-service.png",
+    "note": "Published abstract messaging composition, not a working product screenshot."
+  }
+]

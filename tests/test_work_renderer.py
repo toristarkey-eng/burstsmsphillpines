@@ -20,13 +20,17 @@ from runtime.renderer import Campaign, Hold, Canvas, PALETTE, render, catalog, l
 
 
 def campaign(template='recognition', fmt='portrait', photo=None):
+    if template == 'graphic-focus':
+        fields=json.loads((SKILL/'references/examples/graphic-order-update.json').read_text());fields['format']=fmt
+        return Campaign(**fields)
     if template == 'person-plus-message':
         fields=json.loads((SKILL/'references/examples/person-plus-message.json').read_text());fields['format']=fmt
         if photo is not None:fields['photo_id']=photo
+        if photo=='vhey':fields['image_treatment']='cutout'
         return Campaign(**fields)
     if photo is None:
         photo = 'commercial-team' if template == 'team-coffee' else 'workplace-portrait' if template in ['people-first', 'customer-updates'] else None
-    return Campaign(template_id=template, format=fmt, headline='Make every message count.', accent='Stay connected.', supporting='Explore messaging for your business.', primary_text='Talk to Burst SMS Philippines about messaging for your business.', photo_id=photo)
+    return Campaign(template_id=template, format=fmt, headline='Make every message count.', accent='Stay connected.', supporting='Explore messaging for your business.', primary_text='Talk to Burst SMS Philippines about messaging for your business.', photo_id=photo,image_treatment='cutout' if photo=='vhey' else 'panel')
 
 
 def inspection(report):
@@ -55,7 +59,7 @@ class RendererTests(unittest.TestCase):
         master=Image.open(SKILL/'assets/burst-sms-logo.png').convert('RGB')
         for fmt, dims, size in requests:
             for template in catalog()['templates']:
-                if template=='person-plus-message':continue # This optional composition supports square and portrait only.
+                if template in ('person-plus-message','graphic-focus'):continue # This optional composition supports square and portrait only.
                 for strip in ('top','bottom'):
                     with self.subTest(format=fmt, dimensions=dims, template=template, strip=strip):
                         brief=campaign(template,'portrait' if fmt=='custom' else fmt).model_copy(update={'format':fmt, **{'dimensions':dims,'brand_strip':strip,
@@ -105,7 +109,7 @@ class RendererTests(unittest.TestCase):
 
     def test_all_adaptive_variants_preserve_protected_regions(self):
         for template in catalog()['templates']:
-            if template=='person-plus-message':continue # Dedicated composition has its own protected-region tests.
+            if template in ('person-plus-message','graphic-focus'):continue # Dedicated composition has its own protected-region tests.
             for fmt in ('square', 'portrait'):
                 for strip in ('top', 'bottom'):
                     for composition in ('auto', 'side-by-side', 'text-first', 'image-first'):
@@ -154,7 +158,7 @@ class RendererTests(unittest.TestCase):
                 pixels=set(image.crop((x,y,x+w,y+message['used_height'])).get_flattened_data())
                 self.assertIn((0,42,102),pixels)
                 self.assertIn((244,245,255),pixels)
-        for sender in ('YOUR BRAND','OVERLONGSENDER','evil.example','<brand>'):
+        for sender in ('OVERLONGSENDER','evil.example','<brand>'):
             with self.assertRaises(Hold): render(campaign().model_copy(update={'sender_name':sender}))
 
     def test_full_device_default_and_cover_photo_fill(self):
@@ -311,7 +315,7 @@ class RendererTests(unittest.TestCase):
         self.assertEqual(r['phone_check']['view'],'full')
         self.assertTrue(r['phone_check']['message_fully_visible'])
         for change in ({'brand_strip':'top'},{'heading_style':'light'},{'photo_id':None},{'message':''},
-                       {'sender_name':'BURST SMS'},{'image_position':'centre'},{'format':'landscape'},
+                       {'image_position':'centre'},{'format':'landscape'},
                        {'phone_view':'detail'},{'graphic_placement':'layered'},{'photo_fit':'cover'},{'creative_style':'high-energy-casual'},
                        {'supporting':'A supporting line that is much too long to remain visible on a single readable line in this heading panel.'}):
             with self.assertRaises(Hold):render(brief.model_copy(update=change))
@@ -333,6 +337,66 @@ class RendererTests(unittest.TestCase):
                 with self.assertRaisesRegex(Hold,'clips'):render(brief.model_copy(update={'photo_crop':[20,20,572,400]}))
                 ImageDraw.Draw(image).rectangle((10,10,561,390),fill=(0,42,102,255));image.save(path)
                 with self.assertRaisesRegex(Hold,'collide'):render(brief)
+
+    def test_registered_graphics_readability_palette_and_protected_regions(self):
+        cfg=catalog()
+        for key,asset in cfg['graphics'].items():
+            original=hashlib.sha256((SKILL/asset['file']).read_bytes()).hexdigest()
+            self.assertEqual(hashlib.sha256(Image.open(SKILL/asset['file']).convert('RGB').tobytes()).hexdigest(),asset['original_rgb_sha256'])
+            self.assertEqual(Image.open(SKILL/asset['file']).convert('RGB').tobytes(),Image.open(SKILL/asset['original_file']).convert('RGB').tobytes())
+            for fmt in ('square','portrait'):
+                for strip in ('top','bottom'):
+                    with self.subTest(graphic=key,format=fmt,brand=strip):
+                        _,r=render(campaign('graphic-focus',fmt).model_copy(update={'graphic_id':key,'brand_strip':strip,'headline':'Keep them updated.','supporting':'',**({'imagery_channel':asset['channel'],'channel_request':'Create a '+asset['channel']+' creative.'} if asset.get('channel') else {})}))
+                        self.assertEqual(r['body_layout'],'graphic-hero')
+                        self.assertGreaterEqual(r['graphic_check']['frame'][2],asset['min_rendered_width'])
+                        self.assertLessEqual(r['graphic_check']['frame'][1]+r['graphic_check']['frame'][3],r['cta_region'][1]-24)
+                        self.assertTrue(set(r['graphic_check']['palette'].values())<=set(PALETTE.values()))
+                        self.assertEqual(r['delivery_status'],'INSPECTION_REQUIRED')
+                        self.assertIsNone(r['phone_message'])
+            self.assertEqual(hashlib.sha256((SKILL/asset['file']).read_bytes()).hexdigest(),original)
+        for colour in ('brand','navy','violet','cyan'):
+            _,r=render(campaign('graphic-focus').model_copy(update={'graphic_colour':colour}))
+            self.assertTrue(set(r['graphic_check']['palette'].values())<=set(PALETTE.values()))
+        for change in ({'graphic_id':'kudosity-library-reference'},{'graphic_id':'message-thumbnail-reference'},
+                       {'graphic_id':None},{'message':'Order ready.'},{'phone_view':'full'},{'photo_id':'vhey'},
+                       {'graphic_colour':'pink'},{'format':'landscape'},{'composition':'image-first'}):
+            with self.assertRaises(Hold):render(campaign('graphic-focus').model_copy(update=change))
+        with self.assertRaises(Hold):render(campaign().model_copy(update={'graphic_id':'order-confirmed'}))
+        with self.assertRaises(Hold):render(campaign().model_copy(update={'graphic_colour':'cyan'}))
+
+    def test_channel_imagery_requires_explicit_request(self):
+        example=json.loads((SKILL/'references/examples/viber-order-update.json').read_text())
+        for fmt in ('square','portrait'):
+            _,report=render(Campaign(**{**example,'format':fmt}))
+            self.assertIn('channel artwork identity preserved',report['graphic_check']['palette_mapping'])
+            self.assertEqual(report['graphic_check']['sender_label_repair']['text'],'YOUR BRAND')
+        for change in ({'imagery_channel':'sms','channel_request':''},{'channel_request':'Make a customer update ad.'},
+                       {'imagery_channel':'whatsapp','channel_request':'Use WhatsApp'}, {'graphic_colour':'cyan'},
+                       {'graphic_id':'order-confirmed'}):
+            with self.assertRaises(Hold):render(Campaign(**{**example,**change}))
+        for channel in ('rcs','whatsapp','viber'):
+            with self.assertRaises(Hold):render(campaign().model_copy(update={'imagery_channel':channel}))
+
+    def test_vhey_graphics_and_explanatory_sender_labels(self):
+        asset=catalog()['photos']['vhey']
+        self.assertEqual(hashlib.sha256(Image.open(SKILL/asset['file']).convert('RGB').tobytes()).hexdigest(),asset['original_rgb_sha256'])
+        for name in ('vhey-message','vhey-black-friday'):
+            fields=json.loads((SKILL/'references/examples'/f'{name}.json').read_text())
+            for fmt in ('square','portrait'):
+                for position in ('left','right'):
+                    _,r=render(Campaign(**{**fields,'format':fmt,'image_position':position}))
+                    self.assertEqual(r['photo_checks'][0]['image_treatment'],'cutout')
+                    self.assertIsNone(r['photo_checks'][0]['cutout_fallback'])
+                    self.assertTrue(all(r['checks'].values()))
+        fields=json.loads((SKILL/'references/examples/vhey-black-friday.json').read_text())
+        with self.assertRaisesRegex(Hold,'too small'):render(Campaign(**{**fields,'graphic_id':'order-confirmed'}))
+        for sender in ('YOUR BRAND','Acme Beauty','BURST SMS'):
+            _,r=render(campaign('person-plus-message').model_copy(update={'sender_name':sender}))
+            self.assertEqual(r['sender_name'],sender)
+        for key in ('sender-recognition',):
+            _,r=render(campaign('graphic-focus').model_copy(update={'graphic_id':key}))
+            self.assertIn('YOUR BRAND',r['graphic_check']['embedded_text'])
 
     def test_dynamic_photo_masks_and_source_scene_selection(self):
         for treatment in ('rounded','circle','cutout'):
@@ -504,6 +568,7 @@ class StandaloneTests(unittest.TestCase):
 
     def test_copied_skill_runs_independently_and_delivers_only_after_inspection(self):
         result = self.run_cli('preflight'); self.assertEqual(result.returncode,0,result.stderr)
+        self.assertEqual(json.loads(result.stdout)['version'], '0.4.8')
         self.assertNotIn(str(ROOT),result.stdout)
         self.prepare(); self.assertFalse((self.output/'delivery-validation.json').exists())
         result = self.validate(); self.assertEqual(result.returncode,0,result.stderr)
@@ -530,7 +595,7 @@ class StandaloneTests(unittest.TestCase):
                         self.assertEqual(image.size,(1080,1080 if fmt=='square' else 1350))
 
     def test_modified_logo_font_photo_tokens_code_or_messaging_blocks_preflight(self):
-        files=['assets/burst-sms-logo.png','runtime/fonts/NotoSans-SemiBold.ttf','assets/burst-sms-ph-commercial-team.jpg','assets/tokens.json','runtime/renderer.py','references/messaging-library-brief.md']
+        files=['assets/burst-sms-logo.png','runtime/fonts/NotoSans-SemiBold.ttf','assets/burst-sms-ph-commercial-team.jpg','assets/tokens.json','runtime/renderer.py','references/messaging-library-brief.md','assets/campaign-graphics/order-confirmed.png','assets/vhey-clean-transparent.png']
         for relative in files:
             with self.subTest(file=relative):
                 file=self.skill/relative; original=file.read_bytes()

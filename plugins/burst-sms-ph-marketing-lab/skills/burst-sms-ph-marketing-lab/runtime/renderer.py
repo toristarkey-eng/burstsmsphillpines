@@ -46,7 +46,7 @@ class Campaign(BaseModel):
     creative_style: Literal["default", "high-energy-casual"] = "default"
     energy_treatment: Literal["diagonal", "bands", "none"] = "diagonal"
     prop_id: str | None = Field(default=None, max_length=64)
-    template_id: Literal["recognition", "customer-updates", "people-first", "team-coffee", "bold-statement", "offer-focus", "person-plus-message"]
+    template_id: Literal["recognition", "customer-updates", "people-first", "team-coffee", "bold-statement", "offer-focus", "person-plus-message", "graphic-focus"]
     format: Literal["square", "portrait", "landscape", "story", "custom"] = "portrait"
     dimensions: list[int] | None = Field(default=None, min_length=2, max_length=2)
     headline: str = Field(min_length=1, max_length=65)
@@ -57,7 +57,11 @@ class Campaign(BaseModel):
     photo_id: str | None = Field(default=None, max_length=64)
     message: str = Field(default="", max_length=85)
     brand_strip: Literal["top", "bottom"] = "top"
-    composition: Literal["auto", "side-by-side", "text-first", "image-first", "hero", "photo-background", "person-plus-message"] = "auto"
+    composition: Literal["auto", "side-by-side", "text-first", "image-first", "hero", "photo-background", "person-plus-message", "graphic-hero"] = "auto"
+    imagery_channel: Literal["sms", "rcs", "whatsapp", "viber"] = "sms"
+    channel_request: str = Field(default="", max_length=240)
+    graphic_id: str | None = Field(default=None, max_length=64)
+    graphic_colour: Literal["brand", "navy", "violet", "cyan"] = "brand"
     graphic_placement: Literal["adjacent", "layered"] = "adjacent"
     graphic_decoration: Literal["none", "cyan-band"] = "none"
     image_position: Literal["left", "centre", "right"] = "centre"
@@ -77,8 +81,6 @@ class Campaign(BaseModel):
     def plain_copy(self):
         if not re.fullmatch(r"[A-Za-z][A-Za-z0-9 ]{0,10}", self.sender_name) or self.sender_name != self.sender_name.strip():
             raise ValueError("Illustrative sender names require 1–11 plain alphanumeric characters/spaces")
-        if self.sender_name.upper() in ("YOUR BRAND", "YOUR SHOP"):
-            raise ValueError("Use a deliberate illustrative sender name, not a placeholder")
         if self.format == "custom":
             if self.dimensions is None:
                 raise ValueError("Custom artwork requires explicit width and height in pixels")
@@ -323,6 +325,67 @@ class Canvas:
             "proportional_scale": True})
         return self.photo_checks[-1]["frame"]
 
+    def graphic(self, asset, box, colour="brand"):
+        source=Image.open(PLUGIN/asset["file"])
+        if (not asset.get("recolour_allowed") and not asset.get("preserve_channel_identity")) or (asset.get("native_alpha") and ("A" not in source.getbands() or source.getchannel("A").getextrema()[0] != 0)):
+            raise Hold("Campaign graphic registration or alpha is invalid")
+        x,y,w,h=box
+        if min(x,y)<0 or min(w,h)<=0 or x+w>self.image.width or y+h>self.image.height:
+            raise Hold("Graphic region leaves the canvas")
+        crop=asset["crop"]
+        if not (0<=crop[0]<crop[2]<=source.width and 0<=crop[1]<crop[3]<=source.height):
+            raise Hold("Graphic crop leaves its registered source")
+        panel=source.convert("RGBA").crop(tuple(crop))
+        label=asset.get("sender_label_overlay")
+        if label:
+            bx,by,bw,bh=label["source_box"];bx-=crop[0];by-=crop[1]
+            if min(bx,by)<0 or bx+bw>panel.width or by+bh>panel.height:raise Hold("Registered sender-label repair leaves the graphic")
+            draw=ImageDraw.Draw(panel);draw.rectangle((bx,by,bx+bw,by+bh),fill=PALETTE["white"])
+            label_font=font(label["font_size"],True)
+            if draw.textlength(label["text"],font=label_font)>bw:raise Hold("Registered sender label does not fit")
+            draw.text((bx,by+4),label["text"],font=label_font,fill=PALETTE["navy"])
+        scale=min(w/panel.width,h/panel.height)
+        if asset.get("max_upscale") is not None and scale>asset["max_upscale"]:
+            raise Hold("Graphic source is too small for this export; use a larger original or deterministic recreation")
+        size=(round(panel.width*scale),round(panel.height*scale))
+        if size[0]<asset["min_rendered_width"]:
+            raise Hold("Graphic text/details would be too small; use graphic-hero or a simpler registered graphic")
+        # Bounded palette mapping is deterministic; no arbitrary colour/URL/logo/photo mutations.
+        names=list(PALETTE) if colour=="brand" else list(dict.fromkeys(["navy",colour,"cloud","white"]))
+        colours=[tuple(int(PALETTE[name][i:i+2],16) for i in (1,3,5)) for name in names]
+        # Prepared illustrations retain dimensional depth through controlled tints of
+        # exact locked brand colours, never arbitrary generated palette values.
+        prepared=colour=="brand" and asset.get("prepared_brand_palette")
+        if prepared:
+            bases=[tuple(int(PALETTE[name][i:i+2],16) for i in (1,3,5)) for name in ("navy","violet","cyan","blue")]
+            colours=[tuple(round(value+(255-value)*step/63) for value in base) for base in bases for step in range(64)]
+            colours[-1]=tuple(int(PALETTE["cloud"][i:i+2],16) for i in (1,3,5))
+        palette=Image.new("P",(1,1));palette.putpalette([v for i in range(256) for v in colours[i%len(colours)]])
+        rgb=panel.convert("RGB")
+        if prepared:
+            # Approved recolouring: replace warm pink/red illustration accents
+            # with cyan before shade mapping, rather than washing them to grey.
+            hue,saturation,value=rgb.convert("HSV").split()
+            warm=ImageChops.multiply(hue.point(lambda v:255 if v<=20 or v>=235 else 0),saturation.point(lambda v:255 if v>=16 else 0))
+            hue.paste(132,mask=warm)
+            rgb=Image.merge("HSV",(hue,saturation,value)).convert("RGB")
+        rgb=rgb.quantize(palette=palette,dither=Image.Dither.NONE).convert("RGB")
+        mark=asset.get("protected_channel_mark_box")
+        if mark:
+            mx,my,mw,mh=mark;mx-=crop[0];my-=crop[1]
+            if min(mx,my)<0 or mx+mw>panel.width or my+mh>panel.height:raise Hold("Registered channel mark leaves the graphic")
+            rgb.paste(panel.convert("RGB").crop((mx,my,mx+mw,my+mh)),(mx,my))
+        alpha=panel.getchannel("A").point(lambda value:0 if value<=2 else value)
+        rgba=rgb.convert("RGBA");rgba.putalpha(alpha);rgba=rgba.resize(size,Image.Resampling.LANCZOS)
+        px=x+(w-size[0])//2;py=y+(h-size[1])//2
+        self.image.paste(rgba,(px,py),rgba.getchannel("A"))
+        self.graphic_check={"id":asset["id"],"source":asset["file"],"frame":[px,py,*size],"region":list(box),
+            "proportional_scale":True,"minimum_readable_width":asset["min_rendered_width"],"palette":{} if asset.get("preserve_channel_identity") else {name:PALETTE[name] for name in names},
+            "channel_identity_preserved":bool(asset.get("preserve_channel_identity")), "sender_label_repair":label,
+            "palette_mapping":"approved channel artwork identity preserved; surrounding illustration mapped to locked brand tints" if asset.get("preserve_channel_identity") else "controlled tints of exact locked brand hues; no dither; native alpha retained" if colour=="brand" and asset.get("prepared_brand_palette") else "nearest approved palette; no dither; native alpha retained except alpha <=2 noise",
+            "embedded_text":asset["embedded_text"],"embedded_text_fit_and_contrast":"actual full/feed visual inspection required", "approved_source":asset["approval_source"]}
+        return self.graphic_check["frame"]
+
     def bubble(self, text, box, sender="BURST SMS", paint=True):
         """Measure before painting: both the sender card and message bubble hug actual content."""
         x, y, w, h = box
@@ -417,6 +480,21 @@ def render(campaign: Campaign) -> tuple[bytes, dict]:
     config = catalog()
     template = config["templates"][campaign.template_id]
     photo = config["photos"].get(campaign.photo_id) if campaign.photo_id else None
+    graphic=config.get("graphics",{}).get(campaign.graphic_id) if campaign.graphic_id else None
+    graphic_hero=campaign.template_id=="graphic-focus" or campaign.composition=="graphic-hero"
+    if campaign.graphic_id and (not graphic or campaign.template_id not in graphic["templates"]):
+        raise Hold("Graphic is not registered for this template; references cannot be rendered")
+    if graphic:graphic={**graphic,"id":campaign.graphic_id}
+    if campaign.imagery_channel!="sms":
+        if not re.search(r"\b"+re.escape(campaign.imagery_channel)+r"\b",campaign.channel_request,re.I):
+            raise Hold("Channel imagery requires an explicit user request excerpt naming that channel")
+        if not graphic or graphic.get("channel")!=campaign.imagery_channel:
+            raise Hold("Choose registered imagery matching the explicitly requested channel")
+    if graphic and graphic.get("requires_explicit_channel"):
+        if campaign.imagery_channel!=graphic["channel"] or campaign.graphic_colour!="brand":
+            raise Hold("Channel-specific imagery requires its explicit channel request and unchanged channel identity")
+    if not graphic and campaign.graphic_colour!="brand":
+        raise Hold("Graphic colour selection requires a registered graphic")
     if campaign.photo_id and not photo:
         raise Hold("Photo is not registered")
     if template["photography"] != "optional" and template["photography"] != bool(photo):
@@ -433,12 +511,18 @@ def render(campaign: Campaign) -> tuple[bytes, dict]:
         if not photo:
             raise Hold("Photo description requires photography")
         photo = {**photo, "alt": campaign.photo_description}
-    if (campaign.image_treatment != "panel" or campaign.photo_backdrop != "none" or campaign.photo_fit != "contain" or campaign.composition == "hero" or campaign.heading_style == "navy") and not photo:
+    if (campaign.image_treatment != "panel" or campaign.photo_backdrop != "none" or campaign.photo_fit != "contain" or campaign.composition == "hero" or campaign.heading_style == "navy") and not photo and not (graphic_hero and campaign.heading_style=="navy" and campaign.image_treatment=="panel" and campaign.photo_backdrop=="none" and campaign.photo_fit=="contain"):
         raise Hold("Photo treatment requires photography")
     person_message = campaign.template_id == "person-plus-message" or campaign.composition == "person-plus-message"
+    if graphic and not (person_message or graphic_hero):
+        raise Hold("Registered graphics require person-plus-message or graphic-hero composition")
+    if graphic and (campaign.message or campaign.sender_name!="BURST SMS" or campaign.phone_view!="auto"):
+        raise Hold("Approved graphic supplies its own illustrative content; remove conflicting SMS/device inputs")
+    if graphic_hero and (not graphic or photo or campaign.format not in ("square","portrait") or campaign.creative_style!="default" or campaign.graphic_placement!="adjacent" or campaign.graphic_decoration!="none" or campaign.photo_crop is not None or campaign.photo_description or campaign.image_treatment!="panel" or campaign.photo_backdrop!="none" or campaign.photo_fit!="contain" or campaign.composition not in ("auto","graphic-hero")):
+        raise Hold("Graphic-hero requires one registered graphic, square/portrait and no photography/device/crop/energy options")
     if (campaign.graphic_decoration != "none" or campaign.graphic_placement != "adjacent") and not person_message:
         raise Hold("Graphic decoration requires person-plus-message composition")
-    if person_message and (not photo or campaign.format not in ("square", "portrait") or campaign.brand_strip != "bottom" or campaign.heading_style != "navy" or not campaign.message or campaign.sender_name == "BURST SMS" or campaign.image_position not in ("left", "right") or campaign.photo_fit != "contain" or campaign.photo_backdrop != "none" or campaign.image_treatment not in ("panel", "cutout") or campaign.phone_view not in ("auto", "card", "full") or campaign.creative_style != "default" or campaign.composition not in ("auto", "person-plus-message") or campaign.message_placement != "below" or campaign.sms_position != "lower-left"):
+    if person_message and (not photo or campaign.format not in ("square", "portrait") or campaign.brand_strip != "bottom" or campaign.heading_style != "navy" or (not graphic and (not campaign.message )) or campaign.image_position not in ("left", "right") or campaign.photo_fit != "contain" or campaign.photo_backdrop != "none" or campaign.image_treatment not in ("panel", "cutout") or campaign.phone_view not in ("auto", "card", "full") or campaign.creative_style != "default" or campaign.composition not in ("auto", "person-plus-message") or campaign.message_placement != "below" or campaign.sms_position != "lower-left"):
         raise Hold("Person-plus-message requires square/portrait, registered photography, navy heading, bottom brand bar, left/right subject, an explicit fictional sender/message and contained panel or approved cutout; use card or complete phone")
     if person_message and photo.get("approved_subject_alpha") is True:
         prepared=Image.open(PLUGIN/photo["file"])
@@ -502,7 +586,7 @@ def render(campaign: Campaign) -> tuple[bytes, dict]:
         raise Hold("Photo-background uses an edge-to-edge panel and controlled overlay, without decorative photo treatments")
     if not background and campaign.sms_position != "lower-left":
         raise Hold("SMS overlay positions require photo-background composition")
-    cta_height = ((150 if campaign.offer_terms else 110) if compact else (180 if campaign.offer_terms else 120)) if background or person_message else (150 if campaign.offer_terms else 110) if compact else 180
+    cta_height = ((150 if campaign.offer_terms else 110) if compact else (180 if campaign.offer_terms else 120)) if background or person_message or graphic_hero else (150 if campaign.offer_terms else 110) if compact else 180
     brand_y = 0 if campaign.brand_strip == "top" else height-header_height
     footer = height-cta_height if campaign.brand_strip == "top" else brand_y-cta_height
     # Fixed white header, original logo, separate divider and market descriptor.
@@ -543,6 +627,17 @@ def render(campaign: Campaign) -> tuple[bytes, dict]:
             frame=c.photo(prop,(840,body_bottom-min(180,visual_height),176,min(180,visual_height)),"right","cutout","none","contain")
             c.photo_checks[-1]["role"]="prop"
         c.energy_copy(campaign,copy_x,copy_y,copy_width,copy_height)
+    elif graphic_hero:
+        side=False;image_first=False;has_visual=True;copy_x=64;copy_width=952
+        copy_y=190 if campaign.brand_strip=="top" else 32
+        dark=campaign.heading_style=="navy"
+        copy_height=c.copy_block(campaign,copy_x,copy_y,copy_width,260,dark=dark,paint=False)
+        heading_bottom=copy_y+copy_height+32
+        body_top=heading_bottom;body_bottom=footer-24;body_height=body_bottom-body_top
+        if body_height<200:raise Hold("Graphic-hero needs more visual space; shorten copy or use portrait")
+        c.graphic(graphic,(64,body_top+16,952,body_height-32),campaign.graphic_colour)
+        if dark:d.rectangle((0,0,width,heading_bottom-1),fill=PALETTE["navy"])
+        c.copy_block(campaign,copy_x,copy_y,copy_width,copy_height,dark=dark)
     elif person_message:
         side=False; image_first=False; has_visual=True; copy_x=64;copy_width=952;copy_y=32
         person_heading_sizes=(112,104,96) if campaign.format=="portrait" else (96,88,80)
@@ -568,7 +663,9 @@ def render(campaign: Campaign) -> tuple[bytes, dict]:
         if campaign.graphic_decoration=="cyan-band":
             d.rounded_rectangle((graphic_x-12,visual_y+visual_height//3,graphic_x+graphic_width+11,body_bottom-12),32,fill=PALETTE["cyan"])
         c.photo(photo,(photo_x,visual_y,572,visual_height),"centre",campaign.image_treatment,"none","contain")
-        if campaign.phone_view=="full":
+        if graphic:
+            c.graphic(graphic,(graphic_x,visual_y,graphic_width,visual_height),campaign.graphic_colour)
+        elif campaign.phone_view=="full":
             c.phone(campaign,(graphic_x,visual_y,graphic_width,visual_height))
         else:
             card_height=c.bubble(campaign.message,(graphic_x,visual_y,graphic_width,min(300,visual_height)),campaign.sender_name,paint=False)
@@ -718,7 +815,7 @@ def render(campaign: Campaign) -> tuple[bytes, dict]:
         if not (terms_box[0] >= 64 and terms_box[1] >= button_y+button_height+12 and footer <= terms_box[1] and terms_box[1]+terms_check["used_height"] <= footer+cta_height):
             raise Hold("Terms must fit alongside CTA inside its reserved region")
     if person_message:
-        graphic_box = getattr(c,"message_card",None) or c.phone_check["visible_frame"]
+        graphic_box = c.graphic_check["frame"] if graphic else getattr(c,"message_card",None) or c.phone_check["visible_frame"]
         px,py,pw,ph=c.photo_checks[0]["frame"]
         gx,gy,gw,gh=graphic_box
         collision=gx<px+pw and gx+gw>px and gy<py+ph and gy+gh>py
@@ -747,6 +844,10 @@ def render(campaign: Campaign) -> tuple[bytes, dict]:
                 raise Hold("Photo overlay/readability treatment obscures a registered face, hand or focal action")
         if c.photo_checks[0]["frame"] != photo_region or c.photo_checks[0]["mask_has_transparency"]:
             raise Hold("Photo does not cover the entire middle section")
+    if graphic:
+        gx,gy,gw,gh=c.graphic_check["frame"]
+        if gx<64 or gx+gw>width-64 or gy<body_top or gy+gh>footer-24:
+            raise Hold("Registered graphic leaves the protected body space")
     c.finish_text()
     logo_pixels = c.image.crop((logo_x, logo_y, logo_x + scaled_logo.width, logo_y + scaled_logo.height))
     if ImageChops.difference(logo_pixels, scaled_logo).getbbox():
@@ -760,6 +861,9 @@ def render(campaign: Campaign) -> tuple[bytes, dict]:
         for check in c.photo_checks:
             for name in ("region", "frame"):
                 check[name] = [round(v*export_scale) for v in check[name]]
+        if hasattr(c,"graphic_check"):
+            for name in ("frame","region"):
+                c.graphic_check[name]=[round(v*export_scale) for v in c.graphic_check[name]]
         if hasattr(c, "phone_check"):
             for name in ("device_dimensions", "visible_frame"):
                 if c.phone_check[name] is not None:
@@ -794,23 +898,26 @@ def render(campaign: Campaign) -> tuple[bytes, dict]:
         "photo_background": {"coverage":True,"sms_position":campaign.sms_position,"readability_treatment":"navy scrim alpha 224/255","subject_regions":[{"label":r["label"],"box":[round(v*export_scale) for v in r["box"]]} for r in subject_regions],"visual_subject_inspection_required":True} if background else None,
         "message_placement": campaign.message_placement,
         "heading_style": campaign.heading_style,
-        "heading_region": ([0,0,output_width,round(heading_bottom*export_scale)] if background or person_message else [0,round(max(0,copy_y-20)*export_scale),output_width,round((copy_height+40)*export_scale)]) if campaign.heading_style == "navy" else None,
+        "heading_region": ([0,0,output_width,round(heading_bottom*export_scale)] if background or person_message or graphic_hero else [0,round(max(0,copy_y-20)*export_scale),output_width,round((copy_height+40)*export_scale)]) if campaign.heading_style == "navy" else None,
         "creative_style": campaign.creative_style,
         "energy_treatment": campaign.energy_treatment if energy else None,
         "prop_id": campaign.prop_id,
+        "graphic_id": campaign.graphic_id, "imagery_channel":campaign.imagery_channel, "channel_request":campaign.channel_request,
+        "graphic_check": getattr(c,"graphic_check",None),
+        "graphic_colour": campaign.graphic_colour if graphic else None,
         "graphic_placement": campaign.graphic_placement if person_message else None,
         "graphic_decoration": campaign.graphic_decoration if person_message else None,
-        "body_layout": "person-plus-message" if person_message else "high-energy-casual" if energy else "photo-background" if background else "side-by-side" if side else "image-first" if image_first else "stacked" if has_visual else "statement",
+        "body_layout": "graphic-hero" if graphic_hero else "person-plus-message" if person_message else "high-energy-casual" if energy else "photo-background" if background else "side-by-side" if side else "image-first" if image_first else "stacked" if has_visual else "statement",
         "brand_region": protected_brand, "cta_region": cta_region, "cta_button": button_box,
         "terms_box": terms_box, "website_box": website_box, "cta_alignment": "same-line" if same_line else "stacked", "message_card": getattr(c,"message_card",None),
         "phone_check": getattr(c, "phone_check", None),
-        "sender_name": campaign.sender_name if layout in ("phone", "conversation") else None,
-        "phone_message": (campaign.message or "Your order is ready for collection. Thank you!") if layout in ("phone", "conversation") else None,
+        "sender_name": campaign.sender_name if layout in ("phone", "conversation") and not graphic else None,
+        "phone_message": (campaign.message or "Your order is ready for collection. Thank you!") if layout in ("phone", "conversation") and not graphic else None,
         "photo_checks": c.photo_checks, "brand_strip": campaign.brand_strip, "logo_box": [logo_x, logo_y, scaled_logo.width, scaled_logo.height],
-        "alt_text": "Burst SMS Philippines: " + ". ".join(part.rstrip(". ") for part in [campaign.headline, campaign.accent, photo["alt"] if photo else "", ("Illustrative SMS from "+campaign.sender_name+": "+(campaign.message or "Your order is ready for collection. Thank you!")) if layout in ("phone","conversation") else ""] if part),
+        "alt_text": "Burst SMS Philippines: " + ". ".join(part.rstrip(". ") for part in [campaign.headline, campaign.accent, photo["alt"] if photo else "", ("Illustrative SMS from "+campaign.sender_name+": "+(campaign.message or "Your order is ready for collection. Thank you!")) if layout in ("phone","conversation") and not graphic else "", graphic["alt"] if graphic else ""] if part),
         "channel_copy": campaign.primary_text + "\n\n" + campaign.cta + ": " + DESTINATION + ("\n\nTerms: "+campaign.offer_terms if campaign.offer_terms else ""),
         "contrast_ratios": contrasts,
-        "checks": {**({"person_graphic_separation":True,"complete_photo_preserved":True,"readable_graphic":True} if person_message else {}),**({"prepared_subject_alpha":True,"registered_prop":not prop or prop.get("approved_subject_alpha") is True,"decorations_behind_subjects":True} if energy else {}),**({"photo_coverage":True,"overlay_bounds":True,"overlay_collisions":True,"registered_subject_preservation":True} if background else {}),"asset_integrity": True, "logo_pixels": True, "locked_styles": True, "text_fit": True, "fixed_dimensions": True, "fixed_destination": True, "text_contrast": True, "message_visible": layout not in ("phone", "conversation") or any(t["text"] == (campaign.message or "Your order is ready for collection. Thank you!") for t in c.text_checks), "cta_placement": True, "brand_bar_separation": True, "terms_placement": True, "text_collisions": True, "mask_bounds": all(p["mask_bounds_match"] for p in c.photo_checks), "photo_frame_fit": all(p["frame_filled"] and p["proportional_scale"] for p in c.photo_checks)},
+        "checks": {**({"registered_graphic":True,"graphic_readable_size":True,"graphic_palette_only":True,"graphic_bounds":True} if graphic else {}),**({"person_graphic_separation":True,"complete_photo_preserved":True,"readable_graphic":True} if person_message else {}),**({"prepared_subject_alpha":True,"registered_prop":not prop or prop.get("approved_subject_alpha") is True,"decorations_behind_subjects":True} if energy else {}),**({"photo_coverage":True,"overlay_bounds":True,"overlay_collisions":True,"registered_subject_preservation":True} if background else {}),"asset_integrity": True, "logo_pixels": True, "locked_styles": True, "text_fit": True, "fixed_dimensions": True, "fixed_destination": True, "text_contrast": True, "message_visible": bool(graphic) or layout not in ("phone", "conversation") or any(t["text"] == (campaign.message or "Your order is ready for collection. Thank you!") for t in c.text_checks), "cta_placement": True, "brand_bar_separation": True, "terms_placement": True, "text_collisions": True, "mask_bounds": all(p["mask_bounds_match"] for p in c.photo_checks), "photo_frame_fit": all(p["frame_filled"] and p["proportional_scale"] for p in c.photo_checks)},
         "inspection_required": ["copy_and_claims", "visual_composition", "local_fit_and_photography", "accessibility", "photo_edges", "body_balance", "cta_and_terms", "campaign_effectiveness"]
     }
     return png, report

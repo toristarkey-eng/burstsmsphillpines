@@ -47,6 +47,17 @@
         "portrait"
       ],
       "optional": true
+    },
+    "graphic-focus": {
+      "title": "A clear campaign graphic",
+      "layout": "graphic",
+      "reference": "approved-keep-customers-in-loop.png",
+      "photography": false,
+      "formats": [
+        "square",
+        "portrait"
+      ],
+      "optional": true
     }
   },
   "formats": {
@@ -257,6 +268,27 @@
           ]
         }
       ]
+    },
+    "vhey": {
+      "file": "assets/vhey-clean-transparent.png",
+      "crop": [
+        0,
+        0,
+        1122,
+        1402
+      ],
+      "alt": "Vhey holding a smartphone, photographed portrait",
+      "templates": [
+        "people-first",
+        "customer-updates",
+        "recognition",
+        "person-plus-message"
+      ],
+      "approved_subject_alpha": true,
+      "identity": "vhey",
+      "approval_source": "Tori supplied Vhey for creative use and approved mask-only cleanup, 10 October 2026",
+      "preparation": "Only alpha changed; full original RGB channels verified identical. No role, quotation or endorsement inferred.",
+      "original_rgb_sha256": "2c51a2aac58ad5998df4df13485ef5832274479f5e730d8fe7167fad661bb47a"
     }
   },
   "custom_dimensions": {
@@ -273,7 +305,8 @@
     "image-first",
     "hero",
     "photo-background",
-    "person-plus-message"
+    "person-plus-message",
+    "graphic-hero"
   ],
   "photo_background": {
     "heading_style": "navy",
@@ -309,7 +342,11 @@
         "none"
       ],
       "coffee_prop_required_for": "team-coffee",
-      "registered_assets_available": false
+      "registered_assets_available": true,
+      "registered_people_assets": [
+        "vhey"
+      ],
+      "team_coffee_assets_available": false
     }
   },
   "person_plus_message": {
@@ -338,5 +375,463 @@
       "adjacent",
       "layered"
     ]
+  },
+  "graphics": {
+    "order-confirmed": {
+      "file": "assets/campaign-graphics/order-confirmed-clean.png",
+      "crop": [
+        140,
+        165,
+        1414,
+        849
+      ],
+      "alt": "Approved illustrative campaign graphic: Order confirmed. Thanks, Mia. We\u2019re getting your order ready.",
+      "embedded_text": "Order confirmed. Thanks, Mia. We\u2019re getting your order ready.",
+      "category": "customer-updates",
+      "min_rendered_width": 660,
+      "templates": [
+        "graphic-focus",
+        "person-plus-message",
+        "recognition",
+        "customer-updates",
+        "people-first",
+        "offer-focus"
+      ],
+      "approval_source": "Tori Starkey approval and permission for Burst-palette recolouring, 10 October 2026",
+      "recolour_allowed": true,
+      "recolour_scope": "Graphic artwork only; approved Burst palette; never photographs, logo or third-party marks",
+      "alpha_cleanup": "Reviewed mask-only: remove detached tiny alpha components, smooth one-pixel boundary; original RGB unchanged. Renderer performs controlled brand-tint mapping.",
+      "native_alpha": true,
+      "original_file": "assets/campaign-graphics/order-confirmed.png",
+      "prepared_brand_palette": true,
+      "original_rgb_sha256": "e4d16e1645aaae403be3f1e671525bf28bc4fbec99ee1916963fd7049f4dcf52",
+      "preparation_method": "deterministic alpha-mask cleanup; generative trials rejected"
+    },
+    "delivery-update": {
+      "file": "assets/campaign-graphics/delivery-update-clean.png",
+      "crop": [
+        157,
+        214,
+        1417,
+        822
+      ],
+      "alt": "Approved illustrative campaign graphic: On its way. Your delivery is arriving today.",
+      "embedded_text": "On its way. Your delivery is arriving today.",
+      "category": "customer-updates",
+      "min_rendered_width": 700,
+      "templates": [
+        "graphic-focus",
+        "person-plus-message",
+        "recognition",
+        "customer-updates",
+        "people-first",
+        "offer-focus"
+      ],
+      "approval_source": "Tori Starkey approval and permission for Burst-palette recolouring, 10 October 2026",
+      "recolour_allowed": true,
+      "recolour_scope": "Graphic artwork only; approved Burst palette; never photographs, logo or third-party marks",
+      "alpha_cleanup": "Reviewed mask-only: remove detached tiny alpha components, smooth one-pixel boundary; original RGB unchanged. Renderer performs controlled brand-tint mapping.",
+      "native_alpha": true,
+      "original_file": "assets/campaign-graphics/delivery-update.png",
+      "prepared_brand_palette": true,
+      "original_rgb_sha256": "1fde543ee2157195cae123469ed93dbaaf1420bc3cd944f1de86b0d29065a491",
+      "preparation_method": "deterministic alpha-mask cleanup; generative trials rejected"
+    },
+    "appointment-reminder": {
+      "file": "assets/campaign-graphics/appointment-reminder-clean.png",
+      "crop": [
+        161,
+        178,
+        1433,
+        800
+      ],
+      "alt": "Approved illustrative campaign graphic: See you tomorrow. Your appointment is at 10 am.",
+      "embedded_text": "See you tomorrow. Your appointment is at 10 am.",
+      "category": "reminders",
+      "min_rendered_width": 660,
+      "templates": [
+        "graphic-focus",
+        "person-plus-message",
+        "recognition",
+        "customer-updates",
+        "people-first",
+        "offer-focus"
+      ],
+      "approval_source": "Tori Starkey approval and permission for Burst-palette recolouring, 10 October 2026",
+      "recolour_allowed": true,
+      "recolour_scope": "Graphic artwork only; approved Burst palette; never photographs, logo or third-party marks",
+      "alpha_cleanup": "Reviewed mask-only: remove detached tiny alpha components, smooth one-pixel boundary; original RGB unchanged. Renderer performs controlled brand-tint mapping.",
+      "native_alpha": true,
+      "original_file": "assets/campaign-graphics/appointment-reminder.png",
+      "prepared_brand_palette": true,
+      "original_rgb_sha256": "fb0b169bd3882d771bbffb3aee957b134f251ac7354253615514d560817b27a0",
+      "preparation_method": "deterministic alpha-mask cleanup; generative trials rejected"
+    },
+    "early-access": {
+      "file": "assets/campaign-graphics/early-access-clean.png",
+      "crop": [
+        148,
+        188,
+        1444,
+        883
+      ],
+      "alt": "Approved illustrative campaign graphic: Your early access is here. Shop our sale before everyone else. Shop now.",
+      "embedded_text": "Your early access is here. Shop our sale before everyone else. Shop now.",
+      "category": "promotions",
+      "min_rendered_width": 700,
+      "templates": [
+        "graphic-focus",
+        "person-plus-message",
+        "recognition",
+        "customer-updates",
+        "people-first",
+        "offer-focus"
+      ],
+      "approval_source": "Tori Starkey approval and permission for Burst-palette recolouring, 10 October 2026",
+      "recolour_allowed": true,
+      "recolour_scope": "Graphic artwork only; approved Burst palette; never photographs, logo or third-party marks",
+      "alpha_cleanup": "Reviewed mask-only: remove detached tiny alpha components, smooth one-pixel boundary; original RGB unchanged. Renderer performs controlled brand-tint mapping.",
+      "native_alpha": true,
+      "original_file": "assets/campaign-graphics/early-access.png",
+      "prepared_brand_palette": true,
+      "original_rgb_sha256": "4d66203a9fb9ff8ca66b2bd1ac2d3be805090495c37cfcd6c441da4ce99d97da",
+      "preparation_method": "deterministic alpha-mask cleanup; generative trials rejected"
+    },
+    "reactivation": {
+      "file": "assets/campaign-graphics/reactivation-clean.png",
+      "crop": [
+        122,
+        138,
+        1414,
+        870
+      ],
+      "alt": "Approved illustrative campaign graphic: Ready when you are. Come back and explore what\u2019s new. Take a look.",
+      "embedded_text": "Ready when you are. Come back and explore what\u2019s new. Take a look.",
+      "category": "engagement",
+      "min_rendered_width": 700,
+      "templates": [
+        "graphic-focus",
+        "person-plus-message",
+        "recognition",
+        "customer-updates",
+        "people-first",
+        "offer-focus"
+      ],
+      "approval_source": "Tori Starkey approval and permission for Burst-palette recolouring, 10 October 2026",
+      "recolour_allowed": true,
+      "recolour_scope": "Graphic artwork only; approved Burst palette; never photographs, logo or third-party marks",
+      "alpha_cleanup": "Reviewed mask-only: remove detached tiny alpha components, smooth one-pixel boundary; original RGB unchanged. Renderer performs controlled brand-tint mapping.",
+      "native_alpha": true,
+      "original_file": "assets/campaign-graphics/reactivation.png",
+      "prepared_brand_palette": true,
+      "original_rgb_sha256": "fa4318a2b085c688ab38104666d510c87a71728e860f8af79519c02d58dc0caf",
+      "preparation_method": "deterministic alpha-mask cleanup; generative trials rejected"
+    },
+    "booking-conversation": {
+      "file": "assets/campaign-graphics/booking-conversation-clean.png",
+      "crop": [
+        129,
+        114,
+        1424,
+        921
+      ],
+      "alt": "Approved illustrative campaign graphic: Can I change my booking? Of course. What time suits you?",
+      "embedded_text": "Can I change my booking? Of course. What time suits you?",
+      "category": "conversations",
+      "min_rendered_width": 700,
+      "templates": [
+        "graphic-focus",
+        "person-plus-message",
+        "recognition",
+        "customer-updates",
+        "people-first",
+        "offer-focus"
+      ],
+      "approval_source": "Tori Starkey approval and permission for Burst-palette recolouring, 10 October 2026",
+      "recolour_allowed": true,
+      "recolour_scope": "Graphic artwork only; approved Burst palette; never photographs, logo or third-party marks",
+      "alpha_cleanup": "Reviewed mask-only: remove detached tiny alpha components, smooth one-pixel boundary; original RGB unchanged. Renderer performs controlled brand-tint mapping.",
+      "native_alpha": true,
+      "original_file": "assets/campaign-graphics/booking-conversation.png",
+      "prepared_brand_palette": true,
+      "original_rgb_sha256": "6006c7a564a37a158257f73d8e827f23a6ebf3485b981650be654dc6048022e5",
+      "preparation_method": "deterministic alpha-mask cleanup; generative trials rejected"
+    },
+    "black-friday-bags": {
+      "file": "assets/campaign-graphics/black-friday-bags-clean.png",
+      "crop": [
+        49,
+        35,
+        1470,
+        958
+      ],
+      "alt": "Approved illustrative campaign graphic: Black Friday",
+      "embedded_text": "Black Friday",
+      "category": "seasonal",
+      "min_rendered_width": 320,
+      "templates": [
+        "graphic-focus",
+        "person-plus-message",
+        "recognition",
+        "customer-updates",
+        "people-first",
+        "offer-focus"
+      ],
+      "approval_source": "Tori Starkey approval and permission for Burst-palette recolouring, 10 October 2026",
+      "recolour_allowed": true,
+      "recolour_scope": "Graphic artwork only; approved Burst palette; never photographs, logo or third-party marks",
+      "alpha_cleanup": "Reviewed mask-only: remove detached tiny alpha components, smooth one-pixel boundary; original RGB unchanged. Renderer performs controlled brand-tint mapping.",
+      "native_alpha": true,
+      "original_file": "assets/campaign-graphics/black-friday-bags.png",
+      "prepared_brand_palette": true,
+      "original_rgb_sha256": "6e35bfa94fbf82e09c226db464af747a0d5bdc2fb7c7e603625f42b15cbf23d7",
+      "preparation_method": "deterministic alpha-mask cleanup; generative trials rejected"
+    },
+    "black-friday-trolley": {
+      "file": "assets/campaign-graphics/black-friday-trolley-clean.png",
+      "crop": [
+        89,
+        55,
+        1240,
+        1168
+      ],
+      "alt": "Approved illustrative campaign graphic: Black Friday",
+      "embedded_text": "Black Friday",
+      "category": "seasonal",
+      "min_rendered_width": 320,
+      "templates": [
+        "graphic-focus",
+        "person-plus-message",
+        "recognition",
+        "customer-updates",
+        "people-first",
+        "offer-focus"
+      ],
+      "approval_source": "Tori Starkey approval and permission for Burst-palette recolouring, 10 October 2026",
+      "recolour_allowed": true,
+      "recolour_scope": "Graphic artwork only; approved Burst palette; never photographs, logo or third-party marks",
+      "alpha_cleanup": "Reviewed mask-only: remove detached tiny alpha components, smooth one-pixel boundary; original RGB unchanged. Renderer performs controlled brand-tint mapping.",
+      "native_alpha": true,
+      "original_file": "assets/campaign-graphics/black-friday-trolley.png",
+      "prepared_brand_palette": true,
+      "original_rgb_sha256": "ed95141998950291d8f321c049f458d5a94f4def3bf06c6c94893da876e4cfce",
+      "preparation_method": "deterministic alpha-mask cleanup; generative trials rejected"
+    },
+    "double-digit-sale": {
+      "file": "assets/campaign-graphics/double-digit-sale-clean.png",
+      "crop": [
+        16,
+        170,
+        1526,
+        879
+      ],
+      "alt": "Approved illustrative campaign graphic: 11.11 Sale day",
+      "embedded_text": "11.11 Sale day",
+      "category": "seasonal",
+      "min_rendered_width": 460,
+      "templates": [
+        "graphic-focus",
+        "person-plus-message",
+        "recognition",
+        "customer-updates",
+        "people-first",
+        "offer-focus"
+      ],
+      "approval_source": "Tori Starkey approval and permission for Burst-palette recolouring, 10 October 2026",
+      "recolour_allowed": true,
+      "recolour_scope": "Graphic artwork only; approved Burst palette; never photographs, logo or third-party marks",
+      "alpha_cleanup": "Reviewed mask-only: remove detached tiny alpha components, smooth one-pixel boundary; original RGB unchanged. Renderer performs controlled brand-tint mapping.",
+      "native_alpha": true,
+      "original_file": "assets/campaign-graphics/double-digit-sale.png",
+      "prepared_brand_palette": true,
+      "original_rgb_sha256": "f2310fe7a66600c37353956413a7217e58e7b57771822fc5770fa3ce0ba8b2af",
+      "preparation_method": "deterministic alpha-mask cleanup; generative trials rejected"
+    },
+    "sender-recognition": {
+      "file": "assets/campaign-graphics/sender-recognition-clean.png",
+      "crop": [
+        126,
+        171,
+        1377,
+        846
+      ],
+      "alt": "YOUR BRAND. Hi Mia, your order is on its way.",
+      "embedded_text": "YOUR BRAND. Hi Mia, your order is on its way.",
+      "category": "sender-recognition",
+      "min_rendered_width": 700,
+      "templates": [
+        "graphic-focus",
+        "person-plus-message",
+        "recognition",
+        "customer-updates",
+        "people-first",
+        "offer-focus"
+      ],
+      "approval_source": "Tori approved YOUR BRAND as an explanatory customer brand label, 10 October 2026",
+      "recolour_allowed": true,
+      "native_alpha": true,
+      "background": "retain original photographic/raster white background; no automatic cutout",
+      "original_file": "assets/campaign-graphics/sender-recognition.png",
+      "prepared_brand_palette": true,
+      "alpha_cleanup": "Reviewed mask-only: remove detached tiny alpha components, smooth one-pixel boundary; original RGB unchanged. Renderer performs controlled brand-tint mapping.",
+      "original_rgb_sha256": "f58d0b902cebff0f18a7977dd2d958849ddd37deefa5c78207c684e47c579317",
+      "preparation_method": "deterministic alpha-mask cleanup; generative trials rejected"
+    },
+    "order-details": {
+      "file": "assets/campaign-graphics/order-details-clean.png",
+      "crop": [
+        250,
+        144,
+        1329,
+        868
+      ],
+      "alt": "Your update is ready. View your order details. View order.",
+      "embedded_text": "Your update is ready. View your order details. View order.",
+      "category": "customer-updates",
+      "min_rendered_width": 700,
+      "templates": [
+        "graphic-focus",
+        "person-plus-message",
+        "recognition",
+        "customer-updates",
+        "people-first",
+        "offer-focus"
+      ],
+      "approval_source": "Tori Starkey approval and permission for Burst-palette recolouring, 10 October 2026",
+      "recolour_allowed": true,
+      "recolour_scope": "Graphic artwork only; approved Burst palette; never photographs, logo or third-party marks",
+      "alpha_cleanup": "Reviewed mask-only: remove detached tiny alpha components, smooth one-pixel boundary; original RGB unchanged. Renderer performs controlled brand-tint mapping.",
+      "native_alpha": true,
+      "original_file": "assets/campaign-graphics/order-details.png",
+      "prepared_brand_palette": true,
+      "original_rgb_sha256": "eb056d7271742cb8a3663b4064dfdc669a3faa966308484df6d4034b12259b10",
+      "preparation_method": "deterministic alpha-mask cleanup; generative trials rejected"
+    },
+    "growth-sculpture": {
+      "file": "assets/campaign-graphics/growth-sculpture-clean.png",
+      "crop": [
+        129,
+        78,
+        1219,
+        1135
+      ],
+      "alt": "No text; conceptual rising arrow and growth bars, not a performance promise.",
+      "embedded_text": "No text; conceptual rising arrow and growth bars, not a performance promise.",
+      "category": "customer-updates",
+      "min_rendered_width": 320,
+      "templates": [
+        "graphic-focus",
+        "person-plus-message",
+        "recognition",
+        "customer-updates",
+        "people-first",
+        "offer-focus"
+      ],
+      "approval_source": "Tori Starkey approval and permission for Burst-palette recolouring, 10 October 2026",
+      "recolour_allowed": true,
+      "recolour_scope": "Graphic artwork only; approved Burst palette; never photographs, logo or third-party marks",
+      "alpha_cleanup": "Reviewed mask-only: remove detached tiny alpha components, smooth one-pixel boundary; original RGB unchanged. Renderer performs controlled brand-tint mapping.",
+      "native_alpha": true,
+      "original_file": "assets/campaign-graphics/growth-sculpture.png",
+      "prepared_brand_palette": true,
+      "original_rgb_sha256": "ada655726870acbca885c0e4a360298f68bf6338fd2bb6613b825a125e3b2a25",
+      "preparation_method": "deterministic alpha-mask cleanup; generative trials rejected"
+    },
+    "viber-order-update": {
+      "file": "assets/campaign-graphics/viber-order-update-clean.png",
+      "crop": [
+        112,
+        152,
+        1466,
+        880
+      ],
+      "alt": "Illustrative Viber order update card, YOUR BRAND, Hi Mia, your order is on its way.",
+      "embedded_text": "Viber. YOUR BRAND. Hi Mia, your order is on its way.",
+      "category": "sender-recognition",
+      "min_rendered_width": 700,
+      "templates": [
+        "graphic-focus",
+        "person-plus-message",
+        "recognition",
+        "customer-updates",
+        "people-first",
+        "offer-focus"
+      ],
+      "approval_source": "Tori approved YOUR BRAND as an explanatory customer brand label, 10 October 2026",
+      "recolour_allowed": true,
+      "native_alpha": true,
+      "background": "retain original photographic/raster white background; no automatic cutout",
+      "original_file": "assets/campaign-graphics/viber-order-update.png",
+      "prepared_brand_palette": true,
+      "alpha_cleanup": "Reviewed mask-only: remove detached tiny alpha components, smooth one-pixel boundary; original RGB unchanged. Renderer performs controlled brand-tint mapping.",
+      "original_rgb_sha256": "595adc9f95717987c529fefdeedea0da1fa60d3e05625faa7d75a13c0c8f3870",
+      "preparation_method": "deterministic alpha-mask cleanup; generative trials rejected",
+      "channel": "viber",
+      "requires_explicit_channel": true,
+      "preserve_channel_identity": true,
+      "sender_label_overlay": {
+        "text": "YOUR BRAND",
+        "source_box": [
+          365,
+          497,
+          325,
+          68
+        ],
+        "font_size": 42,
+        "reason": "Replace low-contrast illustrative sender label with locked Noto bold/navy; retain wording and channel mark."
+      },
+      "protected_channel_mark_box": [
+        148,
+        195,
+        328,
+        340
+      ]
+    }
+  },
+  "reference_assets": {
+    "message-thumbnail-reference": {
+      "file": "assets/campaign-graphics/message-thumbnail-reference.jpg",
+      "approval_source": "Tori Starkey approval and permission for Burst-palette recolouring, 10 October 2026",
+      "renderable": false,
+      "reason": "Owner-approved YOUR BRAND explanatory graphic, but 145x85px source is too small for final export; use larger original or deterministic recreation."
+    },
+    "kudosity-library-reference": {
+      "file": "assets/campaign-graphics/kudosity-library-reference.png",
+      "approval_source": "Tori Starkey approval and permission for Burst-palette recolouring, 10 October 2026",
+      "renderable": false,
+      "reason": "Contact sheet with Kudosity branding and historical UI; reference only, never export as Burst artwork"
+    },
+    "kudosity-source-library": {
+      "file": "assets/kudosity-source-library/asset_manifest.json",
+      "renderable": false,
+      "reason": "Individual PNGs and supplied SVG masters retained with source notes. Historical 01, 02 and 04 are reference-only; channel illustrations require relevant approved campaign capability and identity preservation. Use these masters for source preparation, not arbitrary unsupported renderer IDs."
+    }
+  },
+  "graphic_hero": {
+    "selection": "optional requested or relevant graphical campaign; never default",
+    "formats": [
+      "square",
+      "portrait"
+    ],
+    "graphics": "registered enabled catalogue entries only",
+    "min_rendered_width": "asset-specific readability bound",
+    "graphic_colours": [
+      "brand",
+      "navy",
+      "violet",
+      "cyan"
+    ],
+    "protected_logo_recolour": false
+  },
+  "channel_imagery_policy": {
+    "default": "sms",
+    "explicit_request_only": [
+      "rcs",
+      "whatsapp",
+      "viber"
+    ],
+    "require_verbatim_request_excerpt": true,
+    "preserve_channel_marks": true,
+    "source_library_note": "RCS and WhatsApp source masters are retained with original channel identifiers and historical/source notes. Never use them for a generic SMS brief or infer capabilities from illustration."
   }
 }

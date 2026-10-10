@@ -1,0 +1,19 @@
+{
+  "template_id": "person-plus-message",
+  "format": "portrait",
+  "headline": "Ready for the rush?",
+  "accent": "Make every message count.",
+  "supporting": "Keep customers in the loop.",
+  "primary_text": "Planning your Black Friday customer messages? Talk to Burst SMS Philippines about relevant updates and promotions for your business.",
+  "cta": "Talk to our team",
+  "photo_id": "vhey",
+  "message": "",
+  "sender_name": "BURST SMS",
+  "brand_strip": "bottom",
+  "heading_style": "navy",
+  "composition": "person-plus-message",
+  "image_position": "left",
+  "phone_view": "auto",
+  "image_treatment": "cutout",
+  "graphic_id": "black-friday-bags"
+}
