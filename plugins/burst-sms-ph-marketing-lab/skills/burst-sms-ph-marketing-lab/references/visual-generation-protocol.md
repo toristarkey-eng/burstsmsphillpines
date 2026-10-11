@@ -54,3 +54,17 @@ Prepared library graphic cleanup is separate from campaign production. Owner-aut
 
 ### Channel imagery is explicitly requested only
 Use RCS, WhatsApp or Viber imagery only when the actual user request specifically names that channel. Generic messaging, customer-update, automation and SMS requests default to SMS imagery. Never infer a channel from the audience, an uploaded contact sheet or the availability of an asset. For a registered channel asset, record `imagery_channel` and a verbatim `channel_request` excerpt naming the channel; do not invent that excerpt. `viber-order-update` is the supplied approved, mask-cleaned Viber card. Use `graphic_colour: brand` to preserve the channel illustration and mark, never recolour a third-party logo. The campaign heading/CTA/bars still use locked Burst styles. RCS/WhatsApp masters retain their source notes in assets/kudosity-source-library; library presence is not a product availability claim or permission to bypass supported renderer registration. Illustrative sender labels and delivery ticks do not establish a live customer or guarantee delivery.
+
+## Person-plus-message composition (0.4.10)
+
+Apply only to person-plus-message creatives, not as the default campaign style. Preserve the approved headline, colours, CTA, website and brand bar when those elements already work.
+
+Compose the person and SMS example as one connected visual group. Scale the person to occupy most of the available body height, preserving proportions and the complete supplied subject. For portraits that end at the torso, anchor the lower edge to the bottom of the visual area immediately above the reserved CTA space. Do not leave the cropped torso floating in open space or extend the body artificially.
+
+Position the SMS card closer to the person, beside their phone or upper torso, with deliberate alignment. Keep it clear of faces, hands, clothing and equipment. Increase its size where needed so the sender name and message remain readable at feed size. Reduce the gap between person and message before adding decoration. Use scale, proximity and alignment to create cohesion.
+
+If the supplied portrait cannot sit naturally in the available layout, choose another registered image or supported composition. Do not change working copy or brand elements merely to accommodate an unsuitable portrait.
+
+Mandatory visual check: reject floating cutouts, visibly abrupt torso endings, excessive gaps and disconnected person/message elements. Compare suitable arrangements privately and deliver only after full-resolution and feed-size inspection passes. Record observed portrait anchoring, subject preservation, card readability, separation and cohesion in the existing visual_composition, photo_edges, body_balance and campaign_effectiveness inspection notes. Technical checks alone do not pass this standard.
+
+The renderer fits adjacent person/message groups to their actual proportions, uses a 24px group gap and a wider 380px card region at the 1080px layout scale, and anchors the portrait at the CTA boundary. Approved-alpha portraits may lose wholly transparent outer padding only; every nonzero alpha pixel remains. Layered arrangements preserve horizontal negative space and retain the actual subject-opacity collision check. If the available width limits portrait scale, inspect the result and choose a better registered image or supported composition rather than stretching, cropping the subject or forcing a pass.

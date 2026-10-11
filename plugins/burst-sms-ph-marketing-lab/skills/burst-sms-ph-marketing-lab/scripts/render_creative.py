@@ -124,10 +124,10 @@ def main(argv=None):
                 stale.unlink()
         sys.path.insert(0, str(SKILL))
         from runtime import renderer as engine
-        engine.load_locks()
+        lock = engine.load_locks()
         versions = check_dependencies()
         if args.action == "preflight":
-            result = {"status": "PASSED", "plugin": "burst-sms-ph-marketing-lab", "version": "0.4.8", "runtime_versions": versions, "logo_sha256": engine.APPROVED_LOGO_SHA256}
+            result = {"status": "PASSED", "plugin": "burst-sms-ph-marketing-lab", "version": lock["plugin_version"], "runtime_versions": versions, "logo_sha256": engine.APPROVED_LOGO_SHA256}
         elif args.action == "catalog":
             result = engine.catalog()
         elif args.action == "render":

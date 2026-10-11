@@ -253,7 +253,7 @@ class Canvas:
             occupied = ImageChops.lighter(occupied, visible)
             self.draw.text(position, text, font=face, fill=PALETTE[colour], anchor="lt")
 
-    def photo(self, photo, box, position="centre", treatment="panel", backdrop="none", fit="contain"):
+    def photo(self, photo, box, position="centre", treatment="panel", backdrop="none", fit="contain", trim_alpha_padding=False):
         source = Image.open(PLUGIN / photo["file"]).convert("RGBA")
         crop = tuple(photo["crop"])
         if not (0 <= crop[0] < crop[2] <= source.width and 0 <= crop[1] < crop[3] <= source.height):
@@ -263,6 +263,16 @@ class Canvas:
             raise Hold("Photo region is outside the canvas")
         panel = source.crop(crop)
         effective_crop = list(crop)
+        # In the person group, remove only wholly transparent outer padding.
+        # Retain every nonzero alpha pixel, including soft hair and clothing edges.
+        if trim_alpha_padding and treatment == "cutout" and photo.get("approved_subject_alpha") is True:
+            bounds = panel.getchannel("A").getbbox()
+            if bounds is None:
+                raise Hold("Registered portrait has no visible subject")
+            if trim_alpha_padding == "vertical":
+                bounds = (0, bounds[1], panel.width, bounds[3])
+            panel = panel.crop(bounds)
+            effective_crop = [crop[0]+bounds[0], crop[1]+bounds[1], crop[0]+bounds[2], crop[1]+bounds[3]]
         if fit == "cover":
             # A deliberate photographic crop fills the region; never warp subjects.
             ratio = w/h
@@ -651,25 +661,42 @@ def render(campaign: Campaign) -> tuple[bytes, dict]:
             raise Hold("Person-plus-message needs more visual space; shorten heading/emphasis or choose portrait")
         # One adjacent group, with complete-source photography and content-sized deterministic UI.
         # Non-overlapping safe regions avoid covering faces, hands, physical phones or essential text.
-        visual_y=body_top+24;visual_height=body_height-48
+        # The complete torso ends at the reserved CTA boundary, without a floating gap.
+        visual_y=body_top+24;visual_height=footer-visual_y
         photo_x=64 if campaign.image_position=="left" else 444
         graphic_x=668 if campaign.image_position=="left" else 64
-        graphic_width=348
+        graphic_width=380
+        photo_width=572
+        if campaign.graphic_placement=="adjacent":
+            source=Image.open(PLUGIN/photo["file"]).convert("RGBA").crop(tuple(photo["crop"]))
+            if campaign.image_treatment=="cutout" and photo.get("approved_subject_alpha") is True:
+                bounds=source.getchannel("A").getbbox()
+                if bounds is None:raise Hold("Registered portrait has no visible subject")
+                source=source.crop(bounds)
+            # Maximise the proportional person within one compact adjacent group.
+            # A narrow portrait does not inherit a large empty fixed-width column.
+            photo_width=min(548,max(1,round(visual_height*source.width/source.height)))
+            group_x=64+(952-photo_width-24-graphic_width)//2
+            photo_x=group_x if campaign.image_position=="left" else group_x+graphic_width+24
+            graphic_x=group_x+photo_width+24 if campaign.image_position=="left" else group_x
         if campaign.graphic_placement=="layered":
+            graphic_width=348
             alpha_source=Image.open(PLUGIN/photo["file"])
             if photo.get("approved_subject_alpha") is not True or "A" not in alpha_source.getbands() or alpha_source.getchannel("A").getextrema() != (0,255) or campaign.image_treatment!="cutout":
                 raise Hold("Layered message placement requires a registered professionally prepared alpha subject")
             graphic_x=584 if campaign.image_position=="left" else 148
         if campaign.graphic_decoration=="cyan-band":
             d.rounded_rectangle((graphic_x-12,visual_y+visual_height//3,graphic_x+graphic_width+11,body_bottom-12),32,fill=PALETTE["cyan"])
-        c.photo(photo,(photo_x,visual_y,572,visual_height),"centre",campaign.image_treatment,"none","contain")
+        frame=c.photo(photo,(photo_x,visual_y,photo_width,visual_height),"centre",campaign.image_treatment,"none","contain",trim_alpha_padding="vertical" if campaign.graphic_placement=="layered" else True)
+        graphic_height=visual_height-24
         if graphic:
-            c.graphic(graphic,(graphic_x,visual_y,graphic_width,visual_height),campaign.graphic_colour)
+            c.graphic(graphic,(graphic_x,visual_y,graphic_width,graphic_height),campaign.graphic_colour)
         elif campaign.phone_view=="full":
-            c.phone(campaign,(graphic_x,visual_y,graphic_width,visual_height))
+            c.phone(campaign,(graphic_x,visual_y,graphic_width,graphic_height))
         else:
-            card_height=c.bubble(campaign.message,(graphic_x,visual_y,graphic_width,min(300,visual_height)),campaign.sender_name,paint=False)
-            c.bubble(campaign.message,(graphic_x,visual_y+(visual_height-card_height)//2,graphic_width,card_height),campaign.sender_name)
+            card_height=c.bubble(campaign.message,(graphic_x,visual_y,graphic_width,min(300,graphic_height)),campaign.sender_name,paint=False)
+            card_y=max(visual_y,min(footer-24-card_height,frame[1]+round(frame[3]*.42)-card_height//2))
+            c.bubble(campaign.message,(graphic_x,card_y,graphic_width,card_height),campaign.sender_name)
         d.rectangle((0,0,width,heading_bottom-1),fill=PALETTE["navy"])
         c.copy_block(campaign,copy_x,copy_y,copy_width,copy_height,dark=True,heading_sizes=person_heading_sizes)
     elif background:
@@ -822,7 +849,7 @@ def render(campaign: Campaign) -> tuple[bytes, dict]:
         if collision and campaign.graphic_placement=="layered":
             # Check the entire overlay against actual registered subject opacity, including soft hair.
             # Only overlap within transparent negative space is permitted, never foreground pixels.
-            alpha=Image.open(PLUGIN/photo["file"]).getchannel("A").crop(tuple(photo["crop"])).resize((pw,ph),Image.Resampling.LANCZOS)
+            alpha=Image.open(PLUGIN/photo["file"]).getchannel("A").crop(tuple(c.photo_checks[0]["effective_crop"])).resize((pw,ph),Image.Resampling.LANCZOS)
             ix0,iy0=max(gx,px),max(gy,py);ix1,iy1=min(gx+gw,px+pw),min(gy+gh,py+ph)
             collision=alpha.crop((ix0-px,iy0-py,ix1-px,iy1-py)).getbbox() is not None
         if gx<64 or gx+gw>width-64 or gy<body_top+24 or gy+gh>footer-24 or collision:

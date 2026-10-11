@@ -321,6 +321,29 @@ class RendererTests(unittest.TestCase):
             with self.assertRaises(Hold):render(brief.model_copy(update=change))
         with self.assertRaises(Hold):render(campaign().model_copy(update={'graphic_decoration':'cyan-band'}))
 
+    def test_person_message_torso_anchor_and_compact_group(self):
+        for fmt in ('square', 'portrait'):
+            for position in ('left', 'right'):
+                brief=campaign('person-plus-message',fmt,'vhey').model_copy(update={'image_position':position})
+                _,r=render(brief)
+                photo=r['photo_checks'][0]
+                px,py,pw,ph=photo['frame'];gx,gy,gw,gh=r['message_card']
+                self.assertEqual(py+ph,r['cta_region'][1])
+                self.assertLessEqual(abs((gx if position=='left' else px)-(px+pw if position=='left' else gx+gw)-24),1)
+                self.assertEqual(gw,380)
+                self.assertLessEqual(gy+gh,r['cta_region'][1]-24)
+                source=Image.open(SKILL/photo['source']).convert('RGBA')
+                bounds=source.getchannel('A').getbbox()
+                self.assertEqual(photo['effective_crop'],list(bounds))
+                self.assertAlmostEqual(pw/ph,(bounds[2]-bounds[0])/(bounds[3]-bounds[1]),delta=.005)
+                # Transparent-padding trimming must retain every original subject pixel.
+                outside=source.getchannel('A').copy()
+                outside.paste(0,bounds)
+                self.assertIsNone(outside.getbbox())
+                self.assertEqual(r['campaign']['headline'],brief.headline)
+                self.assertEqual(r['campaign']['accent'],brief.accent)
+                self.assertEqual(r['brand_strip'],'bottom')
+
     def test_layered_graphic_only_uses_registered_alpha_negative_space(self):
         from PIL import ImageDraw
         with tempfile.TemporaryDirectory() as temp:
@@ -568,7 +591,7 @@ class StandaloneTests(unittest.TestCase):
 
     def test_copied_skill_runs_independently_and_delivers_only_after_inspection(self):
         result = self.run_cli('preflight'); self.assertEqual(result.returncode,0,result.stderr)
-        self.assertEqual(json.loads(result.stdout)['version'], '0.4.8')
+        self.assertEqual(json.loads(result.stdout)['version'], '0.4.10')
         self.assertNotIn(str(ROOT),result.stdout)
         self.prepare(); self.assertFalse((self.output/'delivery-validation.json').exists())
         result = self.validate(); self.assertEqual(result.returncode,0,result.stderr)
