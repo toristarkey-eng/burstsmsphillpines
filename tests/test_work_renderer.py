@@ -43,6 +43,51 @@ def inspection(report):
 
 
 class RendererTests(unittest.TestCase):
+    def test_sizing_ranges_reject_unsafe_and_nonfinite_values(self):
+        base=campaign().model_dump()
+        for name,value in [('heading_scale',0.5),('heading_scale',1.7),('message_scale',0.9),('message_scale',1.7),('message_width_scale',1.5),('image_scale',1.1),('graphic_scale',0.4),('heading_scale',float('nan')),('image_scale',float('inf'))]:
+            with self.subTest(name=name,value=value), self.assertRaises(ValidationError):
+                Campaign(**{**base,name:value})
+
+    def test_enlarged_sms_and_heading_preserve_brand_and_cta(self):
+        base=Campaign(**json.loads((SKILL/'references/examples/photo-background-ping.json').read_text()))
+        base=base.model_copy(update={'photo_id':'retail-connection','headline':'Good news deserves','accent':'a little ping.','sms_position':'middle-left','message':'Your order is ready to collect. See you soon!'})
+        _,before=render(base)
+        _,after=render(base.model_copy(update={'heading_scale':1.35,'message_scale':1.5,'message_width_scale':0.9}))
+        for text in (base.headline,base.accent,base.message,base.sender_name):
+            a=next(x['size'] for x in before['text_checks'] if x['text']==text)
+            b=next(x['size'] for x in after['text_checks'] if x['text']==text)
+            self.assertGreater(b,a)
+        self.assertGreater(after['message_card'][3],before['message_card'][3])
+        for key in ('logo_box','logo_sha256','brand_region','cta_button','website_box','destination'):
+            self.assertEqual(before[key],after[key])
+        self.assertEqual(after['cta_alignment'],'same-line')
+        self.assertTrue(all(after['checks'].values()))
+
+    def test_visual_sizing_is_proportional_and_preserves_grounding(self):
+        base=campaign('person-plus-message',photo='vhey')
+        _,before=render(base);_,after=render(base.model_copy(update={'image_scale':0.8}))
+        a=before['photo_checks'][0]['frame'];b=after['photo_checks'][0]['frame']
+        self.assertLess(b[2],a[2]);self.assertLess(b[3],a[3])
+        self.assertEqual(b[0]+b[2],a[0]+a[2]);self.assertEqual(b[1]+b[3],a[1]+a[3])
+        self.assertTrue(all(after['checks'].values()))
+        base=campaign('graphic-focus');_,before=render(base)
+        _,after=render(base.model_copy(update={'graphic_scale':0.9}))
+        self.assertLess(after['graphic_check']['frame'][2],before['graphic_check']['frame'][2])
+        self.assertTrue(all(after['checks'].values()))
+
+    def test_incompatible_sizing_and_unreadable_graphics_hold(self):
+        base=campaign()
+        for update in ({'graphic_scale':0.8},{'image_scale':0.8},{'message_width_scale':1.2}):
+            with self.assertRaises(Hold):render(base.model_copy(update=update))
+        base=campaign('graphic-focus')
+        with self.assertRaises(Hold):render(base.model_copy(update={'message_scale':1.2}))
+        base=Campaign(**json.loads((SKILL/'references/examples/photo-background-ping.json').read_text()))
+        with self.assertRaises(Hold):render(base.model_copy(update={'image_scale':0.8}))
+        canvas=Canvas((1080,1080));canvas.graphic_scale=0.65
+        graphic={**catalog()['graphics']['order-details'],'id':'order-details'}
+        with self.assertRaises(Hold):canvas.graphic(graphic,(64,300,graphic['min_rendered_width'],450))
+
     def test_campaign_toolkit_assets_are_registered_with_provenance(self):
         inventory=json.loads((SKILL/'assets/photography/campaign-toolkit-2026-10-12.json').read_text())
         self.assertEqual(len(inventory['new_photography']),8)
@@ -772,7 +817,7 @@ class StandaloneTests(unittest.TestCase):
 
     def test_copied_skill_runs_independently_and_delivers_only_after_inspection(self):
         result = self.run_cli('preflight'); self.assertEqual(result.returncode,0,result.stderr)
-        self.assertEqual(json.loads(result.stdout)['version'], '0.4.15')
+        self.assertEqual(json.loads(result.stdout)['version'], '0.4.16')
         self.assertNotIn(str(ROOT),result.stdout)
         self.prepare(); self.assertFalse((self.output/'delivery-validation.json').exists())
         result = self.validate(); self.assertEqual(result.returncode,0,result.stderr)

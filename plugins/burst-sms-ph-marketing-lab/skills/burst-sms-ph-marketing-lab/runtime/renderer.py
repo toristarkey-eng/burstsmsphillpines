@@ -49,6 +49,11 @@ class Campaign(BaseModel):
     template_id: Literal["recognition", "customer-updates", "people-first", "team-coffee", "bold-statement", "offer-focus", "person-plus-message", "graphic-focus", "prop-focus"]
     format: Literal["square", "portrait", "landscape", "story", "custom"] = "portrait"
     dimensions: list[int] | None = Field(default=None, min_length=2, max_length=2)
+    heading_scale: float = Field(default=1.0, ge=0.85, le=1.6, allow_inf_nan=False)
+    message_scale: float = Field(default=1.0, ge=1.0, le=1.6, allow_inf_nan=False)
+    message_width_scale: float = Field(default=1.0, ge=0.75, le=1.4, allow_inf_nan=False)
+    image_scale: float = Field(default=1.0, ge=0.65, le=1.0, allow_inf_nan=False)
+    graphic_scale: float = Field(default=1.0, ge=0.65, le=1.0, allow_inf_nan=False)
     headline: str = Field(min_length=1, max_length=65)
     accent: str = Field(default="", max_length=45)
     supporting: str = Field(default="", max_length=130)
@@ -195,6 +200,14 @@ class Canvas:
         self.photo_checks = []
         self.photo_masks = []
         self.compact = size[1] < 900
+        self.message_scale = self.image_scale = self.graphic_scale = 1.0
+
+    @staticmethod
+    def scaled_region(box, scale, position="centre", bottom=False):
+        x,y,w,h=box
+        nw,nh=max(1,round(w*scale)),max(1,round(h*scale))
+        return (x if position=="left" else x+w-nw if position=="right" else x+(w-nw)//2,
+                y+h-nh if bottom else y+(h-nh)//2,nw,nh)
 
     def text(self, text, box, size, colour="navy", bold=False, max_lines=3):
         if not text:
@@ -230,6 +243,7 @@ class Canvas:
     def copy_block(self, campaign, x, y, width, budget, dark=False, paint=True, column=False, heading_sizes=None):
         # Choose from bounded approved sizes using actual wrapping, never free-form styles.
         for heading_size in (heading_sizes or ((48, 44, 40, 36) if self.compact else (64, 60, 56, 52, 48) if column else (80, 76, 72, 68, 64, 60, 56, 52))):
+            heading_size = round(heading_size * campaign.heading_scale)
             probe = Canvas(self.image.size)
             cursor = y
             try:
@@ -238,7 +252,7 @@ class Canvas:
                 if campaign.accent:
                     cursor += 12
                     cursor += probe.text(campaign.accent, (x, cursor, width, budget - (cursor-y)),
-                                         max(30 if self.compact else 42, heading_size-10), "cyan" if dark else "violet", True, 3 if column else 2)
+                                         max(round((30 if self.compact else 42)*campaign.heading_scale), heading_size-round(10*campaign.heading_scale)), "cyan" if dark else "violet", True, 3 if column else 2)
                 if campaign.supporting:
                     cursor += 16 if self.compact else 28
                     cursor += probe.text(campaign.supporting, (x, cursor, width, budget - (cursor-y)),
@@ -255,12 +269,13 @@ class Canvas:
 
     def energy_copy(self, campaign, x, y, width, budget, paint=True):
         for size in ((60,56,52) if self.compact else (96,88,80)):
+            size=round(size*campaign.heading_scale)
             probe=Canvas(self.image.size); cursor=y
             try:
                 cursor+=probe.text(campaign.headline,(x,cursor,width,budget),size,"navy",True,2)
                 if campaign.accent:
                     cursor+=12
-                    cursor+=probe.text(campaign.accent,(x,cursor,width,budget-(cursor-y)),36 if self.compact else 52,"violet",True,2)
+                    cursor+=probe.text(campaign.accent,(x,cursor,width,budget-(cursor-y)),round((36 if self.compact else 52)*campaign.heading_scale),"violet",True,2)
                 if campaign.supporting:
                     cursor+=16
                     cursor+=probe.text(campaign.supporting,(x,cursor,width,budget-(cursor-y)),24 if self.compact else 28,"navy",False,2)
@@ -290,6 +305,9 @@ class Canvas:
             self.draw.text(position, text, font=face, fill=PALETTE[colour], anchor="lt")
 
     def photo(self, photo, box, position="centre", treatment="panel", backdrop="none", fit="contain", trim_alpha_padding=False):
+        if photo.get("requires_visible_grounding"):
+            position=photo["anchored_source_edge"]
+        box=self.scaled_region(box,self.image_scale,position,bottom=True)
         source = Image.open(PLUGIN / photo["file"]).convert("RGBA")
         if photo.get("alpha_background"):
             if photo["alpha_background"] != "cloud" or photo.get("approved_subject_alpha") is True:
@@ -382,6 +400,7 @@ class Canvas:
         return self.photo_checks[-1]["frame"]
 
     def graphic(self, asset, box, colour="brand"):
+        box=self.scaled_region(box,self.graphic_scale)
         source=Image.open(PLUGIN/asset["file"])
         if (not asset.get("recolour_allowed") and not asset.get("preserve_channel_identity")) or (asset.get("native_alpha") and ("A" not in source.getbands() or source.getchannel("A").getextrema()[0] != 0)):
             raise Hold("Campaign graphic registration or alpha is invalid")
@@ -446,9 +465,10 @@ class Canvas:
         """Measure before painting: both the sender card and message bubble hug actual content."""
         x, y, w, h = box
         inset, label_y, message_y = (20,16,55) if self.compact else (28,25,80)
+        message_y += round(40*(self.message_scale-1))
         probe = Canvas(self.image.size)
-        probe.text(sender,(x+inset,y+label_y,w-2*inset,40),20 if self.compact else 25,bold=True,max_lines=1)
-        used = probe.text(text or "Your order is ready for collection. Thank you!",(x+inset,y+message_y,w-2*inset,h-message_y-18),22 if self.compact else 29,max_lines=4)
+        probe.text(sender,(x+inset,y+label_y,w-2*inset,round(40*self.message_scale)),round((20 if self.compact else 25)*self.message_scale),bold=True,max_lines=1)
+        used = probe.text(text or "Your order is ready for collection. Thank you!",(x+inset,y+message_y,w-2*inset,h-message_y-18),round((22 if self.compact else 29)*self.message_scale),max_lines=4)
         card_height = message_y+used+18
         if paint:
             self.draw.rounded_rectangle((x,y,x+w-1,y+card_height-1),24,fill=PALETTE["white"])
@@ -461,12 +481,14 @@ class Canvas:
     def sms_overlay(self, campaign, box, paint=True):
         x,y,w,h=box
         probe=Canvas(self.image.size)
-        probe.text(campaign.sender_name,(x+20,y+16,w-40,28),20,bold=True,max_lines=1)
-        used=probe.text(campaign.message,(x+20,y+50,w-40,h-64),22,max_lines=4)
-        card_height=50+used+14
+        label_height=round(28*campaign.message_scale)
+        message_y=22+label_height
+        probe.text(campaign.sender_name,(x+20,y+16,w-40,label_height),round(20*campaign.message_scale),bold=True,max_lines=1)
+        used=probe.text(campaign.message,(x+20,y+message_y,w-40,h-message_y-14),round(22*campaign.message_scale),max_lines=4)
+        card_height=message_y+used+14
         if paint:
             self.draw.rounded_rectangle((x,y,x+w-1,y+card_height-1),18,fill=PALETTE["white"])
-            self.draw.rounded_rectangle((x+10,y+44,x+w-11,y+50+used+7),12,fill=PALETTE["cloud"])
+            self.draw.rounded_rectangle((x+10,y+message_y-6,x+w-11,y+message_y+used+7),12,fill=PALETTE["cloud"])
             self.pending_text.extend(probe.pending_text); self.text_checks.extend(probe.text_checks)
             self.message_card=[x,y,w,card_height]
         return card_height
@@ -498,7 +520,7 @@ class Canvas:
         d.rounded_rectangle((rim,rim,device_width-rim-1,device_height-rim-1), 32, fill=PALETTE["white"])
         d.rounded_rectangle((device_width//2-42,20,device_width//2+42,34),7,fill=PALETTE["navy"])
         # Sender navigation is separate from the conversation, not placeholder copy in its body.
-        ui_size = (24 if self.compact else 28) if view == "detail" else 24
+        ui_size = round(((24 if self.compact else 28) if view == "detail" else 24)*campaign.message_scale)
         d.line((24,65,18,72,24,79),fill=PALETTE["navy"],width=2)
         component.text(campaign.sender_name,(40,59,device_width-64,40),ui_size,bold=True,max_lines=1)
         d.line((rim+1,104,device_width-rim-2,104),fill=PALETTE["cloud"],width=2)
@@ -638,6 +660,19 @@ def render(campaign: Campaign) -> tuple[bytes, dict]:
     width, height = 1080, round(output_height*1080/output_width)
     export_scale = output_width/width
     c = Canvas((width, height))
+    c.message_scale=campaign.message_scale
+    c.image_scale=campaign.image_scale
+    c.graphic_scale=campaign.graphic_scale
+    if campaign.image_scale != 1.0 and campaign.composition == "photo-background":
+        raise Hold("Continuous photo-background requires full coverage; choose another composition to resize photography")
+    if campaign.image_scale != 1.0 and not (photo or prop):
+        raise Hold("Image sizing requires registered photography or a photographic prop")
+    if campaign.graphic_scale != 1.0 and not graphic:
+        raise Hold("Graphic sizing requires a registered graphic")
+    if campaign.message_width_scale != 1.0 and campaign.composition != "photo-background":
+        raise Hold("Message width sizing currently requires a photo-background SMS overlay")
+    if campaign.message_scale != 1.0 and (graphic or template["layout"] not in ("phone","conversation")):
+        raise Hold("Message sizing requires deterministic SMS imagery, not baked raster text")
     d = c.draw
     compact = c.compact
     header_height = 100 if compact else 150
@@ -772,6 +807,8 @@ def render(campaign: Campaign) -> tuple[bytes, dict]:
     elif background:
         side=False; image_first=False; copy_x=64; copy_width=952; copy_y=24 if compact else 32
         budget=(110 if compact else 90)+(60 if campaign.accent else 0)+(70 if campaign.supporting else 0)
+        if campaign.heading_scale != 1.0:
+            budget=round(budget*campaign.heading_scale*1.6)
         copy_height=c.copy_block(campaign,copy_x,copy_y,copy_width,budget,dark=True,paint=False,heading_sizes=(60,56,52))
         heading_bottom=copy_y+copy_height+(24 if compact else 32)
         body_top=heading_bottom; body_bottom=brand_y; body_height=body_bottom-body_top
@@ -788,7 +825,7 @@ def render(campaign: Campaign) -> tuple[bytes, dict]:
         # Opaque enough for white text against the lightest source pixels, but keeps the photo visible.
         scrim=Image.new("RGBA",(width,cta_height),(*tuple(int(PALETTE["navy"].lstrip('#')[i:i+2],16) for i in (0,2,4)),224))
         c.image.paste(scrim,(0,footer),scrim)
-        card_width=480 if not compact else 440
+        card_width=round((480 if not compact else 440)*campaign.message_width_scale)
         card_height=c.sms_overlay(campaign,(64,body_top+24,card_width,min(250,body_height-cta_height-48)),paint=False)
         card_x=64 if campaign.sms_position.endswith("left") else width-64-card_width
         available=footer-body_top
@@ -1041,6 +1078,9 @@ def render(campaign: Campaign) -> tuple[bytes, dict]:
         "graphic_colour": campaign.graphic_colour if graphic else None,
         "graphic_placement": campaign.graphic_placement if person_message else None,
         "graphic_decoration": campaign.graphic_decoration if person_message else None,
+        "sizing": {"heading_scale":campaign.heading_scale,"message_scale":campaign.message_scale,
+                   "message_width_scale":campaign.message_width_scale,"image_scale":campaign.image_scale,"graphic_scale":campaign.graphic_scale,
+                   "policy":"Proportional visuals within allocated regions; protected identity/CTA unchanged; all delivery gates required"},
         "body_layout": "prop-hero" if prop_hero else "graphic-hero" if graphic_hero else "person-plus-message" if person_message else "high-energy-casual" if energy else "photo-background" if background else "side-by-side" if side else "image-first" if image_first else "stacked" if has_visual else "statement",
         "brand_region": protected_brand, "cta_region": cta_region, "cta_button": button_box,
         "terms_box": terms_box, "website_box": website_box, "cta_alignment": "same-line" if same_line else "stacked", "message_card": getattr(c,"message_card",None),

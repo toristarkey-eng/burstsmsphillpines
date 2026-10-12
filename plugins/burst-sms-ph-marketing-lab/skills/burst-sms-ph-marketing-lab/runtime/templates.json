@@ -1340,5 +1340,29 @@
     ],
     "photographic_sources": "Keep original backgrounds and complete object silhouettes; do not recolour photography.",
     "clean_cutout_requirement": "Only separately registered approved native alpha may use cutout/energy; photographic still lifes are panels."
+  },
+  "sizing_controls": {
+    "heading_scale": [
+      0.85,
+      1.6
+    ],
+    "message_scale": [
+      1.0,
+      1.6
+    ],
+    "image_scale": [
+      0.65,
+      1.0
+    ],
+    "graphic_scale": [
+      0.65,
+      1.0
+    ],
+    "default": 1.0,
+    "protected": "Logo, identity and CTA regions unchanged; all validation and actual visual inspection required.",
+    "message_width_scale": [
+      0.75,
+      1.4
+    ]
   }
 }

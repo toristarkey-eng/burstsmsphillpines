@@ -126,3 +126,5 @@ Release 0.4.13 measures opaque silhouette contact across the lower torso, choose
 Release 0.4.14 adds eight owner-approved illustrative campaign image options, including multicultural Manila and travel/tourism scenes, with original sources and source-specific usage notes.
 
 Release 0.4.15 adds eight photographic device/prop/industry assets, two editable native device frames and prop-focus composition with three registered photographic props. Existing actual team imagery is retained; product screenshots are not fabricated.
+
+Release 0.4.16 adds bounded heading, deterministic SMS and proportional image/graphic sizing while retaining every brand and delivery gate.
