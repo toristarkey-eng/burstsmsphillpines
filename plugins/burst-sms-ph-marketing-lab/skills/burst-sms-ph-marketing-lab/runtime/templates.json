@@ -288,7 +288,9 @@
       "identity": "vhey",
       "approval_source": "Tori supplied Vhey for creative use and approved mask-only cleanup, 10 October 2026",
       "preparation": "Only alpha changed; full original RGB channels verified identical. No role, quotation or endorsement inferred.",
-      "original_rgb_sha256": "2c51a2aac58ad5998df4df13485ef5832274479f5e730d8fe7167fad661bb47a"
+      "original_rgb_sha256": "2c51a2aac58ad5998df4df13485ef5832274479f5e730d8fe7167fad661bb47a",
+      "requires_visible_grounding": true,
+      "anchored_source_edge": "right"
     }
   },
   "custom_dimensions": {

@@ -534,6 +534,9 @@ def render(campaign: Campaign) -> tuple[bytes, dict]:
         raise Hold("Graphic decoration requires person-plus-message composition")
     if person_message and (not photo or campaign.format not in ("square", "portrait") or campaign.brand_strip != "bottom" or campaign.heading_style != "navy" or (not graphic and (not campaign.message )) or campaign.image_position not in ("left", "right") or campaign.photo_fit != "contain" or campaign.photo_backdrop != "none" or campaign.image_treatment not in ("panel", "cutout") or campaign.phone_view not in ("auto", "card", "full") or campaign.creative_style != "default" or campaign.composition not in ("auto", "person-plus-message") or campaign.message_placement != "below" or campaign.sms_position != "lower-left"):
         raise Hold("Person-plus-message requires square/portrait, registered photography, navy heading, bottom brand bar, left/right subject, an explicit fictional sender/message and contained panel or approved cutout; use card or complete phone")
+    if photo and photo.get("requires_visible_grounding") and campaign.image_treatment == "cutout":
+        if campaign.image_position != photo.get("anchored_source_edge") or not (person_message or campaign.creative_style == "high-energy-casual"):
+            raise Hold("This cropped portrait requires a grounded right-edge person-plus-message or high-energy composition; choose another registered scene for other layouts")
     if person_message and photo.get("approved_subject_alpha") is True:
         prepared=Image.open(PLUGIN/photo["file"])
         if "A" not in prepared.getbands() or prepared.getchannel("A").getextrema() != (0,255) or campaign.image_treatment != "cutout":
@@ -619,11 +622,12 @@ def render(campaign: Campaign) -> tuple[bytes, dict]:
     if campaign.phone_view != "auto" and layout != "phone" and not person_message:
         raise Hold("Device view requires phone imagery; use auto for a photographic SMS card")
     subject_regions=[]
+    grounded_portrait = bool(photo and photo.get("requires_visible_grounding") and campaign.image_treatment == "cutout")
     if energy:
         side=False;image_first=False;copy_x=64;copy_width=952;copy_y=(125 if compact else 190) if campaign.brand_strip=="top" else 32
         body_top=copy_y;body_bottom=footer-24;body_height=body_bottom-body_top
         copy_height=c.energy_copy(campaign,copy_x,copy_y,copy_width,body_height-(150 if compact else 260)-24,paint=False)
-        visual_y=copy_y+copy_height+24;visual_height=body_bottom-visual_y
+        visual_y=copy_y+copy_height+24;visual_height=(footer if grounded_portrait else body_bottom)-visual_y
         # Decorations live only in the visual region, behind protected native-alpha subjects.
         if campaign.energy_treatment=="diagonal":
             d.polygon([(0,visual_y+round(visual_height*.18)),(width,visual_y+round(visual_height*.48)),(width,body_bottom),(0,visual_y+round(visual_height*.73))],fill=PALETTE["cyan"])
@@ -631,8 +635,8 @@ def render(campaign: Campaign) -> tuple[bytes, dict]:
         elif campaign.energy_treatment=="bands":
             d.rectangle((0,visual_y+visual_height//3,width,body_bottom),fill=PALETTE["cyan"])
             d.rectangle((0,visual_y+2*visual_height//3,width,body_bottom),fill=PALETTE["violet"])
-        subject_width=752 if prop else 952
-        c.photo(photo,(64,visual_y,subject_width,visual_height),campaign.image_position,"cutout","none","contain")
+        subject_width=(width-64) if grounded_portrait and not prop else 752 if prop else 952
+        c.photo(photo,(64,visual_y,subject_width,visual_height),campaign.image_position,"cutout","none","contain",trim_alpha_padding=grounded_portrait)
         if prop:
             frame=c.photo(prop,(840,body_bottom-min(180,visual_height),176,min(180,visual_height)),"right","cutout","none","contain")
             c.photo_checks[-1]["role"]="prop"
@@ -675,11 +679,13 @@ def render(campaign: Campaign) -> tuple[bytes, dict]:
                 source=source.crop(bounds)
             # Maximise the proportional person within one compact adjacent group.
             # A narrow portrait does not inherit a large empty fixed-width column.
-            photo_width=min(548,max(1,round(visual_height*source.width/source.height)))
-            group_x=64+(952-photo_width-24-graphic_width)//2
+            photo_width=min(612 if grounded_portrait else 548,max(1,round(visual_height*source.width/source.height)))
+            group_x=(width-photo_width-24-graphic_width) if grounded_portrait else 64+(952-photo_width-24-graphic_width)//2
             photo_x=group_x if campaign.image_position=="left" else group_x+graphic_width+24
             graphic_x=group_x+photo_width+24 if campaign.image_position=="left" else group_x
         if campaign.graphic_placement=="layered":
+            if grounded_portrait:
+                raise Hold("This cropped portrait uses a grounded adjacent message; choose another alpha subject for layered placement")
             graphic_width=348
             alpha_source=Image.open(PLUGIN/photo["file"])
             if photo.get("approved_subject_alpha") is not True or "A" not in alpha_source.getbands() or alpha_source.getchannel("A").getextrema() != (0,255) or campaign.image_treatment!="cutout":
@@ -695,7 +701,7 @@ def render(campaign: Campaign) -> tuple[bytes, dict]:
             c.phone(campaign,(graphic_x,visual_y,graphic_width,graphic_height))
         else:
             card_height=c.bubble(campaign.message,(graphic_x,visual_y,graphic_width,min(300,graphic_height)),campaign.sender_name,paint=False)
-            card_y=max(visual_y,min(footer-24-card_height,frame[1]+round(frame[3]*.42)-card_height//2))
+            card_y=max(visual_y,min(footer-24-card_height,frame[1]+round(frame[3]*.56)-card_height//2))
             c.bubble(campaign.message,(graphic_x,card_y,graphic_width,card_height),campaign.sender_name)
         d.rectangle((0,0,width,heading_bottom-1),fill=PALETTE["navy"])
         c.copy_block(campaign,copy_x,copy_y,copy_width,copy_height,dark=True,heading_sizes=person_heading_sizes)
@@ -792,7 +798,7 @@ def render(campaign: Campaign) -> tuple[bytes, dict]:
                 frame = c.photo(photo,(group_x,visual_y,photo_width,visual_height),"left",campaign.image_treatment,campaign.photo_backdrop,"cover" if campaign.composition == "hero" else campaign.photo_fit)
                 card_x = frame[0]+frame[2]+24
                 card_height = c.bubble(campaign.message,(card_x,visual_y,card_width,min(300,visual_height)),campaign.sender_name,paint=False)
-                card_y = max(visual_y,min(visual_y+visual_height-card_height,frame[1]+round(frame[3]*.42)-card_height//2))
+                card_y = max(visual_y,min(visual_y+visual_height-card_height,frame[1]+round(frame[3]*.56)-card_height//2))
                 c.bubble(campaign.message,(card_x,card_y,card_width,card_height),campaign.sender_name)
                 c.photo_message_group = {"placement":"beside","gap":24,"anchor":"actual-photo-frame","visual_inspection_required":True}
             else:
@@ -807,6 +813,10 @@ def render(campaign: Campaign) -> tuple[bytes, dict]:
             c.photo(photo, (photo_x if side else 64, visual_y, 468 if side else 952, visual_height), "centre" if side else campaign.image_position, campaign.image_treatment,campaign.photo_backdrop,"cover" if campaign.composition == "hero" else campaign.photo_fit)
     if campaign.brand_strip == "top":
         d.rectangle((0,footer,width,height),fill=PALETTE["white"])
+    if grounded_portrait:
+        # A cropped torso must meet a visible structural edge, never an invisible spacing boundary.
+        # The CTA remains in its reserved region; the white identity bar is unchanged.
+        d.rectangle((0,footer,width-1,footer+cta_height-1),fill=PALETTE["navy"])
     cta_font = font(24 if compact else 29,True)
     button_width = round(d.textlength(campaign.cta,font=cta_font))+66
     button_y = footer+(18 if compact else 28)
@@ -821,13 +831,13 @@ def render(campaign: Campaign) -> tuple[bytes, dict]:
     website_y = button_y+(16 if compact else 22) if same_line else footer+(80 if compact else 121)
     website_box = [website_x if same_line else 68,website_y,website_width,40]
     c.text("burstsms.com.ph",tuple(website_box),website_size,
-           "white" if background or layout == "statement" and campaign.brand_strip == "bottom" else "navy",True,1)
+           "white" if grounded_portrait or background or layout == "statement" and campaign.brand_strip == "bottom" else "navy",True,1)
     terms_box = None
     if campaign.offer_terms:
         terms_y = button_y+button_height+12 if same_line else website_y+36
         terms_box = [64,terms_y,width-128,footer+cta_height-terms_y-12]
         c.text(campaign.offer_terms,tuple(terms_box),22,
-               "white" if background or layout == "statement" and campaign.brand_strip == "bottom" else "navy",False,4)
+               "white" if grounded_portrait or background or layout == "statement" and campaign.brand_strip == "bottom" else "navy",False,4)
     # Paint the isolated brand bar last. Its pixels cannot contain CTA/campaign content.
     c.image.paste(brand_canvas,(0,brand_y))
     logo_y += brand_y
@@ -881,6 +891,22 @@ def render(campaign: Campaign) -> tuple[bytes, dict]:
         gx,gy,gw,gh=c.graphic_check["frame"]
         if gx<64 or gx+gw>width-64 or gy<body_top or gy+gh>footer-24:
             raise Hold("Registered graphic leaves the protected body space")
+    portrait_grounding = None
+    if grounded_portrait:
+        px,py,pw,ph=c.photo_checks[0]["frame"]
+        if abs(px+pw-width)>1:
+            raise Hold("Cropped portrait side edge floats inside the canvas; anchor its supplied right edge to the scene boundary")
+        if abs(py+ph-footer)>1:
+            raise Hold("Cropped portrait floats above its visible boundary; choose person-plus-message or a continuous registered scene")
+        # Test an actual clear-margin pixel on each side of the structural edge.
+        # Drawing a line in metadata cannot substitute for a visible boundary in the PNG.
+        above=c.image.getpixel((0,footer-1)); below=c.image.getpixel((0,footer))
+        above_hex="#"+"".join(f"{v:02X}" for v in above[:3])
+        below_hex="#"+"".join(f"{v:02X}" for v in below[:3])
+        seam_contrast=contrast(above_hex,below_hex)
+        if seam_contrast<3:
+            raise Hold("Cropped portrait boundary is visually invisible; use a contrasting structural edge or continuous scene")
+        portrait_grounding={"type":"contrasting-CTA-boundary","edge_y":round(footer*export_scale),"portrait_bottom":round((py+ph)*export_scale),"side_edge":"right","portrait_right":round((px+pw)*export_scale),"boundary_contrast":round(seam_contrast,2),"visual_inspection_required":True}
     c.finish_text()
     logo_pixels = c.image.crop((logo_x, logo_y, logo_x + scaled_logo.width, logo_y + scaled_logo.height))
     if ImageChops.difference(logo_pixels, scaled_logo).getbbox():
@@ -931,6 +957,7 @@ def render(campaign: Campaign) -> tuple[bytes, dict]:
         "photo_background": {"coverage":True,"sms_position":campaign.sms_position,"readability_treatment":"navy scrim alpha 224/255","subject_regions":[{"label":r["label"],"box":[round(v*export_scale) for v in r["box"]]} for r in subject_regions],"visual_subject_inspection_required":True} if background else None,
         "message_placement": campaign.message_placement,
         "photo_message_group": getattr(c,"photo_message_group",None),
+        "portrait_grounding": portrait_grounding,
         "heading_style": campaign.heading_style,
         "heading_region": ([0,0,output_width,round(heading_bottom*export_scale)] if background or person_message or graphic_hero else [0,round(max(0,copy_y-20)*export_scale),output_width,round((copy_height+40)*export_scale)]) if campaign.heading_style == "navy" else None,
         "creative_style": campaign.creative_style,
@@ -951,7 +978,7 @@ def render(campaign: Campaign) -> tuple[bytes, dict]:
         "alt_text": "Burst SMS Philippines: " + ". ".join(part.rstrip(". ") for part in [campaign.headline, campaign.accent, photo["alt"] if photo else "", ("Illustrative SMS from "+campaign.sender_name+": "+(campaign.message or "Your order is ready for collection. Thank you!")) if layout in ("phone","conversation") and not graphic else "", graphic["alt"] if graphic else ""] if part),
         "channel_copy": campaign.primary_text + "\n\n" + campaign.cta + ": " + DESTINATION + ("\n\nTerms: "+campaign.offer_terms if campaign.offer_terms else ""),
         "contrast_ratios": contrasts,
-        "checks": {**({"registered_graphic":True,"graphic_readable_size":True,"graphic_palette_only":True,"graphic_bounds":True} if graphic else {}),**({"person_graphic_separation":True,"complete_photo_preserved":True,"readable_graphic":True} if person_message else {}),**({"prepared_subject_alpha":True,"registered_prop":not prop or prop.get("approved_subject_alpha") is True,"decorations_behind_subjects":True} if energy else {}),**({"photo_coverage":True,"overlay_bounds":True,"overlay_collisions":True,"registered_subject_preservation":True} if background else {}),"asset_integrity": True, "logo_pixels": True, "locked_styles": True, "text_fit": True, "fixed_dimensions": True, "fixed_destination": True, "text_contrast": True, "message_visible": bool(graphic) or layout not in ("phone", "conversation") or any(t["text"] == (campaign.message or "Your order is ready for collection. Thank you!") for t in c.text_checks), "cta_placement": True, "brand_bar_separation": True, "terms_placement": True, "text_collisions": True, "mask_bounds": all(p["mask_bounds_match"] for p in c.photo_checks), "photo_frame_fit": all(p["frame_filled"] and p["proportional_scale"] for p in c.photo_checks)},
+        "checks": {**({"visible_portrait_grounding":True} if grounded_portrait else {}),**({"registered_graphic":True,"graphic_readable_size":True,"graphic_palette_only":True,"graphic_bounds":True} if graphic else {}),**({"person_graphic_separation":True,"complete_photo_preserved":True,"readable_graphic":True} if person_message else {}),**({"prepared_subject_alpha":True,"registered_prop":not prop or prop.get("approved_subject_alpha") is True,"decorations_behind_subjects":True} if energy else {}),**({"photo_coverage":True,"overlay_bounds":True,"overlay_collisions":True,"registered_subject_preservation":True} if background else {}),"asset_integrity": True, "logo_pixels": True, "locked_styles": True, "text_fit": True, "fixed_dimensions": True, "fixed_destination": True, "text_contrast": True, "message_visible": bool(graphic) or layout not in ("phone", "conversation") or any(t["text"] == (campaign.message or "Your order is ready for collection. Thank you!") for t in c.text_checks), "cta_placement": True, "brand_bar_separation": True, "terms_placement": True, "text_collisions": True, "mask_bounds": all(p["mask_bounds_match"] for p in c.photo_checks), "photo_frame_fit": all(p["frame_filled"] and p["proportional_scale"] for p in c.photo_checks)},
         "inspection_required": ["copy_and_claims", "visual_composition", "local_fit_and_photography", "accessibility", "photo_edges", "body_balance", "cta_and_terms", "campaign_effectiveness"]
     }
     return png, report

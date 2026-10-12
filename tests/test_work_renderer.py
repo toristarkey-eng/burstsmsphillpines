@@ -26,7 +26,7 @@ def campaign(template='recognition', fmt='portrait', photo=None):
     if template == 'person-plus-message':
         fields=json.loads((SKILL/'references/examples/person-plus-message.json').read_text());fields['format']=fmt
         if photo is not None:fields['photo_id']=photo
-        if photo=='vhey':fields['image_treatment']='cutout'
+        if photo=='vhey':fields.update(image_treatment='cutout',image_position='right')
         return Campaign(**fields)
     if photo is None:
         photo = 'commercial-team' if template == 'team-coffee' else 'workplace-portrait' if template in ['people-first', 'customer-updates'] else None
@@ -113,6 +113,10 @@ class RendererTests(unittest.TestCase):
             for template in photo['templates']:
                 for fmt in (('square','portrait') if template=='person-plus-message' else config['formats']):
                     with self.subTest(photo=photo_id, template=template, format=fmt):
+                        if photo.get('requires_visible_grounding') and template != 'person-plus-message':
+                            with self.assertRaisesRegex(Hold,'grounded right-edge'):
+                                render(campaign(template, fmt, photo_id))
+                            continue
                         _, report = render(campaign(template, fmt, photo_id))
                         self.assertEqual(report['photography'], photo)
         for cta in config['ctas']:
@@ -344,7 +348,7 @@ class RendererTests(unittest.TestCase):
 
     def test_person_message_torso_anchor_and_compact_group(self):
         for fmt in ('square', 'portrait'):
-            for position in ('left', 'right'):
+            for position in ('right',):
                 brief=campaign('person-plus-message',fmt,'vhey').model_copy(update={'image_position':position})
                 _,r=render(brief)
                 photo=r['photo_checks'][0]
@@ -364,6 +368,43 @@ class RendererTests(unittest.TestCase):
                 self.assertEqual(r['campaign']['headline'],brief.headline)
                 self.assertEqual(r['campaign']['accent'],brief.accent)
                 self.assertEqual(r['brand_strip'],'bottom')
+
+    def test_cropped_portrait_has_visible_grounding_and_rejects_floating_variants(self):
+        for fmt in ('square','portrait'):
+            brief=campaign('person-plus-message',fmt,'vhey')
+            png,r=render(brief)
+            ground=r['portrait_grounding']
+            self.assertEqual(ground['portrait_bottom'],r['cta_region'][1])
+            self.assertEqual(ground['portrait_right'],r['dimensions'][0])
+            self.assertGreaterEqual(ground['boundary_contrast'],3)
+            self.assertTrue(r['checks']['visible_portrait_grounding'])
+            image=Image.open(io.BytesIO(png)).convert('RGB')
+            edge=r['cta_region'][1]
+            self.assertEqual(image.getpixel((0,edge)),(0,42,102))
+            self.assertNotEqual(image.getpixel((0,edge-1)),image.getpixel((0,edge)))
+            for position in ('left','centre'):
+                with self.assertRaisesRegex(Hold,'grounded right-edge|left/right subject'):
+                    render(brief.model_copy(update={'image_position':position}))
+            # Recreate the actual failure: a torso stopping above the CTA boundary.
+            original=Canvas.photo
+            def floated(canvas,*args,**kwargs):
+                frame=original(canvas,*args,**kwargs)
+                canvas.photo_checks[-1]['frame'][1]-=24
+                return frame
+            with patch.object(Canvas,'photo',floated):
+                with self.assertRaisesRegex(Hold,'floats above'):
+                    render(brief)
+            # A coloured-boundary record must never pass if PNG pixels have no contrast.
+            import runtime.renderer as module
+            original_contrast=module.contrast
+            def invisible(a,b):
+                return 1 if a.upper()=='#F4F5FF' and b.upper()=='#002A66' else original_contrast(a,b)
+            with patch('runtime.renderer.contrast',side_effect=invisible):
+                with self.assertRaisesRegex(Hold,'visually invisible'):
+                    render(brief)
+        for template in ('recognition','customer-updates','people-first'):
+            with self.assertRaisesRegex(Hold,'grounded right-edge'):
+                render(campaign(template,'square','vhey'))
 
     def test_layered_graphic_only_uses_registered_alpha_negative_space(self):
         from PIL import ImageDraw
@@ -428,7 +469,7 @@ class RendererTests(unittest.TestCase):
         for name in ('vhey-message','vhey-black-friday'):
             fields=json.loads((SKILL/'references/examples'/f'{name}.json').read_text())
             for fmt in ('square','portrait'):
-                for position in ('left','right'):
+                for position in ('right',):
                     _,r=render(Campaign(**{**fields,'format':fmt,'image_position':position}))
                     self.assertEqual(r['photo_checks'][0]['image_treatment'],'cutout')
                     self.assertIsNone(r['photo_checks'][0]['cutout_fallback'])
@@ -612,7 +653,7 @@ class StandaloneTests(unittest.TestCase):
 
     def test_copied_skill_runs_independently_and_delivers_only_after_inspection(self):
         result = self.run_cli('preflight'); self.assertEqual(result.returncode,0,result.stderr)
-        self.assertEqual(json.loads(result.stdout)['version'], '0.4.11')
+        self.assertEqual(json.loads(result.stdout)['version'], '0.4.12')
         self.assertNotIn(str(ROOT),result.stdout)
         self.prepare(); self.assertFalse((self.output/'delivery-validation.json').exists())
         result = self.validate(); self.assertEqual(result.returncode,0,result.stderr)
