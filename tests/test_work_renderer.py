@@ -16,7 +16,7 @@ from pydantic import ValidationError
 ROOT = Path(__file__).resolve().parents[1]
 SKILL = ROOT / 'plugins/burst-sms-ph-marketing-lab/skills/burst-sms-ph-marketing-lab'
 sys.path.insert(0, str(SKILL))
-from runtime.renderer import Campaign, Hold, Canvas, PALETTE, render, catalog, load_locks
+from runtime.renderer import Campaign, Hold, Canvas, PALETTE, render, catalog, load_locks, lower_body_crop
 
 
 def campaign(template='recognition', fmt='portrait', photo=None):
@@ -359,8 +359,16 @@ class RendererTests(unittest.TestCase):
                 self.assertLessEqual(gy+gh,r['cta_region'][1]-24)
                 source=Image.open(SKILL/photo['source']).convert('RGBA')
                 bounds=source.getchannel('A').getbbox()
-                self.assertEqual(photo['effective_crop'],list(bounds))
-                self.assertAlmostEqual(pw/ph,(bounds[2]-bounds[0])/(bounds[3]-bounds[1]),delta=.005)
+                effective=photo['effective_crop']
+                self.assertEqual(effective[:3],list(bounds[:3]))
+                self.assertLess(effective[3],bounds[3])
+                self.assertLessEqual(photo['lower_body_crop']['removed_fraction'],.10)
+                for region in photo['lower_body_crop']['protected_regions']:
+                    self.assertLessEqual(region['box'][3],effective[3])
+                    original=source.crop(tuple(region['box']))
+                    retained=source.crop(tuple(effective)).crop((region['box'][0]-effective[0],region['box'][1]-effective[1],region['box'][2]-effective[0],region['box'][3]-effective[1]))
+                    self.assertEqual(original.tobytes(),retained.tobytes())
+                self.assertAlmostEqual(pw/ph,(effective[2]-effective[0])/(effective[3]-effective[1]),delta=.005)
                 # Transparent-padding trimming must retain every original subject pixel.
                 outside=source.getchannel('A').copy()
                 outside.paste(0,bounds)
@@ -405,6 +413,46 @@ class RendererTests(unittest.TestCase):
         for template in ('recognition','customer-updates','people-first'):
             with self.assertRaisesRegex(Hold,'grounded right-edge'):
                 render(campaign(template,'square','vhey'))
+
+    def test_torso_contact_span_blocks_the_actual_0412_alpha_wedge(self):
+        import runtime.renderer as module
+        for fmt in ('square','portrait'):
+            brief=campaign('person-plus-message',fmt,'vhey')
+            png,r=render(brief)
+            ground=r['portrait_grounding']
+            self.assertEqual(ground['transparent_contact_columns'],0)
+            self.assertGreaterEqual(ground['minimum_contact_alpha'],240)
+            # The PNG itself must have photograph pixels across the whole contact span.
+            image=Image.open(io.BytesIO(png)).convert('RGB')
+            left,right=ground['contact_span_export'];y=ground['edge_y']-1
+            self.assertTrue(all(image.getpixel((x,y))!=(244,245,255) for x in range(left,right)))
+            # Reproduce 0.4.12: unchanged bounding box touches, but the silhouette has a wedge.
+            original=module.lower_body_crop
+            def uncropped(source,crop,photo):
+                _,audit=original(source,crop,photo)
+                return list(crop),audit
+            with patch('runtime.renderer.lower_body_crop',side_effect=uncropped):
+                with self.assertRaisesRegex(Hold,'silhouette leaves a gap'):
+                    render(brief)
+            # Even a one-column hole in the resampled mask must block delivery.
+            photo_method=Canvas.photo
+            def holed(canvas,*args,**kwargs):
+                frame=photo_method(canvas,*args,**kwargs)
+                mask=canvas.photo_masks[-1]
+                mask.putpixel((mask.width//2,mask.height-1),0)
+                return frame
+            with patch.object(Canvas,'photo',holed):
+                with self.assertRaisesRegex(Hold,'silhouette leaves a gap'):
+                    render(brief)
+        cfg=catalog();photo=cfg['photos']['vhey']
+        source=Image.open(SKILL/photo['file']).convert('RGBA')
+        for updates in ({'max_crop_fraction':.04},{'protected_clearance':100},
+                        {'protected_regions':[{'label':'fixture protected hands','box':[600,900,1095,1350]}]}):
+            altered={**photo,'lower_body_grounding':{**photo['lower_body_grounding'],**updates}}
+            with self.assertRaisesRegex(Hold,'No safe opaque'):
+                lower_body_crop(source,list(photo['crop']),altered)
+        with self.assertRaisesRegex(Hold,'registered safe lower-body'):
+            lower_body_crop(source,list(photo['crop']),{**photo,'lower_body_grounding':None})
 
     def test_layered_graphic_only_uses_registered_alpha_negative_space(self):
         from PIL import ImageDraw
@@ -653,7 +701,7 @@ class StandaloneTests(unittest.TestCase):
 
     def test_copied_skill_runs_independently_and_delivers_only_after_inspection(self):
         result = self.run_cli('preflight'); self.assertEqual(result.returncode,0,result.stderr)
-        self.assertEqual(json.loads(result.stdout)['version'], '0.4.12')
+        self.assertEqual(json.loads(result.stdout)['version'], '0.4.13')
         self.assertNotIn(str(ROOT),result.stdout)
         self.prepare(); self.assertFalse((self.output/'delivery-validation.json').exists())
         result = self.validate(); self.assertEqual(result.returncode,0,result.stderr)

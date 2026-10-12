@@ -151,6 +151,41 @@ def font(size: int, bold: bool = False):
     return ImageFont.truetype(str(SERVICE / "fonts" / ("NotoSans-Bold.ttf" if bold else "NotoSans-Regular.ttf")), size)
 
 
+def lower_body_crop(source, crop, photo):
+    """Choose the shallowest registered crop with an opaque lower contact span.
+
+    Source pixels remain unchanged. Only a reviewed lower jacket/forearm band
+    may leave the frame; source-space protected regions must remain complete.
+    """
+    rule=photo.get("lower_body_grounding")
+    if not rule:
+        raise Hold("Cropped torso needs a registered safe lower-body crop or continuous scene")
+    alpha=source.getchannel("A")
+    bounds=alpha.crop(tuple(crop)).getbbox()
+    if not bounds:
+        raise Hold("Portrait has no visible subject")
+    bottom=crop[1]+bounds[3];top=crop[1]+bounds[1]
+    left,right=rule["contact_span"]
+    if not crop[0]<=left<right<=crop[2]:
+        raise Hold("Registered grounding contact span leaves the source crop")
+    minimum=max(bottom-int((bottom-top)*rule["max_crop_fraction"]),
+                max(r["box"][3] for r in rule["protected_regions"])+rule["protected_clearance"])
+    threshold=rule["alpha_threshold"]
+    for cutoff in range(bottom,minimum-1,-1):
+        values=list(alpha.crop((left,cutoff-1,right,cutoff)).getdata())
+        if values and min(values)>=threshold:
+            effective=[crop[0],crop[1],crop[2],cutoff]
+            for region in rule["protected_regions"]:
+                x0,y0,x1,y1=region["box"]
+                if x0<effective[0] or y0<effective[1] or x1>effective[2] or y1>effective[3]:
+                    raise Hold("Grounding crop clips protected "+region["label"])
+            return effective,{"source_cutoff":cutoff,"removed_source_rows":bottom-cutoff,
+                              "removed_fraction":round((bottom-cutoff)/(bottom-top),4),
+                              "contact_span":list(rule["contact_span"]),"protected_regions":rule["protected_regions"],
+                              "protected_regions_preserved":True,"alpha_threshold":threshold}
+    raise Hold("No safe opaque torso contact span; use another registered portrait or continuous scene")
+
+
 class Canvas:
     def __init__(self, size):
         self.image = Image.new("RGB", size, PALETTE["cloud"])
@@ -158,6 +193,7 @@ class Canvas:
         self.text_checks = []
         self.pending_text = []
         self.photo_checks = []
+        self.photo_masks = []
         self.compact = size[1] < 900
 
     def text(self, text, box, size, colour="navy", bold=False, max_lines=3):
@@ -261,8 +297,11 @@ class Canvas:
         x, y, w, h = box
         if min(x, y) < 0 or min(w, h) <= 0 or x+w > self.image.width or y+h > self.image.height:
             raise Hold("Photo region is outside the canvas")
-        panel = source.crop(crop)
         effective_crop = list(crop)
+        grounding_crop = None
+        if treatment == "cutout" and photo.get("requires_visible_grounding"):
+            effective_crop,grounding_crop=lower_body_crop(source,effective_crop,photo)
+        panel = source.crop(tuple(effective_crop))
         # In the person group, remove only wholly transparent outer padding.
         # Retain every nonzero alpha pixel, including soft hair and clothing edges.
         if trim_alpha_padding and treatment == "cutout" and photo.get("approved_subject_alpha") is True:
@@ -272,7 +311,7 @@ class Canvas:
             if trim_alpha_padding == "vertical":
                 bounds = (0, bounds[1], panel.width, bounds[3])
             panel = panel.crop(bounds)
-            effective_crop = [crop[0]+bounds[0], crop[1]+bounds[1], crop[0]+bounds[2], crop[1]+bounds[3]]
+            effective_crop = [effective_crop[0]+bounds[0], effective_crop[1]+bounds[1], effective_crop[0]+bounds[2], effective_crop[1]+bounds[3]]
         if fit == "cover":
             # A deliberate photographic crop fills the region; never warp subjects.
             ratio = w/h
@@ -325,8 +364,10 @@ class Canvas:
             backing_mask = ImageChops.multiply(ellipse, mask)
             self.image.paste(backing, (px,py), backing_mask)
         self.image.paste(scaled, (px,py), mask)
+        self.photo_masks.append(mask.copy())
         self.photo_checks.append({"source": photo["file"], "registered_crop": list(crop),
-            "effective_crop": effective_crop, "photo_fit": fit, "additional_crop_inspection_required": fit == "cover",
+            "effective_crop": effective_crop, "photo_fit": fit, "additional_crop_inspection_required": fit == "cover" or grounding_crop is not None,
+            "lower_body_crop": grounding_crop,
             "region": list(box), "frame": [px,py,*size], "frame_filled": True,
             "complete_panel_preserved": treatment == "panel", "requested_treatment": requested_treatment,
             "image_treatment": treatment, "cutout_fallback": fallback, "photo_backdrop": backdrop,
@@ -672,7 +713,10 @@ def render(campaign: Campaign) -> tuple[bytes, dict]:
         graphic_width=380
         photo_width=572
         if campaign.graphic_placement=="adjacent":
-            source=Image.open(PLUGIN/photo["file"]).convert("RGBA").crop(tuple(photo["crop"]))
+            source=Image.open(PLUGIN/photo["file"]).convert("RGBA")
+            sizing_crop=photo["crop"]
+            if grounded_portrait:sizing_crop,_=lower_body_crop(source,list(sizing_crop),photo)
+            source=source.crop(tuple(sizing_crop))
             if campaign.image_treatment=="cutout" and photo.get("approved_subject_alpha") is True:
                 bounds=source.getchannel("A").getbbox()
                 if bounds is None:raise Hold("Registered portrait has no visible subject")
@@ -898,6 +942,15 @@ def render(campaign: Campaign) -> tuple[bytes, dict]:
             raise Hold("Cropped portrait side edge floats inside the canvas; anchor its supplied right edge to the scene boundary")
         if abs(py+ph-footer)>1:
             raise Hold("Cropped portrait floats above its visible boundary; choose person-plus-message or a continuous registered scene")
+        crop=c.photo_checks[0]["effective_crop"]
+        rule=photo["lower_body_grounding"]
+        mask=c.photo_masks[0]
+        start=round((rule["contact_span"][0]-crop[0])*pw/(crop[2]-crop[0]))
+        end=round((rule["contact_span"][1]-crop[0])*pw/(crop[2]-crop[0]))
+        contact=list(mask.crop((start,ph-1,end,ph)).getdata())
+        if not contact or min(contact)<rule["alpha_threshold"]:
+            raise Hold("Visible torso silhouette leaves a gap above the CTA boundary")
+        # The full intended lower torso span must touch, not just its lowest point.
         # Test an actual clear-margin pixel on each side of the structural edge.
         # Drawing a line in metadata cannot substitute for a visible boundary in the PNG.
         above=c.image.getpixel((0,footer-1)); below=c.image.getpixel((0,footer))
@@ -906,7 +959,7 @@ def render(campaign: Campaign) -> tuple[bytes, dict]:
         seam_contrast=contrast(above_hex,below_hex)
         if seam_contrast<3:
             raise Hold("Cropped portrait boundary is visually invisible; use a contrasting structural edge or continuous scene")
-        portrait_grounding={"type":"contrasting-CTA-boundary","edge_y":round(footer*export_scale),"portrait_bottom":round((py+ph)*export_scale),"side_edge":"right","portrait_right":round((px+pw)*export_scale),"boundary_contrast":round(seam_contrast,2),"visual_inspection_required":True}
+        portrait_grounding={"type":"contrasting-CTA-boundary","edge_y":round(footer*export_scale),"portrait_bottom":round((py+ph)*export_scale),"side_edge":"right","portrait_right":round((px+pw)*export_scale),"boundary_contrast":round(seam_contrast,2),"contact_span_export":[round((px+start)*export_scale),round((px+end)*export_scale)],"minimum_contact_alpha":min(contact),"transparent_contact_columns":sum(v<rule["alpha_threshold"] for v in contact),"visual_inspection_required":True}
     c.finish_text()
     logo_pixels = c.image.crop((logo_x, logo_y, logo_x + scaled_logo.width, logo_y + scaled_logo.height))
     if ImageChops.difference(logo_pixels, scaled_logo).getbbox():
@@ -978,7 +1031,7 @@ def render(campaign: Campaign) -> tuple[bytes, dict]:
         "alt_text": "Burst SMS Philippines: " + ". ".join(part.rstrip(". ") for part in [campaign.headline, campaign.accent, photo["alt"] if photo else "", ("Illustrative SMS from "+campaign.sender_name+": "+(campaign.message or "Your order is ready for collection. Thank you!")) if layout in ("phone","conversation") and not graphic else "", graphic["alt"] if graphic else ""] if part),
         "channel_copy": campaign.primary_text + "\n\n" + campaign.cta + ": " + DESTINATION + ("\n\nTerms: "+campaign.offer_terms if campaign.offer_terms else ""),
         "contrast_ratios": contrasts,
-        "checks": {**({"visible_portrait_grounding":True} if grounded_portrait else {}),**({"registered_graphic":True,"graphic_readable_size":True,"graphic_palette_only":True,"graphic_bounds":True} if graphic else {}),**({"person_graphic_separation":True,"complete_photo_preserved":True,"readable_graphic":True} if person_message else {}),**({"prepared_subject_alpha":True,"registered_prop":not prop or prop.get("approved_subject_alpha") is True,"decorations_behind_subjects":True} if energy else {}),**({"photo_coverage":True,"overlay_bounds":True,"overlay_collisions":True,"registered_subject_preservation":True} if background else {}),"asset_integrity": True, "logo_pixels": True, "locked_styles": True, "text_fit": True, "fixed_dimensions": True, "fixed_destination": True, "text_contrast": True, "message_visible": bool(graphic) or layout not in ("phone", "conversation") or any(t["text"] == (campaign.message or "Your order is ready for collection. Thank you!") for t in c.text_checks), "cta_placement": True, "brand_bar_separation": True, "terms_placement": True, "text_collisions": True, "mask_bounds": all(p["mask_bounds_match"] for p in c.photo_checks), "photo_frame_fit": all(p["frame_filled"] and p["proportional_scale"] for p in c.photo_checks)},
+        "checks": {**({"visible_portrait_grounding":True} if grounded_portrait else {}),**({"registered_graphic":True,"graphic_readable_size":True,"graphic_palette_only":True,"graphic_bounds":True} if graphic else {}),**({"person_graphic_separation":True,"protected_subject_regions_preserved":True,"readable_graphic":True} if person_message else {}),**({"prepared_subject_alpha":True,"registered_prop":not prop or prop.get("approved_subject_alpha") is True,"decorations_behind_subjects":True} if energy else {}),**({"photo_coverage":True,"overlay_bounds":True,"overlay_collisions":True,"registered_subject_preservation":True} if background else {}),"asset_integrity": True, "logo_pixels": True, "locked_styles": True, "text_fit": True, "fixed_dimensions": True, "fixed_destination": True, "text_contrast": True, "message_visible": bool(graphic) or layout not in ("phone", "conversation") or any(t["text"] == (campaign.message or "Your order is ready for collection. Thank you!") for t in c.text_checks), "cta_placement": True, "brand_bar_separation": True, "terms_placement": True, "text_collisions": True, "mask_bounds": all(p["mask_bounds_match"] for p in c.photo_checks), "photo_frame_fit": all(p["frame_filled"] and p["proportional_scale"] for p in c.photo_checks)},
         "inspection_required": ["copy_and_claims", "visual_composition", "local_fit_and_photography", "accessibility", "photo_edges", "body_balance", "cta_and_terms", "campaign_effectiveness"]
     }
     return png, report

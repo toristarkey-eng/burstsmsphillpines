@@ -290,7 +290,37 @@
       "preparation": "Only alpha changed; full original RGB channels verified identical. No role, quotation or endorsement inferred.",
       "original_rgb_sha256": "2c51a2aac58ad5998df4df13485ef5832274479f5e730d8fe7167fad661bb47a",
       "requires_visible_grounding": true,
-      "anchored_source_edge": "right"
+      "anchored_source_edge": "right",
+      "lower_body_grounding": {
+        "contact_span": [
+          140,
+          1100
+        ],
+        "max_crop_fraction": 0.1,
+        "protected_regions": [
+          {
+            "label": "face and hair",
+            "box": [
+              37,
+              83,
+              950,
+              1230
+            ]
+          },
+          {
+            "label": "palms fingers and phone",
+            "box": [
+              600,
+              900,
+              1095,
+              1258
+            ]
+          }
+        ],
+        "protected_clearance": 4,
+        "alpha_threshold": 240,
+        "scope": "Bounded lower jacket/forearm edge crop, requested by Tori 12 October 2026; preserve palms, fingers, phone, face and hair; no source alteration."
+      }
     }
   },
   "custom_dimensions": {
