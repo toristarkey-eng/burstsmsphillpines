@@ -785,10 +785,16 @@ def render(campaign: Campaign) -> tuple[bytes, dict]:
             if campaign.message_placement == "beside":
                 if group_width < 700:
                     raise Hold("Photo and SMS beside one another require a stacked heading composition")
-                half = (group_width-24)//2
-                card_height = c.bubble(campaign.message,(group_x+half+24,visual_y,half,min(300,visual_height)),campaign.sender_name,paint=False)
-                frame = c.photo(photo,(group_x,visual_y,half,visual_height),"centre",campaign.image_treatment,campaign.photo_backdrop,"cover" if campaign.composition == "hero" else campaign.photo_fit)
-                c.bubble(campaign.message,(group_x+half+24,visual_y+(visual_height-card_height)//2,half,card_height),campaign.sender_name)
+                # Fit one group to actual image bounds, not two independently centred columns.
+                # Preserve a larger photo and a readable content-sized card; no forced overlay.
+                card_width = 380
+                photo_width = group_width-card_width-24
+                frame = c.photo(photo,(group_x,visual_y,photo_width,visual_height),"left",campaign.image_treatment,campaign.photo_backdrop,"cover" if campaign.composition == "hero" else campaign.photo_fit)
+                card_x = frame[0]+frame[2]+24
+                card_height = c.bubble(campaign.message,(card_x,visual_y,card_width,min(300,visual_height)),campaign.sender_name,paint=False)
+                card_y = max(visual_y,min(visual_y+visual_height-card_height,frame[1]+round(frame[3]*.42)-card_height//2))
+                c.bubble(campaign.message,(card_x,card_y,card_width,card_height),campaign.sender_name)
+                c.photo_message_group = {"placement":"beside","gap":24,"anchor":"actual-photo-frame","visual_inspection_required":True}
             else:
                 card_height = c.bubble(campaign.message,(group_x,visual_y,group_width,min(300,visual_height)),campaign.sender_name,paint=False)
                 photo_budget = visual_height-card_height-16
@@ -924,6 +930,7 @@ def render(campaign: Campaign) -> tuple[bytes, dict]:
         "body_region": [round(v*export_scale) for v in ((0,body_top,width,body_height) if background else (64,body_top,952,body_height))],
         "photo_background": {"coverage":True,"sms_position":campaign.sms_position,"readability_treatment":"navy scrim alpha 224/255","subject_regions":[{"label":r["label"],"box":[round(v*export_scale) for v in r["box"]]} for r in subject_regions],"visual_subject_inspection_required":True} if background else None,
         "message_placement": campaign.message_placement,
+        "photo_message_group": getattr(c,"photo_message_group",None),
         "heading_style": campaign.heading_style,
         "heading_region": ([0,0,output_width,round(heading_bottom*export_scale)] if background or person_message or graphic_hero else [0,round(max(0,copy_y-20)*export_scale),output_width,round((copy_height+40)*export_scale)]) if campaign.heading_style == "navy" else None,
         "creative_style": campaign.creative_style,

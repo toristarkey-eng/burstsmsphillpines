@@ -40,6 +40,27 @@ def inspection(report):
 
 
 class RendererTests(unittest.TestCase):
+    def test_adjacent_message_uses_actual_photo_bounds_across_aspect_ratios(self):
+        for fmt in ('square', 'portrait'):
+            for photo in ('workplace-portrait', 'two-shoppers'):
+                with self.subTest(format=fmt, photo=photo):
+                    brief=campaign('customer-updates',fmt,photo).model_copy(update={
+                        'composition':'text-first', 'message_placement':'beside',
+                        'heading_style':'navy', 'brand_strip':'bottom',
+                        'headline':'Stay connected.', 'accent':'Business messaging.',
+                        'supporting':'Keep customers informed.',
+                        'sender_name':'ACME SHOP', 'message':'Your order is ready to collect.'})
+                    _,report=render(brief)
+                    px,py,pw,ph=report['photo_checks'][0]['frame']
+                    cx,cy,cw,ch=report['message_card']
+                    self.assertEqual(cx-(px+pw),24)
+                    self.assertEqual(px,64)
+                    self.assertEqual(cw,380)
+                    self.assertLess(cx+cw,1080-63)
+                    self.assertLess(cy,py+ph)
+                    self.assertGreater(cy+ch,py)
+                    self.assertEqual(report['photo_message_group']['anchor'],'actual-photo-frame')
+
     def test_every_template_and_export_size_is_deterministic(self):
         for template in catalog()['templates']:
             for fmt in ('square', 'portrait'):
@@ -591,7 +612,7 @@ class StandaloneTests(unittest.TestCase):
 
     def test_copied_skill_runs_independently_and_delivers_only_after_inspection(self):
         result = self.run_cli('preflight'); self.assertEqual(result.returncode,0,result.stderr)
-        self.assertEqual(json.loads(result.stdout)['version'], '0.4.10')
+        self.assertEqual(json.loads(result.stdout)['version'], '0.4.11')
         self.assertNotIn(str(ROOT),result.stdout)
         self.prepare(); self.assertFalse((self.output/'delivery-validation.json').exists())
         result = self.validate(); self.assertEqual(result.returncode,0,result.stderr)
