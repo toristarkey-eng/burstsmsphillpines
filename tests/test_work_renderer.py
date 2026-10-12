@@ -20,6 +20,9 @@ from runtime.renderer import Campaign, Hold, Canvas, PALETTE, render, catalog, l
 
 
 def campaign(template='recognition', fmt='portrait', photo=None):
+    if template == 'prop-focus':
+        fields=json.loads((SKILL/'references/examples/prop-parcel.json').read_text());fields['format']=fmt
+        return Campaign(**fields)
     if template == 'graphic-focus':
         fields=json.loads((SKILL/'references/examples/graphic-order-update.json').read_text());fields['format']=fmt
         return Campaign(**fields)
@@ -40,6 +43,51 @@ def inspection(report):
 
 
 class RendererTests(unittest.TestCase):
+    def test_campaign_toolkit_assets_are_registered_with_provenance(self):
+        inventory=json.loads((SKILL/'assets/photography/campaign-toolkit-2026-10-12.json').read_text())
+        self.assertEqual(len(inventory['new_photography']),8)
+        self.assertEqual(len(inventory['registered_props']),3)
+        self.assertEqual(len(inventory['device_frames']),2)
+        cfg=catalog()
+        for entry in inventory['new_photography']:
+            self.assertEqual(hashlib.sha256((SKILL/entry['file']).read_bytes()).hexdigest(),entry['source_sha256'])
+            self.assertIn(entry['photo_id'],cfg['photos'])
+            self.assertIn('AI-generated',entry['provenance'])
+        self.assertEqual(inventory['existing_actual_team']['photo_id'],'commercial-team')
+        self.assertEqual(cfg['photos']['commercial-team']['identity'],'philippines-team')
+        for key in inventory['device_frames']:
+            asset=cfg['graphics'][key]
+            self.assertTrue((SKILL/asset['vector_source']).exists())
+            self.assertNotIn('<text', (SKILL/asset['vector_source']).read_text())
+            self.assertIn('no product screenshot',asset['alt'])
+            source=Image.open(SKILL/asset['file'])
+            self.assertEqual(source.getchannel('A').getextrema(),(0,255))
+            if key=='phone-frame':
+                x,y,r,b=asset['crop'];self.assertEqual((b-y)/(r-x),2)
+
+    def test_prop_hero_preserves_photography_bars_and_rejects_conflicting_inputs(self):
+        cfg=catalog()
+        for key in ('parcel-shopping-props','travel-booking-props','coffee-invitation-props'):
+            for fmt in ('square','portrait'):
+                for strip in ('top','bottom'):
+                    brief=campaign('prop-focus',fmt).model_copy(update={'prop_id':key,'brand_strip':strip})
+                    png,r=render(brief)
+                    self.assertEqual(r['body_layout'],'prop-hero')
+                    self.assertEqual(r['prop']['file'],cfg['props'][key]['file'])
+                    self.assertTrue(all(r['checks'].values()))
+                    photo=r['photo_checks'][0];x,y,w,h=photo['frame']
+                    self.assertLessEqual(y+h,r['cta_region'][1])
+                    expected=Image.open(SKILL/photo['source']).convert('RGB').crop(tuple(photo['registered_crop'])).resize((w,h),Image.Resampling.LANCZOS)
+                    # Raw scene RGB stays exact: no illustration recolouring is applied.
+                    actual=Image.open(io.BytesIO(png)).convert('RGB').crop((x,y,x+w,y+h))
+                    self.assertIsNone(ImageChops.difference(actual,expected).getbbox())
+        brief=campaign('prop-focus')
+        for update in ({'prop_id':'unregistered'},{'photo_id':'vhey'},{'graphic_id':'phone-frame'},
+                       {'message':'Order ready.'},{'image_treatment':'cutout'},{'format':'landscape'},
+                       {'photo_crop':[0,0,100,100]},{'composition':'photo-background'},
+                       {'creative_style':'high-energy-casual'}):
+            with self.assertRaises(Hold):render(brief.model_copy(update=update))
+
     def test_eight_approved_image_options_preserve_sources_and_resolve_in_catalogue(self):
         inventory=json.loads((SKILL/'assets/photography/approved-expansion-2026-10-12.json').read_text())
         self.assertEqual(len(inventory),8)
@@ -103,7 +151,7 @@ class RendererTests(unittest.TestCase):
         master=Image.open(SKILL/'assets/burst-sms-logo.png').convert('RGB')
         for fmt, dims, size in requests:
             for template in catalog()['templates']:
-                if template in ('person-plus-message','graphic-focus'):continue # This optional composition supports square and portrait only.
+                if template in ('person-plus-message','graphic-focus','prop-focus'):continue # This optional composition supports square and portrait only.
                 for strip in ('top','bottom'):
                     with self.subTest(format=fmt, dimensions=dims, template=template, strip=strip):
                         brief=campaign(template,'portrait' if fmt=='custom' else fmt).model_copy(update={'format':fmt, **{'dimensions':dims,'brand_strip':strip,
@@ -157,7 +205,7 @@ class RendererTests(unittest.TestCase):
 
     def test_all_adaptive_variants_preserve_protected_regions(self):
         for template in catalog()['templates']:
-            if template in ('person-plus-message','graphic-focus'):continue # Dedicated composition has its own protected-region tests.
+            if template in ('person-plus-message','graphic-focus','prop-focus'):continue # Dedicated composition has its own protected-region tests.
             for fmt in ('square', 'portrait'):
                 for strip in ('top', 'bottom'):
                     for composition in ('auto', 'side-by-side', 'text-first', 'image-first'):
@@ -724,7 +772,7 @@ class StandaloneTests(unittest.TestCase):
 
     def test_copied_skill_runs_independently_and_delivers_only_after_inspection(self):
         result = self.run_cli('preflight'); self.assertEqual(result.returncode,0,result.stderr)
-        self.assertEqual(json.loads(result.stdout)['version'], '0.4.14')
+        self.assertEqual(json.loads(result.stdout)['version'], '0.4.15')
         self.assertNotIn(str(ROOT),result.stdout)
         self.prepare(); self.assertFalse((self.output/'delivery-validation.json').exists())
         result = self.validate(); self.assertEqual(result.returncode,0,result.stderr)

@@ -1,0 +1,198 @@
+{
+  "new_photography": [
+    {
+      "photo_id": "phone-in-hand-close-up",
+      "file": "assets/photography/phone-in-hand-close-up.png",
+      "crop": [
+        0,
+        0,
+        1254,
+        1254
+      ],
+      "alt": "Illustrative AI-generated scene: Close-up of hands holding a complete smartphone above a desk.",
+      "templates": [
+        "people-first",
+        "customer-updates",
+        "recognition",
+        "person-plus-message"
+      ],
+      "approval_source": "Tori requested creation, library registration and plugin access for these supporting assets, 12 October 2026.",
+      "provenance": "AI-generated illustrative supporting imagery; not documentary photography, real employees, customers, patient or student records or endorsements.",
+      "recommended_use": "Device use, updates, reminders.",
+      "source_sha256": "10125e0e36a62e6bca06dad91ba05dc3efb0c9f95e819e9780658ff04460faca",
+      "subject_framing": "detail-or-still-life"
+    },
+    {
+      "photo_id": "laptop-workspace-detail",
+      "file": "assets/photography/laptop-workspace-detail.png",
+      "crop": [
+        0,
+        0,
+        1536,
+        1024
+      ],
+      "alt": "Illustrative AI-generated scene: Complete unbranded laptop with blank screen and hands at a desk.",
+      "templates": [
+        "people-first",
+        "customer-updates",
+        "recognition",
+        "person-plus-message"
+      ],
+      "approval_source": "Tori requested creation, library registration and plugin access for these supporting assets, 12 October 2026.",
+      "provenance": "AI-generated illustrative supporting imagery; not documentary photography, real employees, customers, patient or student records or endorsements.",
+      "recommended_use": "Business workflows; blank screen is not a product interface.",
+      "source_sha256": "5a55cbc826ee9c8680a5712b21fdae43a6148cec4b63fa81be7d945b234051f9",
+      "subject_framing": "detail-or-still-life"
+    },
+    {
+      "photo_id": "parcel-shopping-props",
+      "file": "assets/photography/parcel-shopping-props.png",
+      "crop": [
+        0,
+        0,
+        1254,
+        1254
+      ],
+      "alt": "Illustrative AI-generated scene: Parcels, a complete shopping bag, receipt roll and tape dispenser on a counter.",
+      "templates": [
+        "people-first",
+        "customer-updates",
+        "recognition",
+        "person-plus-message"
+      ],
+      "approval_source": "Tori requested creation, library registration and plugin access for these supporting assets, 12 October 2026.",
+      "provenance": "AI-generated illustrative supporting imagery; not documentary photography, real employees, customers, patient or student records or endorsements.",
+      "recommended_use": "Retail, orders and delivery; no labels, discounts or delivery promises.",
+      "source_sha256": "fc66eea76698677ef023b3303daadcc18dccfa06be504b0ffd1de649013bb509",
+      "subject_framing": "detail-or-still-life"
+    },
+    {
+      "photo_id": "travel-booking-props",
+      "file": "assets/photography/travel-booking-props.png",
+      "crop": [
+        0,
+        0,
+        1254,
+        1254
+      ],
+      "alt": "Illustrative AI-generated scene: Luggage, a plain card sleeve and closed travel wallet in a hotel reception.",
+      "templates": [
+        "people-first",
+        "customer-updates",
+        "recognition",
+        "person-plus-message"
+      ],
+      "approval_source": "Tori requested creation, library registration and plugin access for these supporting assets, 12 October 2026.",
+      "provenance": "AI-generated illustrative supporting imagery; not documentary photography, real employees, customers, patient or student records or endorsements.",
+      "recommended_use": "Travel, tourism, bookings and guest communication.",
+      "source_sha256": "9e6293eb6b6cd6a909ec90d77edccbceba23b6f18f1620f778e82cbe5aa74cd3",
+      "subject_framing": "detail-or-still-life"
+    },
+    {
+      "photo_id": "coffee-invitation-props",
+      "file": "assets/photography/coffee-invitation-props.png",
+      "crop": [
+        0,
+        0,
+        1254,
+        1254
+      ],
+      "alt": "Illustrative AI-generated scene: Two unbranded coffee cups on saucers at a caf\u00e9 table.",
+      "templates": [
+        "people-first",
+        "customer-updates",
+        "recognition",
+        "person-plus-message"
+      ],
+      "approval_source": "Tori requested creation, library registration and plugin access for these supporting assets, 12 October 2026.",
+      "provenance": "AI-generated illustrative supporting imagery; not documentary photography, real employees, customers, patient or student records or endorsements.",
+      "recommended_use": "Deliberate coffee invitations, not general filler.",
+      "source_sha256": "123be8f14aa9377460717dbd1e1f01973e64efc47a8af9e23a834dcacd43d853",
+      "subject_framing": "detail-or-still-life"
+    },
+    {
+      "photo_id": "healthcare-reception-scene",
+      "file": "assets/photography/healthcare-reception-scene.png",
+      "crop": [
+        0,
+        0,
+        1122,
+        1402
+      ],
+      "alt": "Illustrative AI-generated scene: Receptionist assists an adult at a clinic counter.",
+      "templates": [
+        "people-first",
+        "customer-updates",
+        "recognition",
+        "person-plus-message"
+      ],
+      "approval_source": "Tori requested creation, library registration and plugin access for these supporting assets, 12 October 2026.",
+      "provenance": "AI-generated illustrative supporting imagery; not documentary photography, real employees, customers, patient or student records or endorsements.",
+      "recommended_use": "Appointments and administrative updates; no medical outcome claim.",
+      "source_sha256": "9e812b910a1a84d16ff3e63577ef7cf9b1fd2f6659d0e65ed33fb983dda8399d",
+      "subject_framing": "continuous-scene"
+    },
+    {
+      "photo_id": "education-services-scene",
+      "file": "assets/photography/education-services-scene.png",
+      "crop": [
+        0,
+        0,
+        1536,
+        1024
+      ],
+      "alt": "Illustrative AI-generated scene: Staff member and two adult students talking at a college reception desk.",
+      "templates": [
+        "people-first",
+        "customer-updates",
+        "recognition",
+        "person-plus-message"
+      ],
+      "approval_source": "Tori requested creation, library registration and plugin access for these supporting assets, 12 October 2026.",
+      "provenance": "AI-generated illustrative supporting imagery; not documentary photography, real employees, customers, patient or student records or endorsements.",
+      "recommended_use": "Education, enrolment and administrative reminders.",
+      "source_sha256": "17c7971e2cb189901aa28f81be4474e043500f931a47ee30afb3c00f39151caa",
+      "subject_framing": "continuous-scene"
+    },
+    {
+      "photo_id": "logistics-dispatch-scene",
+      "file": "assets/photography/logistics-dispatch-scene.png",
+      "crop": [
+        0,
+        0,
+        1536,
+        1024
+      ],
+      "alt": "Illustrative AI-generated scene: Dispatch supervisor checks a phone beside a bench while a colleague handles a carton.",
+      "templates": [
+        "people-first",
+        "customer-updates",
+        "recognition",
+        "person-plus-message"
+      ],
+      "approval_source": "Tori requested creation, library registration and plugin access for these supporting assets, 12 October 2026.",
+      "provenance": "AI-generated illustrative supporting imagery; not documentary photography, real employees, customers, patient or student records or endorsements.",
+      "recommended_use": "Logistics, dispatch and operational updates.",
+      "source_sha256": "e77c2eecfb8df560f0e912d42ffa57ea2059a116aa87831ca895681c2b9b59df",
+      "subject_framing": "continuous-scene"
+    }
+  ],
+  "device_frames": [
+    "phone-frame",
+    "laptop-frame"
+  ],
+  "registered_props": [
+    "parcel-shopping-props",
+    "travel-booking-props",
+    "coffee-invitation-props"
+  ],
+  "existing_actual_team": {
+    "photo_id": "commercial-team",
+    "file": "assets/burst-sms-ph-commercial-team.jpg",
+    "scope": "Approved actual Philippines team; team-coffee template. No synthetic staff identities."
+  },
+  "requires_supplied_source": [
+    "New individual actual team portraits",
+    "Current approved product screenshots; generated screens remain blank."
+  ]
+}
