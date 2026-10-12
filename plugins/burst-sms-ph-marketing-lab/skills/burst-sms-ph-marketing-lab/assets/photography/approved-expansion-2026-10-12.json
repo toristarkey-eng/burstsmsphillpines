@@ -1,0 +1,184 @@
+[
+  {
+    "photo_id": "retail-connection",
+    "file": "assets/photography/retail-connection.png",
+    "crop": [
+      0,
+      0,
+      1122,
+      1402
+    ],
+    "alt": "Illustrative AI-generated scene: Two people talking across a retail counter, with a smartphone.",
+    "templates": [
+      "people-first",
+      "customer-updates",
+      "recognition",
+      "person-plus-message"
+    ],
+    "approval_source": "Tori Starkey approved all eight generated images for the plugin image library, 12 October 2026",
+    "provenance": "AI-generated illustrative supporting imagery, 12 October 2026; not documentary photography or a real customer/team endorsement.",
+    "recommended_use": "Retail, customer relationships, sender recognition.",
+    "source_sha256": "8cc784ce1d224e5696de9d14aecbf29327be37ba39cf2315d4a2b9eb8fd81858",
+    "subject_framing": "continuous-scene"
+  },
+  {
+    "photo_id": "order-fulfilment",
+    "file": "assets/photography/order-fulfilment.png",
+    "crop": [
+      0,
+      0,
+      1536,
+      1024
+    ],
+    "alt": "Illustrative AI-generated scene: A business owner checks a phone beside packed orders while a colleague packs a box.",
+    "templates": [
+      "people-first",
+      "customer-updates",
+      "recognition",
+      "person-plus-message"
+    ],
+    "approval_source": "Tori Starkey approved all eight generated images for the plugin image library, 12 October 2026",
+    "provenance": "AI-generated illustrative supporting imagery, 12 October 2026; not documentary photography or a real customer/team endorsement.",
+    "recommended_use": "Ecommerce, order updates, delivery communication.",
+    "source_sha256": "95ccfbab4773d63e74706690cc6ce1888265ec77daf8442525a41ea7e13ac49c",
+    "subject_framing": "continuous-scene"
+  },
+  {
+    "photo_id": "appointment-welcome",
+    "file": "assets/photography/appointment-welcome.png",
+    "crop": [
+      0,
+      0,
+      1122,
+      1402
+    ],
+    "alt": "Illustrative AI-generated scene: A receptionist welcomes a customer across a salon counter.",
+    "templates": [
+      "people-first",
+      "customer-updates",
+      "recognition",
+      "person-plus-message"
+    ],
+    "approval_source": "Tori Starkey approved all eight generated images for the plugin image library, 12 October 2026",
+    "provenance": "AI-generated illustrative supporting imagery, 12 October 2026; not documentary photography or a real customer/team endorsement.",
+    "recommended_use": "Bookings, appointment reminders, customer service.",
+    "source_sha256": "8ad90bfdaf2f86520cdcd0de441322b9e4b301722133d0ed0d5c7b6d366d9a49",
+    "subject_framing": "continuous-scene"
+  },
+  {
+    "photo_id": "team-collaboration",
+    "file": "assets/photography/team-collaboration.png",
+    "crop": [
+      0,
+      0,
+      1536,
+      1024
+    ],
+    "alt": "Illustrative AI-generated scene: Three colleagues collaborating around a laptop at a desk.",
+    "templates": [
+      "people-first",
+      "customer-updates",
+      "recognition",
+      "person-plus-message"
+    ],
+    "approval_source": "Tori Starkey approved all eight generated images for the plugin image library, 12 October 2026",
+    "provenance": "AI-generated illustrative supporting imagery, 12 October 2026; not documentary photography or a real customer/team endorsement.",
+    "recommended_use": "Business workflows, partnerships, collaboration.",
+    "source_sha256": "2d0ceaa235caa18e20b2d0f75f2fd8808f9aa82465f2715712cfcc56da6de777",
+    "subject_framing": "continuous-scene"
+  },
+  {
+    "photo_id": "hospitality-owner-full-body",
+    "file": "assets/photography/hospitality-owner-full-body.png",
+    "crop": [
+      0,
+      0,
+      1024,
+      1536
+    ],
+    "alt": "Illustrative AI-generated scene: A full-body hospitality owner in a navy polo and apron, with hands and shoes visible.",
+    "templates": [
+      "people-first",
+      "customer-updates",
+      "recognition",
+      "person-plus-message"
+    ],
+    "approval_source": "Tori Starkey approved all eight generated images for the plugin image library, 12 October 2026",
+    "provenance": "AI-generated illustrative supporting imagery, 12 October 2026; not documentary photography or a real customer/team endorsement.",
+    "recommended_use": "Hospitality, small businesses, people-led awareness.",
+    "source_sha256": "14f9bc7d5473b9ab863936f3888f8074cb860309bdbc88bad3b98ea2ef12e52b",
+    "subject_framing": "full-body",
+    "alpha_background": "cloud",
+    "approved_subject_alpha": false,
+    "alpha_note": "Original generated alpha ranges 0\u2013254; preserve source bytes and composite onto locked cloud for panel photography. Not registered as a professionally prepared cutout; never infer masks or claim clean-alpha cutout approval."
+  },
+  {
+    "photo_id": "business-professional-full-body",
+    "file": "assets/photography/business-professional-full-body.png",
+    "crop": [
+      0,
+      0,
+      1024,
+      1536
+    ],
+    "alt": "Illustrative AI-generated scene: A full-body business professional holding a smartphone, with hands and shoes visible.",
+    "templates": [
+      "people-first",
+      "customer-updates",
+      "recognition",
+      "person-plus-message"
+    ],
+    "approval_source": "Tori Starkey approved all eight generated images for the plugin image library, 12 October 2026",
+    "provenance": "AI-generated illustrative supporting imagery, 12 October 2026; not documentary photography or a real customer/team endorsement.",
+    "recommended_use": "Business messaging, professional services, people-led awareness.",
+    "source_sha256": "a44d09b07e25a9059508ed659dcd91c7fe5613f6d26f1bd8a2c35edd907c4838",
+    "subject_framing": "full-body",
+    "alpha_background": "cloud",
+    "approved_subject_alpha": false,
+    "alpha_note": "Original generated alpha ranges 0\u2013254; preserve source bytes and composite onto locked cloud for panel photography. Not registered as a professionally prepared cutout; never infer masks or claim clean-alpha cutout approval."
+  },
+  {
+    "photo_id": "multicultural-manila-collaboration",
+    "file": "assets/photography/multicultural-manila-collaboration.png",
+    "crop": [
+      0,
+      0,
+      1536,
+      1024
+    ],
+    "alt": "Illustrative AI-generated scene: Four diverse colleagues collaborating around a laptop at a desk.",
+    "templates": [
+      "people-first",
+      "customer-updates",
+      "recognition",
+      "person-plus-message"
+    ],
+    "approval_source": "Tori Starkey approved all eight generated images for the plugin image library, 12 October 2026",
+    "provenance": "AI-generated illustrative supporting imagery, 12 October 2026; not documentary photography or a real customer/team endorsement.",
+    "recommended_use": "Multicultural Manila, enterprise, collaboration and partnerships.",
+    "source_sha256": "cab238f6d3d88a445fd3cb6c34a93424c40c5e4c4d328f6a67ae856ad514c2cf",
+    "subject_framing": "continuous-scene"
+  },
+  {
+    "photo_id": "philippines-travel-tourism",
+    "file": "assets/photography/philippines-travel-tourism.png",
+    "crop": [
+      0,
+      0,
+      1122,
+      1402
+    ],
+    "alt": "Illustrative AI-generated scene: A hospitality professional holding a phone welcomes two travellers beside an island coastline.",
+    "templates": [
+      "people-first",
+      "customer-updates",
+      "recognition",
+      "person-plus-message"
+    ],
+    "approval_source": "Tori Starkey approved all eight generated images for the plugin image library, 12 October 2026",
+    "provenance": "AI-generated illustrative supporting imagery, 12 October 2026; not documentary photography or a real customer/team endorsement.",
+    "recommended_use": "Travel, tourism, bookings, guest updates and hospitality.",
+    "source_sha256": "9a1c5a75740bc14286d288f04f02a7b04302c1f18a20ae27a35a6e33bd9f5562",
+    "subject_framing": "continuous-scene"
+  }
+]

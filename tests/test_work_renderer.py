@@ -40,6 +40,29 @@ def inspection(report):
 
 
 class RendererTests(unittest.TestCase):
+    def test_eight_approved_image_options_preserve_sources_and_resolve_in_catalogue(self):
+        inventory=json.loads((SKILL/'assets/photography/approved-expansion-2026-10-12.json').read_text())
+        self.assertEqual(len(inventory),8)
+        cfg=catalog()
+        for registered in inventory:
+            photo=cfg['photos'][registered['photo_id']]
+            self.assertEqual(hashlib.sha256((SKILL/photo['file']).read_bytes()).hexdigest(),photo['source_sha256'])
+            self.assertIn('AI-generated',photo['provenance'])
+            self.assertIn('Tori Starkey',photo['approval_source'])
+            png,r=render(campaign('people-first','portrait',registered['photo_id']).model_copy(update={'composition':'text-first','brand_strip':'bottom'}))
+            self.assertTrue(all(r['checks'].values()))
+            self.assertEqual(r['photography']['file'],photo['file'])
+            self.assertEqual(r['photo_checks'][0]['registered_crop'],r['photo_checks'][0]['effective_crop'])
+            if photo.get('alpha_background'):
+                self.assertFalse(photo['approved_subject_alpha'])
+                self.assertEqual(r['photo_checks'][0]['alpha_background'],'cloud')
+                with self.assertRaisesRegex(Hold,'prepared transparent'):
+                    render(campaign('people-first','portrait',registered['photo_id']).model_copy(update={'creative_style':'high-energy-casual','heading_style':'light','brand_strip':'bottom'}))
+                source=Image.open(SKILL/photo['file']).convert('RGBA')
+                c=Canvas(source.size);c.photo(photo,(0,0,*source.size))
+                expected=Image.alpha_composite(Image.new('RGBA',source.size,PALETTE['cloud']),source).convert('RGB')
+                self.assertIsNone(ImageChops.difference(c.image,expected).getbbox())
+
     def test_adjacent_message_uses_actual_photo_bounds_across_aspect_ratios(self):
         for fmt in ('square', 'portrait'):
             for photo in ('workplace-portrait', 'two-shoppers'):
@@ -701,7 +724,7 @@ class StandaloneTests(unittest.TestCase):
 
     def test_copied_skill_runs_independently_and_delivers_only_after_inspection(self):
         result = self.run_cli('preflight'); self.assertEqual(result.returncode,0,result.stderr)
-        self.assertEqual(json.loads(result.stdout)['version'], '0.4.13')
+        self.assertEqual(json.loads(result.stdout)['version'], '0.4.14')
         self.assertNotIn(str(ROOT),result.stdout)
         self.prepare(); self.assertFalse((self.output/'delivery-validation.json').exists())
         result = self.validate(); self.assertEqual(result.returncode,0,result.stderr)

@@ -291,6 +291,11 @@ class Canvas:
 
     def photo(self, photo, box, position="centre", treatment="panel", backdrop="none", fit="contain", trim_alpha_padding=False):
         source = Image.open(PLUGIN / photo["file"]).convert("RGBA")
+        if photo.get("alpha_background"):
+            if photo["alpha_background"] != "cloud" or photo.get("approved_subject_alpha") is True:
+                raise Hold("Registered alpha panel must use its locked cloud background, not claim cutout approval")
+            backing=Image.new("RGBA",source.size,PALETTE["cloud"])
+            source=Image.alpha_composite(backing,source)
         crop = tuple(photo["crop"])
         if not (0 <= crop[0] < crop[2] <= source.width and 0 <= crop[1] < crop[3] <= source.height):
             raise Hold("Photo crop outside its approved source")
@@ -367,7 +372,7 @@ class Canvas:
         self.photo_masks.append(mask.copy())
         self.photo_checks.append({"source": photo["file"], "registered_crop": list(crop),
             "effective_crop": effective_crop, "photo_fit": fit, "additional_crop_inspection_required": fit == "cover" or grounding_crop is not None,
-            "lower_body_crop": grounding_crop,
+            "lower_body_crop": grounding_crop, "alpha_background":photo.get("alpha_background"),
             "region": list(box), "frame": [px,py,*size], "frame_filled": True,
             "complete_panel_preserved": treatment == "panel", "requested_treatment": requested_treatment,
             "image_treatment": treatment, "cutout_fallback": fallback, "photo_backdrop": backdrop,

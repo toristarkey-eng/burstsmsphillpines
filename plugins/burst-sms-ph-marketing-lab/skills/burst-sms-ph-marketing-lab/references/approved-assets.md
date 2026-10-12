@@ -42,3 +42,12 @@ These examples establish a reusable Burst SMS Philippines art direction:
 - `burstsms.com.ph` presented clearly in navy or white.
 
 Use this as a composition system, not permission to redraw the logo or copy a person into a new context. New derivatives still require the controlled compositor and complete validation.
+
+
+## Eight approved campaign imagery options (0.4.14)
+
+Tori approved all eight newly generated supporting images for plugin users on 12 October 2026. They are AI-generated illustrative scenes, not documentary photographs, actual employees, customers or testimonials. Approval allows using these registered sources in new campaigns, subject to normal claim, brand, crop, subject, accessibility, composition and delivery checks; it does not approve every derivative or a product claim.
+
+Registered photo IDs: retail-connection, order-fulfilment, appointment-welcome, team-collaboration, hospitality-owner-full-body, business-professional-full-body, multicultural-manila-collaboration and philippines-travel-tourism. Select by audience and use case. Reuse the original continuous counters/desks for naturally grounded compositions; preserve faces, hands and equipment and inspect any cover crop. The two full-body sources retain complete shoes and hands. Their original generated alpha is softly translucent and ranges 0–254; the renderer composites them deterministically onto locked cloud and uses background-preserving panel photography. They are NOT registered clean-alpha cutouts or high-energy-casual sources. Do not remove their backgrounds, infer an alpha mask or extend anatomy. Native sources remain unchanged.
+
+For new cutouts, register safe framing/grounding and protected regions per source before enabling them; do not copy Vhey's crop onto another person. Photograph selection remains optional and concept-led. See assets/photography/approved-expansion-2026-10-12.json and references/image-library.md for provenance and campaign scope.

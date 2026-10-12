@@ -122,3 +122,5 @@ Version 0.4.8 includes 13 prepared illustrative graphics and authentic mask-clea
 Release 0.4.12 requires a visible structural edge for the registered cropped Vhey portrait, anchors the portrait to a contrasting navy CTA area and blocks invisible or separated grounding. Full/feed visual cohesion review remains mandatory. Existing plugin identity, logo, font, palette, destination and audience are preserved.
 
 Release 0.4.13 measures opaque silhouette contact across the lower torso, chooses a registered safe shallow crop and rejects the transparent forearm/jacket wedge that passed 0.4.12. Protected face, hair, palms, fingers and phone remain complete.
+
+Release 0.4.14 adds eight owner-approved illustrative campaign image options, including multicultural Manila and travel/tourism scenes, with original sources and source-specific usage notes.
