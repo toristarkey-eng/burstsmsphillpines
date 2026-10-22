@@ -20,6 +20,9 @@ from runtime.renderer import Campaign, Hold, Canvas, PALETTE, render, catalog, l
 
 
 def campaign(template='recognition', fmt='portrait', photo=None):
+    if template == 'social-playground':
+        fields=json.loads((SKILL/'references/examples/social-mystery-sender.json').read_text());fields['format']=fmt
+        return Campaign(**fields)
     if template == 'prop-focus':
         fields=json.loads((SKILL/'references/examples/prop-parcel.json').read_text());fields['format']=fmt
         return Campaign(**fields)
@@ -43,6 +46,131 @@ def inspection(report):
 
 
 class RendererTests(unittest.TestCase):
+    def upload_fixture(self, directory, alpha=False, channel='sms', kind='phone'):
+        from runtime.uploads import prepare, CHECKS
+        image=Image.new('RGBA' if alpha else 'RGB',(600,900),(0,0,0,0) if alpha else 'white')
+        from PIL import ImageDraw
+        d=ImageDraw.Draw(image);d.rounded_rectangle((40,20,560,880),45,fill='#002A66')
+        d.rounded_rectangle((60,55,540,845),25,fill='white')
+        source=directory/'supplied.png';image.save(source)
+        review={'source_sha256':hashlib.sha256(source.read_bytes()).hexdigest(),
+                'description':'User-supplied complete illustrative phone with a blank screen.',
+                'kind':kind,'channel':channel,'framing':'complete-subject',
+                'checks':{k:True for k in CHECKS},
+                'notes':{k:'Synthetic test source only; no personal data, customer, route or publication claim.' for k in CHECKS}}
+        bundle=directory/'prepared';prepare(source,review,bundle)
+        brief=Campaign(template_id='uploaded-image',format='portrait',photo_id='user-upload',
+                       composition='text-first',brand_strip='bottom',headline='Be recognised.',
+                       primary_text='Talk to our team about Sender ID requirements for your business.',
+                       image_treatment='cutout' if alpha else 'panel')
+        return source,review,bundle,brief
+
+    def test_user_uploads_preserve_source_and_protected_brand(self):
+        from runtime.uploads import load
+        for alpha in (False,True):
+            with tempfile.TemporaryDirectory() as tmp:
+                source,review,bundle,brief=self.upload_fixture(Path(tmp),alpha)
+                original=source.read_bytes();png,r=render(brief,upload_dir=bundle)
+                self.assertEqual(original,source.read_bytes())
+                self.assertTrue(all(r['checks'].values()))
+                self.assertEqual(r['uploaded_image']['review']['source_sha256'],hashlib.sha256(original).hexdigest())
+                self.assertEqual(r['photo_checks'][0]['effective_crop'],[0,0,600,900])
+                self.assertTrue(r['photo_checks'][0]['proportional_scale'])
+                self.assertEqual(r['photo_checks'][0]['cutout_fallback'],None)
+                self.assertIn('User-supplied complete',r['alt_text'])
+                image=Image.open(io.BytesIO(png));x,y,w,h=r['logo_box']
+                logo=Image.open(SKILL/'assets/burst-sms-logo.png').convert('RGB').resize((w,h),Image.Resampling.LANCZOS)
+                self.assertIsNone(ImageChops.difference(image.crop((x,y,x+w,y+h)),logo).getbbox())
+                self.assertEqual(png,render(brief,upload_dir=bundle)[0])
+                self.assertEqual(load(bundle)['channel'],'sms')
+
+    def test_user_upload_source_review_and_mutation_fail_closed(self):
+        from runtime.uploads import prepare
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);source,review,bundle,brief=self.upload_fixture(root)
+            review['checks']['privacy_and_sensitive_data']=False
+            with self.assertRaises(ValueError):prepare(source,review,root/'rejected')
+            self.assertFalse((root/'rejected').exists())
+            review['checks']['privacy_and_sensitive_data']=True;review['source_sha256']='0'*64
+            with self.assertRaises(ValueError):prepare(source,review,root/'mismatch')
+            for name in ('source.png','original.bin','source-review.json'):
+                file=bundle/name;original=file.read_bytes()
+                try:
+                    file.write_bytes(original+b'x')
+                    with self.assertRaises(ValueError):render(brief,upload_dir=bundle)
+                finally:file.write_bytes(original)
+            with self.assertRaises(Hold):render(brief)
+            for change in ({'photo_fit':'cover'},{'composition':'hero'},{'image_treatment':'circle'},
+                           {'photo_crop':[0,0,400,400]},{'message':'Replace the phone screen'},
+                           {'image_treatment':'cutout'}):
+                with self.assertRaises(Hold):render(brief.model_copy(update=change),upload_dir=bundle)
+            with self.assertRaises(Hold):render(campaign(),upload_dir=bundle)
+
+    def test_user_upload_channels_and_resolution_remain_qualified(self):
+        from runtime.uploads import prepare
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);source,review,bundle,brief=self.upload_fixture(root,channel='whatsapp')
+            with self.assertRaises(Hold):render(brief,upload_dir=bundle)
+            with self.assertRaises(Hold):render(brief.model_copy(update={'imagery_channel':'whatsapp'}),upload_dir=bundle)
+            _,r=render(brief.model_copy(update={'imagery_channel':'whatsapp','channel_request':'Use my WhatsApp phone example.'}),upload_dir=bundle)
+            self.assertTrue(all(r['checks'].values()))
+            tiny=root/'tiny.png';Image.new('RGB',(100,200),'white').save(tiny)
+            review['source_sha256']=hashlib.sha256(tiny.read_bytes()).hexdigest()
+            with self.assertRaises(ValueError):prepare(tiny,review,root/'tiny-prepared')
+
+    def test_user_upload_cli_snapshots_and_revalidates_private_source(self):
+        import importlib.util
+        spec=importlib.util.spec_from_file_location('upload_cli',SKILL/'scripts/render_creative.py')
+        cli=importlib.util.module_from_spec(spec);spec.loader.exec_module(cli)
+        import runtime.renderer as engine
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);source,review,bundle,brief=self.upload_fixture(root,alpha=True)
+            bp=root/'brief.json';bp.write_text(brief.model_dump_json());candidate=root/'candidate'
+            cli.render_candidate(bp,candidate,engine,bundle)
+            shutil.rmtree(bundle);source.unlink()
+            r=json.loads((candidate/'render-report.json').read_text());ip=root/'inspection.json'
+            ip.write_text(json.dumps(inspection(r)))
+            self.assertEqual(cli.validate_delivery(candidate,ip,engine)['status'],'PASSED')
+            original=(candidate/'user-upload/source.png').read_bytes()
+            (candidate/'user-upload/source.png').write_bytes(original+b'x')
+            with self.assertRaises(ValueError):cli.validate_delivery(candidate,ip,engine)
+            self.assertFalse((candidate/'delivery-validation.json').exists())
+
+    def test_playful_social_motifs_preserve_identity_and_copy(self):
+        base=campaign('social-playground')
+        master=Image.open(SKILL/'assets/burst-sms-logo.png').convert('RGB')
+        for motif in ('mystery-sender','message-pop','spotlight'):
+            for fmt in ('square','portrait'):
+                for backdrop in ('navy','violet'):
+                    brief=base.model_copy(update={'social_motif':motif,'format':fmt,'social_backdrop':backdrop})
+                    png,r=render(brief);image=Image.open(io.BytesIO(png))
+                    self.assertEqual(r['social_art']['motif'],motif)
+                    self.assertTrue(r['social_art']['illustrative_only'])
+                    self.assertTrue(all(r['checks'].values()))
+                    self.assertEqual(r['cta_alignment'],'same-line')
+                    self.assertGreaterEqual(r['social_art']['minimum_type_size'],19)
+                    self.assertIn(brief.message,[v['text'] for v in r['text_checks']])
+                    self.assertIn(brief.sender_name,[v['text'] for v in r['text_checks']])
+                    x,y,w,h=r['logo_box']
+                    self.assertIsNone(ImageChops.difference(image.crop((x,y,x+w,y+h)),master.resize((w,h),Image.Resampling.LANCZOS)).getbbox())
+                    self.assertEqual(r['destination'],'https://burstsms.com.ph/')
+                    self.assertEqual(r['delivery_status'],'INSPECTION_REQUIRED')
+        _,r=render(base)
+        self.assertIn('sunglasses',r['alt_text'])
+        self.assertEqual(render(base)[0],render(base)[0])
+
+    def test_playful_social_conflicts_and_unreadable_copy_hold(self):
+        base=campaign('social-playground')
+        for update in ({'format':'landscape'},{'brand_strip':'top'},{'creative_style':'default'},
+                       {'composition':'hero'},{'photo_id':'vhey'},{'phone_view':'full'},
+                       {'graphic_id':'sender-recognition'},{'message':''},{'image_scale':0.8},
+                       {'message_scale':1.2},{'heading_style':'navy'},{'message':'W'*85}):
+            with self.subTest(update=update), self.assertRaises(Hold):render(base.model_copy(update=update))
+        for update in ({'social_motif':'mystery-sender'},{'social_backdrop':'navy'},{'creative_style':'playful-social'}):
+            with self.assertRaises(Hold):render(campaign().model_copy(update=update))
+        for update in ({'social_motif':'unregistered'},{'social_backdrop':'pink'},{'font':'Comic Sans'}):
+            with self.assertRaises(ValidationError):Campaign(**{**base.model_dump(),**update})
+
     def test_sizing_ranges_reject_unsafe_and_nonfinite_values(self):
         base=campaign().model_dump()
         for name,value in [('heading_scale',0.5),('heading_scale',1.7),('message_scale',0.9),('message_scale',1.7),('message_width_scale',1.5),('image_scale',1.1),('graphic_scale',0.4),('heading_scale',float('nan')),('image_scale',float('inf'))]:
@@ -179,6 +307,7 @@ class RendererTests(unittest.TestCase):
 
     def test_every_template_and_export_size_is_deterministic(self):
         for template in catalog()['templates']:
+            if template=='uploaded-image':continue # Needs an explicit campaign-local reviewed source.
             for fmt in ('square', 'portrait'):
                 with self.subTest(template=template, format=fmt):
                     png, report = render(campaign(template, fmt))
@@ -196,7 +325,8 @@ class RendererTests(unittest.TestCase):
         master=Image.open(SKILL/'assets/burst-sms-logo.png').convert('RGB')
         for fmt, dims, size in requests:
             for template in catalog()['templates']:
-                if template in ('person-plus-message','graphic-focus','prop-focus'):continue # This optional composition supports square and portrait only.
+                if template=='uploaded-image':continue # Needs an explicit campaign-local reviewed source.
+                if template in ('person-plus-message','graphic-focus','prop-focus','social-playground','uploaded-image'):continue # This optional composition supports square and portrait only.
                 for strip in ('top','bottom'):
                     with self.subTest(format=fmt, dimensions=dims, template=template, strip=strip):
                         brief=campaign(template,'portrait' if fmt=='custom' else fmt).model_copy(update={'format':fmt, **{'dimensions':dims,'brand_strip':strip,
@@ -250,7 +380,8 @@ class RendererTests(unittest.TestCase):
 
     def test_all_adaptive_variants_preserve_protected_regions(self):
         for template in catalog()['templates']:
-            if template in ('person-plus-message','graphic-focus','prop-focus'):continue # Dedicated composition has its own protected-region tests.
+            if template=='uploaded-image':continue # Needs an explicit campaign-local reviewed source.
+            if template in ('person-plus-message','graphic-focus','prop-focus','social-playground','uploaded-image'):continue # Dedicated composition has its own protected-region tests.
             for fmt in ('square', 'portrait'):
                 for strip in ('top', 'bottom'):
                     for composition in ('auto', 'side-by-side', 'text-first', 'image-first'):
@@ -817,7 +948,7 @@ class StandaloneTests(unittest.TestCase):
 
     def test_copied_skill_runs_independently_and_delivers_only_after_inspection(self):
         result = self.run_cli('preflight'); self.assertEqual(result.returncode,0,result.stderr)
-        self.assertEqual(json.loads(result.stdout)['version'], '0.4.17')
+        self.assertEqual(json.loads(result.stdout)['version'], '0.4.18')
         self.assertNotIn(str(ROOT),result.stdout)
         self.prepare(); self.assertFalse((self.output/'delivery-validation.json').exists())
         result = self.validate(); self.assertEqual(result.returncode,0,result.stderr)
@@ -834,6 +965,7 @@ class StandaloneTests(unittest.TestCase):
 
     def test_all_sizes_and_templates_work_from_copied_package(self):
         for template in catalog()['templates']:
+            if template=='uploaded-image':continue # Needs an explicit campaign-local reviewed source.
             for fmt in ('square','portrait'):
                 with self.subTest(template=template,format=fmt):
                     self.brief.write_text(campaign(template,fmt).model_dump_json())

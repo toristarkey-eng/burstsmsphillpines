@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import importlib.metadata
 import json
+import shutil
 import sys
 from pathlib import Path
 
@@ -51,13 +52,22 @@ def candidate_file(directory, name):
     return path
 
 
-def render_candidate(brief, directory, engine):
+def render_candidate(brief, directory, engine, upload_dir=None):
     # All rendering/checks happen in memory before a new private directory is created.
     campaign = engine.Campaign.model_validate(read_json(brief, 16384))
-    png, report = engine.render(campaign)
+    png, report = engine.render(campaign, upload_dir=upload_dir)
     if directory.resolve().is_relative_to(SKILL.resolve()):
         raise ValueError("Use a new private directory outside the installed skill")
     directory.mkdir(parents=True, mode=0o700, exist_ok=False)
+    if upload_dir is not None:
+        # Keep user content local to the campaign; never put it in the installed/public bundle.
+        target=directory/"user-upload"
+        target.mkdir(mode=0o700)
+        for name in ("original.bin","source.png","source-review.json"):
+            shutil.copyfile(Path(upload_dir)/name,target/name)
+        copied_png,copied_report=engine.render(campaign,upload_dir=target)
+        if copied_png!=png or copied_report!=report:
+            raise ValueError("Uploaded image changed during candidate preparation")
     (directory / "artwork.png").write_bytes(png)
     json_file(directory / "render-report.json", report)
     (directory / "recommended-copy.md").write_text(report["channel_copy"] + "\n", encoding="utf-8")
@@ -73,7 +83,7 @@ def validate_delivery(directory, inspection_path, engine):
         receipt_path.unlink()
     report = read_json(candidate_file(directory, "render-report.json"))
     campaign = engine.Campaign.model_validate(report["campaign"])
-    expected_png, expected_report = engine.render(campaign)
+    expected_png, expected_report = engine.render(campaign, upload_dir=candidate_file(directory,"user-upload") if campaign.template_id=="uploaded-image" else None)
     expected_report = json.loads(json.dumps(expected_report))
     with candidate_file(directory, "artwork.png").open("rb") as stream:
         png = stream.read(8 * 1024 * 1024 + 1)
@@ -110,6 +120,11 @@ def main(argv=None):
     render = actions.add_parser("render")
     render.add_argument("--brief", type=Path, required=True)
     render.add_argument("--output-dir", type=Path, required=True)
+    render.add_argument("--upload-dir", type=Path, help="Reviewed campaign-local upload bundle")
+    upload=actions.add_parser("prepare-upload")
+    upload.add_argument("--image",type=Path,required=True)
+    upload.add_argument("--review",type=Path,required=True)
+    upload.add_argument("--output-dir",type=Path,required=True)
     validate = actions.add_parser("validate")
     validate.add_argument("--directory", type=Path, required=True)
     validate.add_argument("--inspection", type=Path, required=True)
@@ -131,7 +146,12 @@ def main(argv=None):
         elif args.action == "catalog":
             result = engine.catalog()
         elif args.action == "render":
-            result = render_candidate(args.brief, args.output_dir, engine)
+            result = render_candidate(args.brief, args.output_dir, engine, args.upload_dir)
+        elif args.action == "prepare-upload":
+            if args.output_dir.resolve().is_relative_to(SKILL.resolve()):
+                raise ValueError("User uploads must stay outside the installed skill")
+            from runtime.uploads import prepare
+            result=prepare(args.image,read_json(args.review,20000),args.output_dir)
         else:
             result = validate_delivery(args.directory, args.inspection, engine)
         print(json.dumps(result, indent=2))

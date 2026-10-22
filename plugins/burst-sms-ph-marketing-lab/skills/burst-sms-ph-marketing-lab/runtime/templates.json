@@ -69,6 +69,26 @@
         "portrait"
       ],
       "optional": true
+    },
+    "social-playground": {
+      "title": "Playful social illustration",
+      "layout": "social",
+      "reference": "Owner-requested playful social direction, 22 October 2026",
+      "photography": false,
+      "formats": [
+        "square",
+        "portrait"
+      ]
+    },
+    "uploaded-image": {
+      "title": "User-supplied image or phone",
+      "layout": "split",
+      "photography": true,
+      "reference": "User-authorised image upload support, 22 October 2026",
+      "formats": [
+        "square",
+        "portrait"
+      ]
     }
   },
   "formats": {
@@ -1364,5 +1384,35 @@
       0.75,
       1.4
     ]
+  },
+  "playful_social": {
+    "style": "playful-social",
+    "composition": "social-hero",
+    "motifs": [
+      "mystery-sender",
+      "message-pop",
+      "spotlight"
+    ],
+    "backdrops": [
+      "navy",
+      "violet"
+    ],
+    "brand_strip": "bottom",
+    "illustrative_only": true,
+    "protected": "Original logo, Noto Sans, locked palette, CTA and destination, copy/evidence and exact delivery validation"
+  },
+  "uploads": {
+    "template": "uploaded-image",
+    "photo_id": "user-upload",
+    "formats": [
+      "PNG",
+      "JPEG",
+      "WebP"
+    ],
+    "max_bytes": 20971520,
+    "private_campaign_local": true,
+    "source_review_required": true,
+    "brand_bar_protected": true,
+    "phone_and_screenshot_preservation": "complete device, original pixels and aspect ratio, no UI overlays"
   }
 }
