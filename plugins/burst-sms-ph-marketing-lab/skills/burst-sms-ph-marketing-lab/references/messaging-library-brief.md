@@ -66,3 +66,14 @@ Campaign choice: lead with the customer's relevant need and one compelling reaso
 ## Owner-requested coffee invitation, 10 October 2026
 
 Tori’s explicit acceptance brief requests Coffee’s on us. / Let’s make every message count. / Meet your Philippines team for a messaging audit. with Book a coffee chat. This confirms that invitation wording for the team coffee campaign. It does not establish deadlines, quantities, venue, audit deliverables, savings, performance or other commercial conditions. Do not invent terms; resolve any specifically requested details separately. Visual delivery remains blocked until authentic prepared team and registered coffee-prop assets meet the requested treatment.
+
+
+## RCS market qualification update 22 October 2026
+
+Source: owner-requested incorporation of the 22 October 2026 RCS enablement material. Status: internal claim-governance rule, not Philippines product availability or publication approval. The shared-platform international enablement does not establish that RCS is commercially available for Philippines recipients or that a Burst SMS Philippines account is enabled.
+
+Before any RCS campaign, demo invitation, customer example or proposal, verify the destination country, carrier, business-RCS device support, account/sender configuration, agent approval, delivery path, pricing, consent and opt-out handling, with the responsible local product/commercial owner. Record source, date, scope and approval status under the existing evidence rules. Do not import foreign-market launch claims, sample prices, free-registration offers, approval timelines or future features into Philippine copy without that confirmation.
+
+Distinguish a text-only SMS-to-RCS upgrade from a rich RCS API integration. Do not infer rich cards, buttons, read receipts, automatically managed opt-outs or campaign-builder availability from a generic shared-platform capability. Qualify SMS fallback by the actual implementation; never promise guaranteed delivery, scam-proof identity or guaranteed compliance. Treat conflicting country lists and unsupported benchmarks as Hold until resolved. Device OS version alone does not prove business-RCS reach.
+
+Existing Burst-only branding, Philippines destination, explicit-request-only use of registered RCS graphics, deterministic renderer, claim-owner approval and final inspection rules remain in force. Approved channel artwork is illustrative and does not prove a live product or route.
