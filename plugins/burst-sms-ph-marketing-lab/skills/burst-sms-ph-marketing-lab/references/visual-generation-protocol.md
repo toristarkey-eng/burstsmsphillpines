@@ -97,3 +97,6 @@ Use `image_scale` and `graphic_scale` (0.65–1, default 1) to adjust registered
 Inspect final full/feed size after resizing for preserved subjects, grounding, safe SMS placement, legible raster text and visual cohesion. Resizing must still pass original logo pixels, fonts, palette, contrast, bounds, collisions, graphic minimum readability, CTA-left/website-right, terms, brand-bar separation, integrity and exact delivery reconstruction checks. Never weaken a gate or infer artistic quality from sizing success. All users receive these controls with the updated plugin release.
 
 For photo-background SMS overlays, `message_width_scale` (0.75–1.4, default 1) adjusts card width; sender/message text size remains controlled separately. The complete content-sized card must fit safe bounds and avoid every subject. Other compositions Hold non-default width sizing rather than ignoring it.
+
+
+Native playful-social illustration is supported as of 0.4.18. Apply the contract in work-runtime.md: inspect the visual metaphor at full and feed sizes, sender/message readability, illustration boundaries, CTA separation and unchanged logo. All technical and eight inspection gates still apply.

@@ -1,0 +1,17 @@
+{
+  "template_id": "social-playground",
+  "format": "portrait",
+  "headline": "New phone.",
+  "accent": "Who dis?",
+  "supporting": "Your customers shouldn't have to ask.",
+  "primary_text": "New phone. Who dis?\n\nFunny in the group chat. Awkward when it's your business.\n\nYou've put work into your brand. Give its name a place in the conversation.\n\nTalk to Burst SMS Philippines about branded Sender IDs and the requirements for your business.",
+  "cta": "Explore branded Sender IDs",
+  "brand_strip": "bottom",
+  "composition": "social-hero",
+  "heading_scale": 1.25,
+  "creative_style": "playful-social",
+  "social_motif": "mystery-sender",
+  "social_backdrop": "violet",
+  "sender_name": "YOUR BRAND",
+  "message": "Hi Mia, your order is on its way."
+}
