@@ -1,6 +1,6 @@
-# Fresh-conversation acceptance for Burst SMS PH Marketing Lab 0.4.22
+# Fresh-conversation acceptance for Burst SMS PH Marketing Lab 0.4.24
 
-These are manual acceptance tests for the 0.4.22 candidate, not a release instruction. Use an isolated test installation from the candidate commit. Confirm the existing plugin name and ID are unchanged and version 0.4.22 is installed.
+These are manual acceptance tests for the 0.4.24 candidate, not a release instruction. Use an isolated test installation from the candidate commit. Confirm the existing plugin name and ID are unchanged and version 0.4.24 is installed.
 Release only after automated and actual visual checks pass and the owner authorises the team update.
 
 ## Work, fresh conversation for each test

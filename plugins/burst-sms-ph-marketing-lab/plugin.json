@@ -1,8 +1,8 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "burst-sms-ph-marketing-lab",
-  "version": "0.4.22",
-  "description": "Create and review Burst SMS Philippines marketing in Work using the bundled deterministic renderer and approved messaging library.",
+  "version": "0.4.24",
+  "description": "Create Burst SMS Philippines marketing in Work with campaign-local user or generated imagery, deterministic brand layers and mandatory checks.",
   "author": {
     "name": "Tori",
     "email": "tori.starkey@kudosity.com"
@@ -12,7 +12,7 @@
       "interface": {
         "displayName": "Burst SMS PH Marketing Lab",
         "shortDescription": "PH marketing creative in Work",
-        "longDescription": "Work-only creative production with flexible campaign bodies, verified assets, locked brand and CTA bars, and mandatory checks before delivery.",
+        "longDescription": "Work-only creative production with campaign-local user or generated imagery, flexible compositions, locked brand and CTA layers, and mandatory checks before delivery.",
         "developerName": "Tori",
         "category": "Productivity",
         "capabilities": [

@@ -1,5 +1,4 @@
 """Bounded native illustration for playful social posts; no external assets or UI claims."""
-import math
 
 
 def paint_social(canvas, campaign, footer, palette, hold):
@@ -52,11 +51,8 @@ def paint_social(canvas, campaign, footer, palette, hold):
         oval(35,420,830,170,"violet")
     else:
         oval(0,0,900,600,"cyan" if bg=="violet" else "violet")
-    # Only three deliberate impact strokes, behind the complete illustration.
-    for x,y,angle in [(55,82,-.8),(840,66,.8),(873,167,1.2)]:
-        dx,dy=math.cos(angle)*22,math.sin(angle)*22
-        a,b,_,_=box(x-dx,y-dy,1,1);c,e,_,_=box(x+dx,y+dy,1,1)
-        d.line((a,b,c,e),fill=palette['white'],width=max(4,round(8*scale)))
+    # Keep the campaign scene clean. Decorative impact strokes competed with
+    # the phone and message in feed-size reviews.
     if motif != "phone-chat":
         # One conversation panel with a contrasting shadow. Do not stack duplicate
         # white cards: their shared edge disappears and makes the SMS look synthetic.

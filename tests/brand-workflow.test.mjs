@@ -11,7 +11,7 @@ test('both manifests retain existing plugin identity and declare Work production
   for (const relative of ['plugin.json', '.codex-plugin/plugin.json']) {
     const manifest = JSON.parse(await fs.readFile(path.join(plugin, relative), 'utf8'));
     assert.equal(manifest.name, 'burst-sms-ph-marketing-lab');
-    assert.equal(manifest.version, '0.4.22');
+    assert.equal(manifest.version, '0.4.24');
     assert.match(manifest.description, /Work/);
     assert.equal(manifest.apps, undefined);
     assert.equal(manifest.mcpServers, undefined);
@@ -24,7 +24,7 @@ test('ordinary Chat requires Work and has no approved-image or image-generation 
   const instructions = await fs.readFile(path.join(skill, 'SKILL.md'), 'utf8');
   assert.match(instructions, /Creative production requires Work\. Open this request in Work with Burst SMS PH Marketing Lab\./);
   assert.match(instructions, /Do not generate or attach artwork, deliver an approved-image fallback/);
-  assert.match(instructions, /Never call an image-generation or image-editing tool/);
+  assert.match(instructions, /In ordinary Chat, never call an image-generation or image-editing tool/);
   assert.match(instructions, /fresh exit status 0/);
   assert.doesNotMatch(instructions, /c188b54|list_creative_templates|get_reviewed_creative/);
 });

@@ -1,7 +1,7 @@
 {
   "name": "burst-sms-ph-marketing-lab",
-  "version": "0.4.22",
-  "description": "Create and review Burst SMS Philippines marketing in Work using the bundled deterministic renderer and approved messaging library.",
+  "version": "0.4.24",
+  "description": "Create Burst SMS Philippines marketing in Work with campaign-local user or generated imagery, deterministic brand layers and mandatory checks.",
   "author": {
     "name": "Tori",
     "email": "tori.starkey@kudosity.com"
