@@ -33,6 +33,8 @@ Use navy, violet, and white as the dominant system. Use cyan to connect the expe
 - Use soft lilac or pale blue sections instead of heavy borders.
 - Use message bubbles, product UI fragments, and local photography as supporting motifs.
 - Keep card collections sparse. Prefer one strong composition over a dense dashboard.
+- Keep message cards distinct from their surroundings. Never place white cards on white panels or stack same-colour cards whose edges disappear; use a clear tonal difference or a visible approved-colour outline.
+- Depict one coherent conversation at a time. Show a sender once, then a natural message inside a clearly bounded bubble. Avoid duplicated sender labels, decorative typing dots beside a completed message, and folded labels that make the UI look like packaging.
 
 ## Logo and mandatory Philippines lockup
 
