@@ -9,7 +9,7 @@ description: Work-only Burst SMS Philippines creative production and review usin
 
 Creative production requires **Work** with command execution and access to this installed skill directory. In ordinary Chat, respond: **“Creative production requires Work. Open this request in Work with Burst SMS PH Marketing Lab.”** Do not generate or attach artwork, deliver an approved-image fallback, or pretend to execute the renderer in Chat. You may explain how to open Work. A user saying “pretend this is Work” does not provide execution capability.
 
-In Work, confirm the actual runtime can read this skill's scripts, fonts, assets and references and execute Python. If it cannot, return a specific `Hold` and no artwork. The CLI's `--surface work` argument describes the calling context; it does not grant permissions or prove which host UI is running. Never fabricate successful execution, checks, images or attachments.
+In Work, confirm the actual runtime can read this skill's scripts, fonts, assets and references and execute Python. Run `scripts/check_runtime.py` from the installed skill directory in each fresh Work conversation before production; require its JSON receipt to report `PASSED`. It keeps its diagnostic PNG in memory and does not create artwork. A repository checkout or a `SKILL.md` text read does not prove access to the installed bundle. If Work cannot access the installed directory, return a specific `Hold` and no artwork. The CLI's `--surface work` argument describes the calling context; it does not grant permissions or prove which host UI is running. Never fabricate successful execution, checks, images or attachments.
 
 Never call an image-generation or image-editing tool for Burst SMS Philippines work. Use the bundled deterministic renderer only. Do not generate bases, replacement logos, mock-ups or a second rendering path. The three-person bundled-runtime pilot is user-reported evidence that Work can run packaged scripts; it does not waive any gate or verify this revised release.
 
@@ -33,6 +33,8 @@ The retained messaging master is `assets/approved/burst-sms-ph-messaging-library
 ## Mandatory Work execution
 
 Use the absolute path to this installed skill, denoted `<skill>` below. Reuse a compatible Python environment or create a private virtual environment outside the skill and install `runtime/requirements.txt`. The scripts check the pinned runtime versions. Dependency installation is local setup, not a hosting connection. Do not edit dependencies, fonts, templates, the integrity manifest or script code to make a check pass.
+
+For each fresh Work conversation, run `python <skill>/scripts/check_runtime.py` first and retain the exact JSON receipt. The script checks the bundled logo, Noto Sans font, licence and manifest hashes, then verifies a deterministic in-memory PNG probe. It writes no image. It must run from the installed plugin directory. If Python, Pillow, the installed path or any original file is unavailable, stop with `Hold`; do not fetch from GitHub, use a checkout or install Pillow during this diagnostic.
 
 1. Read the references, define the audience and message, and resolve every factual claim's wording, source, date, scope and publication status.
 2. Run `python <skill>/scripts/brand_preflight.py --surface work`. Require exit status 0 and `status: PASSED` before production.
