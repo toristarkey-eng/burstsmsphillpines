@@ -31,7 +31,7 @@ try {
   const css = fs.readFileSync(path.join(root, 'design-system/tokens/tokens.css'), 'utf8').toLowerCase();
   for (const [name, token] of Object.entries(tokens.color.brand)) if (!css.includes(token.$value.toLowerCase())) errors.push(`Missing CSS token: ${name}`);
   const skillText = fs.readFileSync(path.join(skill, 'SKILL.md'), 'utf8');
-  for (const policy of ['Creative production requires Work.', 'ordinary Chat', 'No successful compliance checks, no delivery', 'Never call an image-generation or image-editing tool', 'brand_preflight.py', 'image_ready_for_delivery: true', 'Promote Burst SMS only']) if (!skillText.includes(policy)) errors.push(`Missing policy: ${policy}`);
+  for (const policy of ['Creative production requires Work.', 'ordinary Chat', 'No successful compliance checks, no delivery', 'In ordinary Chat, never call an image-generation or image-editing tool', 'brand_preflight.py', 'image_ready_for_delivery: true', 'Promote Burst SMS only']) if (!skillText.includes(policy)) errors.push(`Missing policy: ${policy}`);
   const approved = path.join(skill, 'assets/approved');
   for (const name of fs.readdirSync(approved).filter(name => name.endsWith('.png'))) {
     if (!fs.readFileSync(path.join(approved, name)).equals(fs.readFileSync(path.join(root, 'design-system/assets/approved', name)))) errors.push(`Approved example changed: ${name}`);

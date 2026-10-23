@@ -21,6 +21,7 @@ def sha(data):
 class UploadReview(BaseModel):
     model_config = ConfigDict(extra="forbid", strict=True)
     source_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    source_origin: Literal["user-supplied", "imagegen-generated"] = "user-supplied"
     description: str = Field(min_length=15, max_length=500)
     kind: Literal["photo", "phone", "screenshot", "illustration"]
     channel: Literal["none", "sms", "rcs", "whatsapp", "viber"] = "none"
@@ -110,5 +111,6 @@ def load(directory):
         raise ValueError("Transparent uploaded subjects must remain complete")
     asset={"file":"user-upload/source.png","crop":[0,0,*dims],"alt":review.description,
            "templates":["uploaded-image"],"user_supplied":True,"kind":review.kind,
-           "channel":review.channel,"approved_subject_alpha":alpha,"upload_review":r}
+           "source_origin":review.source_origin,"channel":review.channel,
+           "approved_subject_alpha":alpha,"upload_review":r}
     return asset
