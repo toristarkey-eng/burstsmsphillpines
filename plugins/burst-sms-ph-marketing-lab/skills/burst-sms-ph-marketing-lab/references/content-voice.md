@@ -31,6 +31,10 @@ Label unsupported numbers and claims as placeholders. Current claims must link t
 
 Choose messaging for the customer and objective, rather than repeating compliance-led copy. Lead with a concrete relevant benefit and a substantiated reason to choose Burst SMS. For compliance/onboarding, use the dated owner-confirmed Philippines team expertise within its recorded scope; never promise guaranteed compliance or regulatory approval. Facebook artwork requires a short customer-focused headline, strong relevant focal point and immediately clear action.
 
+When creative includes a message example, make it read like a plausible human exchange: use a clearly fictional business sender such as `ACME SHOP`, address a person naturally, and keep the message short and relevant to the scene. Do not repeat the sender as a headline and a second header, use placeholder or robotic copy, or make an illustrative message appear to be a real customer endorsement. Use `BURST SMS` as the sender only when the example is deliberately about a message sent by Burst itself.
+
+For organic social posts, include up to three specific, relevant hashtags in the recommended caption, including `#BurstSMS` and a Philippines/business or campaign topic tag where appropriate. Keep hashtags out of the artwork. Use `post_type: paid` for paid ads and leave the hashtag line out; never assume hashtags improve reach or conversion. The renderer uses campaign context for defaults and accepts up to three explicit, plain-text tags.
+
 ## Approved campaign graphics and Vhey (0.4.8)
 
 Tori supplied and approved the attached graphics on 10 October 2026, including permission to recolour graphic artwork using only the Burst SMS approved palette. They are optional campaign assets, not a new default style. Choose assets by campaign relevance: order-confirmed, delivery-update, appointment-reminder, early-access, reactivation, booking-conversation, sender-recognition, black-friday-bags, black-friday-trolley or double-digit-sale. Seasonal artwork does not establish a Burst offer, discount, deadline or campaign-performance result. Do not use a sender ID graphic to imply regulatory approval.
