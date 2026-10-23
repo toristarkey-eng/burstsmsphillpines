@@ -2,11 +2,11 @@
   "schema_version": 1,
   "plugin_name": "burst-sms-ph-marketing-lab",
   "plugin_id": "Plugin_f128b9ca740081918b32107ab5b22124",
-  "plugin_version": "0.4.21",
+  "plugin_version": "0.4.22",
   "repository": "https://github.com/toristarkey-eng/burstsmsphillpines",
   "runtime": "Work",
   "files": {
-    "SKILL.md": "577d23880342228b27792b24e15902f546eef1332bfdcf79a850c6ddf039a51f",
+    "SKILL.md": "2f03f386d39c796ae125fa717faf346a91d96f364e6dfb0d7d2e93fdfd6dd942",
     "assets/approved/approved-be-recognised-facebook.png": "d11a25d5b8c082eb7c52f58b62699d019e4fe1c8f50db3c6bcdff7cbf4c9a4af",
     "assets/approved/approved-coffee-chat-team-with-lockup.png": "cd4990dca151f7cfc44b9ae5fad73fe4f082c8352af18d0486941295380ae7a3",
     "assets/approved/approved-coffee-chat-team.png": "00ed9c029ce37224de907449d405bf3f756624e27c4406fa0133bc3080904f24",
@@ -133,6 +133,7 @@
     "runtime/templates.json": "6d9321d3153e60041f58b356e5241dbb061c5f2f0c4bb05cf4a480513cf681dc",
     "runtime/uploads.py": "fddd2df2ea8c3831afffe9ea98b744a1edd5004de3ddf004ac835348c2442944",
     "scripts/brand_preflight.py": "522ce5e4c82ddb1f1a68d6d9e9293965e14a7849cc00873134e00b19b6f91bf0",
-    "scripts/render_creative.py": "d602ee8670027b0ac2741ed4ecd147a1178ddf85ea231a7bbbd074c6d62f7b36"
+    "scripts/render_creative.py": "d602ee8670027b0ac2741ed4ecd147a1178ddf85ea231a7bbbd074c6d62f7b36",
+    "scripts/check_runtime.py": "d2a98230aa99fcbdbb61879038a7ef8af31c66dbc0418c0bcdd3f0760ec159b0"
   }
 }
