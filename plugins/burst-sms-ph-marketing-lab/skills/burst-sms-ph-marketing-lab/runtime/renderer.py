@@ -127,12 +127,12 @@ class Campaign(BaseModel):
 def load_locks() -> dict:
     """Verify the installed skill package locally, without a checkout or network."""
     try:
-        lock = json.loads((ROOT / "brand-integrity.json").read_text())
+        lock = json.loads((ROOT / "brand-integrity.json").read_text(encoding="utf-8"))
         if lock.get("schema_version") != 1 or lock.get("plugin_name") != "burst-sms-ph-marketing-lab" or not isinstance(lock.get("files"), dict):
             raise Hold("Bundled integrity manifest is invalid")
         required = {"SKILL.md", "runtime/__init__.py", "runtime/renderer.py", "runtime/requirements.txt", "runtime/templates.json", "assets/tokens.json", "assets/burst-sms-logo.png", "scripts/render_creative.py", "scripts/brand_preflight.py", "assets/approved/burst-sms-ph-messaging-library-brief.docx"}
-        required.update(str(p.relative_to(ROOT)) for folder in [ROOT / "runtime", ROOT / "scripts", ROOT / "references"] for p in folder.rglob("*") if p.is_file() and "__pycache__" not in p.parts and p.suffix != ".pyc")
-        templates = json.loads((SERVICE / "templates.json").read_text())
+        required.update(p.relative_to(ROOT).as_posix() for folder in [ROOT / "runtime", ROOT / "scripts", ROOT / "references"] for p in folder.rglob("*") if p.is_file() and "__pycache__" not in p.parts and p.suffix != ".pyc")
+        templates = json.loads((SERVICE / "templates.json").read_text(encoding="utf-8"))
         required.update(photo["file"] for photo in templates["photos"].values())
         if not required.issubset(lock["files"]):
             raise Hold("Bundled integrity manifest omits a required input")
@@ -144,7 +144,7 @@ def load_locks() -> dict:
                 raise Hold(f"Bundled integrity mismatch: {relative}")
         if digest((ROOT / "assets/burst-sms-logo.png").read_bytes()) != APPROVED_LOGO_SHA256:
             raise Hold("Approved logo master changed")
-        tokens = json.loads((ROOT / "assets/tokens.json").read_text())
+        tokens = json.loads((ROOT / "assets/tokens.json").read_text(encoding="utf-8"))
         for name in ["navy", "violet", "cyan", "blue"]:
             if tokens["color"]["brand"][name]["$value"] != PALETTE[name]:
                 raise Hold(f"Brand token changed: {name}")
@@ -159,7 +159,7 @@ def load_locks() -> dict:
 
 def catalog() -> dict:
     load_locks()
-    return json.loads((SERVICE / "templates.json").read_text())
+    return json.loads((SERVICE / "templates.json").read_text(encoding="utf-8"))
 
 
 def recommended_hashtags(campaign: Campaign) -> list[str]:

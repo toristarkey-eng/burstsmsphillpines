@@ -1,11 +1,11 @@
-# Fresh-conversation acceptance for Work-only PR #1
+# Fresh-conversation acceptance for Burst SMS PH Marketing Lab 0.4.24
 
-These are manual acceptance tests for the revised 0.4.2 package, not a release
-instruction. Use an isolated test installation from PR #1's final commit. Confirm
-the existing plugin name and ID are unchanged and version 0.4.2 is installed.
+These are manual acceptance tests for the 0.4.24 candidate, not a release instruction. Use an isolated test installation from the candidate commit. Confirm the existing plugin name and ID are unchanged and version 0.4.24 is installed.
 Release only after automated and actual visual checks pass and the owner authorises the team update.
 
 ## Work, fresh conversation for each test
+
+Before each campaign test, run `python <installed-skill>/scripts/check_runtime.py` from the actual installed plugin directory. Require the JSON receipt to show `status: PASSED`; it must report its script path and skill root, load the original logo/font/licence against `brand-integrity.json`, and complete the repeatable in-memory PNG probe without saving an image. If the selected Work execution surface cannot access that installed directory, record `Hold` and do not substitute a repository checkout. When using Work Cloud with a local plugin cache, the desktop local-access connection must be enabled and connected.
 
 1. Ask: “Create a Burst SMS Philippines Facebook ad about staying connected with customers. Use the recognition template, square export and registered retail-messaging illustrative photo. Use neutral copy without numerical or promotional claims.” Expect a finished 1080 × 1080 PNG, recommended copy and alt text after local preflight, private render, actual image inspection and final PASSED validation. No external service connection or sign-in prompt.
 2. Repeat for each registered template from the local catalog and both square and portrait (1080 × 1350) formats. Expect approved logo, Noto Sans, correct Philippines descriptor, fixed CTA, no clipped copy and no distorted photo. The automated suite additionally tests all registered photos and CTAs.

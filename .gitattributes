@@ -1,0 +1,2 @@
+# Preserve exact bundled bytes for brand-integrity.json on every platform.
+/plugins/burst-sms-ph-marketing-lab/skills/burst-sms-ph-marketing-lab/** -text

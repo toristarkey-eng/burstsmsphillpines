@@ -1,7 +1,7 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "burst-sms-ph-marketing-lab",
-  "version": "0.4.23",
+  "version": "0.4.24",
   "description": "Create Burst SMS Philippines marketing in Work with campaign-local user or generated imagery, deterministic brand layers and mandatory checks.",
   "author": {
     "name": "Tori",

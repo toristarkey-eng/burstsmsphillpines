@@ -2,11 +2,11 @@
   "schema_version": 1,
   "plugin_name": "burst-sms-ph-marketing-lab",
   "plugin_id": "Plugin_f128b9ca740081918b32107ab5b22124",
-  "plugin_version": "0.4.23",
+  "plugin_version": "0.4.24",
   "repository": "https://github.com/toristarkey-eng/burstsmsphillpines",
   "runtime": "Work",
   "files": {
-    "SKILL.md": "f9d85b4b8dbf44428253295fe094e164ead9ba1acd303a78979a99872b7695a6",
+    "SKILL.md": "b852f6252ec1117ca5ed9786f71fc923cf353364ec467e59a43f85ab19021968",
     "assets/approved/approved-be-recognised-facebook.png": "d11a25d5b8c082eb7c52f58b62699d019e4fe1c8f50db3c6bcdff7cbf4c9a4af",
     "assets/approved/approved-coffee-chat-team-with-lockup.png": "cd4990dca151f7cfc44b9ae5fad73fe4f082c8352af18d0486941295380ae7a3",
     "assets/approved/approved-coffee-chat-team.png": "00ed9c029ce37224de907449d405bf3f756624e27c4406fa0133bc3080904f24",
@@ -127,12 +127,13 @@
     "runtime/fonts/NotoSans-Regular.ttf": "b85c38ecea8a7cfb39c24e395a4007474fa5a4fc864f6ee33309eb4948d232d5",
     "runtime/fonts/NotoSans-SemiBold.ttf": "87a8b90ece1e89746b544e4e086f85a3710e41485a8078f9be874837dfad45d5",
     "runtime/fonts/OFL.txt": "0dab92d0544f7b233403f14b84a663bdbfa746982eda629e7f4f9ffe1b036feb",
-    "runtime/renderer.py": "52ec85abd4b438833adab3eeb1f810372beb77cd16952a82f03f91318d66a505",
+    "runtime/renderer.py": "564ef0310784780843ebc04daed743d40111e6a9d1fa34c0ac2512e41a4ecbaf",
     "runtime/requirements.txt": "d7cb3d741c7e935e732fb2575914abac575aab7522319eee076c7cfaa0fa854e",
     "runtime/social_art.py": "f8ab6f7ca589adb4d19ab93525ad5e25bbbe2443b37fbafc812f3d8912968e92",
     "runtime/templates.json": "6d9321d3153e60041f58b356e5241dbb061c5f2f0c4bb05cf4a480513cf681dc",
     "runtime/uploads.py": "6cce805c05d1fbaa0c77a6730ad13f8bf3beb4e77ed71e5aa702c90998f9d16a",
     "scripts/brand_preflight.py": "522ce5e4c82ddb1f1a68d6d9e9293965e14a7849cc00873134e00b19b6f91bf0",
-    "scripts/render_creative.py": "dc787d14537cdd5533400be0f4425e43f4714c63253016ef895ce0c65bf9dcfc"
+    "scripts/render_creative.py": "950ef9a60406bac9007f21011098a7a3094f7014c5352074df53650e3401a933",
+    "scripts/check_runtime.py": "d2a98230aa99fcbdbb61879038a7ef8af31c66dbc0418c0bcdd3f0760ec159b0"
   }
 }
