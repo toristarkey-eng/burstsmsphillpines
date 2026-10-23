@@ -128,3 +128,7 @@ Release 0.4.14 adds eight owner-approved illustrative campaign image options, in
 Release 0.4.15 adds eight photographic device/prop/industry assets, two editable native device frames and prop-focus composition with three registered photographic props. Existing actual team imagery is retained; product screenshots are not fabricated.
 
 Release 0.4.16 adds bounded heading, deterministic SMS and proportional image/graphic sizing while retaining every brand and delivery gate.
+
+Release 0.4.20 expands reviewed user-image layouts for more varied, connected social creative while keeping the Burst identity system fixed. Organic recommended captions now include contextual hashtags; paid copy stays hashtag-free.
+
+Release 0.4.21 adds a native phone-chat social motif that creates a complete phone, sender and readable SMS over a colourful Burst backdrop without requiring a finished ad or phone mockup. It keeps the message bubble visibly outlined and preserves the protected logo, CTA, palette, contrast and delivery checks.

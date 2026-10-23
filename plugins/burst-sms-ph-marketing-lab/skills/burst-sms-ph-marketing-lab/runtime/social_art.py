@@ -57,45 +57,80 @@ def paint_social(canvas, campaign, footer, palette, hold):
         dx,dy=math.cos(angle)*22,math.sin(angle)*22
         a,b,_,_=box(x-dx,y-dy,1,1);c,e,_,_=box(x+dx,y+dy,1,1)
         d.line((a,b,c,e),fill=palette['white'],width=max(4,round(8*scale)))
-    rect(78,92,760,350,"navy",60)
-    poly([(150,390),(150,510),(300,390)],"navy")
-    rect(50,60,760,350,"white",60)
-    poly([(126,350),(126,475),(290,350)],"white")
+    if motif != "phone-chat":
+        # One conversation panel with a contrasting shadow. Do not stack duplicate
+        # white cards: their shared edge disappears and makes the SMS look synthetic.
+        rect(78,92,760,350,"navy",36)
+        rect(50,60,760,350,"white",36)
 
-    if motif == "mystery-sender":
-        # Sunglasses and a curled moustache turn an anonymous SMS into a visual joke.
-        rect(180,120,230,120,"navy",40)
-        rect(440,120,230,120,"navy",40)
-        rect(398,140,56,22,"navy",8)
-        rect(147,128,50,22,"navy",8)
-        rect(655,128,50,22,"navy",8)
-        poly([(206,142),(229,142),(315,218),(286,218)],"cyan")
-        poly([(470,142),(493,142),(579,218),(550,218)],"cyan")
-        # Two solid curved lobes, not third-party iconography.
-        oval(322,270,112,52,"violet")
-        oval(420,270,112,52,"violet")
-        poly([(323,296),(286,270),(303,319),(355,320)],"violet")
-        poly([(530,296),(568,270),(551,319),(500,320)],"violet")
-        alt="Playful SMS character in sunglasses and a curled moustache, with its brand name revealed on a folded label"
-        name_y=386
+    if motif == "phone-chat":
+        # A complete native phone gives the message a clear context. The dark
+        # bezel and navy bubble outline keep adjacent pale surfaces distinct.
+        rect(300,18,340,564,"navy",52)
+        rect(316,34,308,532,"white",38)
+        rect(418,48,104,10,"navy",5)
+        oval(535,46,14,14,"navy")
+        text(campaign.sender_name,346,90,244,42,29,"navy",True,1)
+        divider=box(338,146,244,2)
+        d.line((divider[0],divider[1],divider[0]+divider[2],divider[1]),
+               fill=palette["cyan"],width=max(2,round(3*scale)))
+        rect(340,170,260,196,"cloud",24)
+        a,b,c,e=box(340,170,260,196)
+        d.rounded_rectangle((a,b,a+c-1,b+e-1),round(24*scale),outline=palette["navy"],width=max(2,round(3*scale)))
+        text(campaign.message,358,185,224,166,28,"navy",False,4)
+        rect(410,536,120,8,"navy",4)
+        alt="A complete navy-framed phone on a colourful Burst background, showing one sender header and one readable outlined SMS bubble"
+        name_y=90
+        bubble_height=196
+    elif motif == "mystery-sender":
+        # Keep the disguise as a playful illustration, separate from the SMS UI.
+        rect(180,92,210,68,"navy",28)
+        rect(430,92,210,68,"navy",28)
+        rect(390,116,50,16,"navy",7)
+        rect(150,104,38,16,"navy",7)
+        rect(640,104,38,16,"navy",7)
+        poly([(205,108),(225,108),(300,148),(278,148)],"cyan")
+        poly([(455,108),(475,108),(550,148),(528,148)],"cyan")
+        oval(330,170,100,32,"violet")
+        oval(425,170,100,32,"violet")
+        poly([(331,186),(300,170),(312,205),(360,205)],"violet")
+        poly([(524,186),(555,170),(543,205),(495,205)],"violet")
+        alt="Playful sunglasses and moustache illustration above a single realistic-looking SMS conversation card"
+        name_y=215
     else:
-        # Message-pop and spotlight are useful for other SMS topics without a disguise.
-        text(campaign.sender_name,104,110,650,75,58,"navy",True,1)
-        for x in (135,230,325):
-            oval(x,235,48,48,"violet")
-        alt="Oversized illustrative SMS bubble with "+("a spotlight" if motif=="spotlight" else "a bold colour pop")+" and a folded sender label"
-        name_y=386
+        alt="Single SMS conversation card with one sender header and one clearly bounded message bubble, with a "+("spotlight" if motif=="spotlight" else "bold colour pop")+" behind it"
+        name_y=104
 
-    # The label reveal carries the exact sender and fictional message, never baked raster copy.
-    rect(160,368,660,212,"navy",24)
-    rect(136,346,660,212,"white",24)
-    poly([(738,346),(796,404),(738,404)],"cyan")
-    # Keep sender lettering clear of the folded corner.
-    text(campaign.sender_name,170,name_y-16,552,68,48,"violet",True,1)
-    text(campaign.message,170,452,582,82,30,"navy",False,2)
+    # The phone-chat motif has its own complete, bounded device UI above.
+    if motif == "phone-chat":
+        frame=box(300,18,340,564)
+        if frame[0]<64 or frame[0]+frame[2]>1016 or frame[1]<heading_bottom or frame[1]+frame[3]>footer-24:
+            raise hold("Phone social motif leaves the protected body region")
+        return {"motif":motif,"backdrop":bg,"frame":frame,"heading_bottom":heading_bottom,
+                "illustrative_only":True,"alt":alt,"source":"registered native renderer geometry",
+                "minimum_type_size":round(28*scale),"visual_inspection_required":True,
+                "sender_header_count":1,"message_bubble_count":1,
+                "stacked_same_fill_cards":False,"message_bubble_outline":"navy",
+                "device":"complete-native-phone"}
+
+    # The sender appears once in the conversation header. The message sits in a
+    # separate, visibly bounded incoming bubble; do not duplicate either label.
+    text(campaign.sender_name,104,name_y,650,54,38,"navy",True,1)
+    divider=box(104,name_y+66,652,2)
+    d.line((divider[0],divider[1],divider[0]+divider[2],divider[1]),
+           fill=palette["cyan"],width=max(2,round(3*scale)))
+    bubble_y=name_y+88
+    bubble_height=98 if motif=="mystery-sender" else 148
+    rect(100,bubble_y,660,bubble_height,"cloud",24)
+    a,b,c,e=box(100,bubble_y,660,bubble_height)
+    d.rounded_rectangle((a,b,a+c-1,b+e-1),round(24*scale),outline=palette["navy"],width=max(2,round(3*scale)))
+    bubble_font=28 if motif=="mystery-sender" else 32
+    text(campaign.message,126,bubble_y+10,608,bubble_height-18,bubble_font,"navy",False,2)
     frame=box(0,0,900,600)
     if frame[0]<64 or frame[0]+frame[2]>1016 or frame[1]<heading_bottom or frame[1]+frame[3]>footer-24:
         raise hold("Playful illustration leaves the protected body region")
     return {"motif":motif,"backdrop":bg,"frame":frame,"heading_bottom":heading_bottom,
             "illustrative_only":True,"alt":alt,"source":"registered native renderer geometry",
-            "minimum_type_size":round(30*scale),"visual_inspection_required":True}
+            "minimum_type_size":round(32*scale),"visual_inspection_required":True,
+            "sender_header_count":1,"message_bubble_count":1,
+            "stacked_same_fill_cards":False,"message_bubble_outline":"navy"}
