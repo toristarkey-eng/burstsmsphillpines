@@ -127,7 +127,7 @@
     "runtime/fonts/NotoSans-Regular.ttf": "b85c38ecea8a7cfb39c24e395a4007474fa5a4fc864f6ee33309eb4948d232d5",
     "runtime/fonts/NotoSans-SemiBold.ttf": "87a8b90ece1e89746b544e4e086f85a3710e41485a8078f9be874837dfad45d5",
     "runtime/fonts/OFL.txt": "0dab92d0544f7b233403f14b84a663bdbfa746982eda629e7f4f9ffe1b036feb",
-    "runtime/renderer.py": "52ec85abd4b438833adab3eeb1f810372beb77cd16952a82f03f91318d66a505",
+    "runtime/renderer.py": "895f3490a241a1a660acd36654ae4270213592b0c340de9b1786317a15a19b44",
     "runtime/requirements.txt": "d7cb3d741c7e935e732fb2575914abac575aab7522319eee076c7cfaa0fa854e",
     "runtime/social_art.py": "0170421cf0c9cbdfabbda12ffee15885cbfaa1407c867b8ddc45297c612d4fd6",
     "runtime/templates.json": "6d9321d3153e60041f58b356e5241dbb061c5f2f0c4bb05cf4a480513cf681dc",
