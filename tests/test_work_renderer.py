@@ -48,21 +48,30 @@ def inspection(report):
 class RendererTests(unittest.TestCase):
     def upload_fixture(self, directory, alpha=False, channel='sms', kind='phone'):
         from runtime.uploads import prepare, CHECKS
-        image=Image.new('RGBA' if alpha else 'RGB',(600,900),(0,0,0,0) if alpha else 'white')
+        image=Image.new('RGBA' if alpha else 'RGB',(1200,1800),(0,0,0,0) if alpha else 'white')
         from PIL import ImageDraw
-        d=ImageDraw.Draw(image);d.rounded_rectangle((40,20,560,880),45,fill='#002A66')
-        d.rounded_rectangle((60,55,540,845),25,fill='white')
+        d=ImageDraw.Draw(image)
+        if kind in ('phone','screenshot'):
+            d.rounded_rectangle((80,40,1120,1760),90,fill='#002A66')
+            d.rounded_rectangle((120,110,1080,1690),50,fill='white')
+        elif alpha:
+            d.ellipse((160,200,1040,1520),fill='#00AEC4')
+            d.rectangle((380,960,820,1640),fill='#002A66')
+        else:
+            d.rectangle((0,0,1199,1799),fill='#C8EAF0')
+            d.ellipse((80,200,1000,1120),fill='#00AEC4')
+            d.rectangle((0,1240,1199,1799),fill='#002A66')
         source=directory/'supplied.png';image.save(source)
         review={'source_sha256':hashlib.sha256(source.read_bytes()).hexdigest(),
-                'description':'User-supplied complete illustrative phone with a blank screen.',
-                'kind':kind,'channel':channel,'framing':'complete-subject',
+                'description':'User-supplied illustrative subject or continuous scene for campaign layout testing.',
+                'kind':kind,'channel':channel,'framing':'continuous-scene' if kind=='photo' and not alpha else 'complete-subject',
                 'checks':{k:True for k in CHECKS},
                 'notes':{k:'Synthetic test source only; no personal data, customer, route or publication claim.' for k in CHECKS}}
         bundle=directory/'prepared';prepare(source,review,bundle)
         brief=Campaign(template_id='uploaded-image',format='portrait',photo_id='user-upload',
                        composition='text-first',brand_strip='bottom',headline='Be recognised.',
                        primary_text='Talk to our team about Sender ID requirements for your business.',
-                       image_treatment='cutout' if alpha else 'panel')
+                       image_treatment='cutout' if alpha and kind not in ('phone','screenshot') else 'panel')
         return source,review,bundle,brief
 
     def test_user_uploads_preserve_source_and_protected_brand(self):
@@ -74,15 +83,62 @@ class RendererTests(unittest.TestCase):
                 self.assertEqual(original,source.read_bytes())
                 self.assertTrue(all(r['checks'].values()))
                 self.assertEqual(r['uploaded_image']['review']['source_sha256'],hashlib.sha256(original).hexdigest())
-                self.assertEqual(r['photo_checks'][0]['effective_crop'],[0,0,600,900])
+                self.assertEqual(r['photo_checks'][0]['effective_crop'],[0,0,1200,1800])
                 self.assertTrue(r['photo_checks'][0]['proportional_scale'])
                 self.assertEqual(r['photo_checks'][0]['cutout_fallback'],None)
-                self.assertIn('User-supplied complete',r['alt_text'])
+                self.assertIn('User-supplied illustrative subject',r['alt_text'])
                 image=Image.open(io.BytesIO(png));x,y,w,h=r['logo_box']
                 logo=Image.open(SKILL/'assets/burst-sms-logo.png').convert('RGB').resize((w,h),Image.Resampling.LANCZOS)
                 self.assertIsNone(ImageChops.difference(image.crop((x,y,x+w,y+h)),logo).getbbox())
                 self.assertEqual(png,render(brief,upload_dir=bundle)[0])
                 self.assertEqual(load(bundle)['channel'],'sms')
+
+    def test_uploaded_photos_can_use_connected_background_or_shaped_layouts(self):
+        for composition, treatment, fit in (('photo-background','panel','cover'),('image-first','rounded','contain'),('side-by-side','circle','contain')):
+            with self.subTest(composition=composition,treatment=treatment):
+                with tempfile.TemporaryDirectory() as tmp:
+                    _,_,bundle,brief=self.upload_fixture(Path(tmp),channel='none',kind='photo')
+                    brief=brief.model_copy(update={'composition':composition,'image_treatment':treatment,'photo_fit':fit,
+                        'photo_backdrop':'none','brand_strip':'bottom','heading_style':'navy' if composition=='photo-background' else 'light',
+                        'message':'','primary_text':'Give customers timely updates. Talk to our team about messaging.'})
+                    _,report=render(brief,upload_dir=bundle)
+                    self.assertTrue(all(report['checks'].values()))
+                    self.assertEqual(report['photo_checks'][0]['photo_fit'],fit)
+                    if composition=='photo-background':
+                        self.assertIsNone(report['message_card'])
+                        self.assertTrue(report['photo_background']['coverage'])
+                        self.assertTrue(report['photo_checks'][0]['additional_crop_inspection_required'])
+                    else:
+                        self.assertEqual(report['photo_checks'][0]['image_treatment'],treatment)
+        with tempfile.TemporaryDirectory() as tmp:
+            _,_,bundle,brief=self.upload_fixture(Path(tmp),alpha=True,channel='none',kind='photo')
+            brief=brief.model_copy(update={'composition':'auto','creative_style':'high-energy-casual','image_treatment':'cutout',
+                'heading_style':'light','brand_strip':'bottom','message':'','primary_text':'Give customers timely updates. Talk to our team about messaging.'})
+            _,report=render(brief,upload_dir=bundle)
+            self.assertEqual(report['energy_treatment'],'diagonal')
+            self.assertTrue(all(report['checks'].values()))
+
+    def test_uploaded_phone_and_screenshot_cannot_be_cropped_or_masked(self):
+        for kind,channel in (('phone','sms'),('screenshot','sms'),('phone','rcs')):
+            with self.subTest(kind=kind,channel=channel):
+                with tempfile.TemporaryDirectory() as tmp:
+                    _,_,bundle,brief=self.upload_fixture(Path(tmp),channel=channel,kind=kind)
+                    for changes in ({'composition':'photo-background','photo_fit':'cover','heading_style':'navy'},
+                                    {'image_treatment':'circle'}, {'photo_backdrop':'cyan-ellipse'}):
+                        with self.assertRaises(Hold):render(brief.model_copy(update=changes),upload_dir=bundle)
+
+    def test_organic_channel_copy_includes_relevant_hashtags_and_paid_copy_does_not(self):
+        brief=campaign().model_copy(update={'primary_text':'Talk to our team about branded Sender IDs for your business.'})
+        _,organic=render(brief)
+        self.assertEqual(organic['hashtags'],['#BurstSMS','#SenderID','#PhilippinesBusiness'])
+        self.assertTrue(organic['channel_copy'].endswith('#BurstSMS #SenderID #PhilippinesBusiness'))
+        _,paid=render(brief.model_copy(update={'post_type':'paid'}))
+        self.assertEqual(paid['hashtags'],[])
+        self.assertNotIn('#',paid['channel_copy'])
+        _,selected=render(brief.model_copy(update={'hashtags':['#BurstSMS','#BusinessMessaging']}))
+        self.assertTrue(selected['channel_copy'].endswith('#BurstSMS #BusinessMessaging'))
+        for update in ({'post_type':'paid','hashtags':['#BurstSMS']},{'hashtags':['#BurstSMS','#burstsms']},{'hashtags':['not-a-tag']}):
+            with self.assertRaises(ValidationError):Campaign(**{**brief.model_dump(),**update})
 
     def test_user_upload_source_review_and_mutation_fail_closed(self):
         from runtime.uploads import prepare
@@ -139,7 +195,7 @@ class RendererTests(unittest.TestCase):
     def test_playful_social_motifs_preserve_identity_and_copy(self):
         base=campaign('social-playground')
         master=Image.open(SKILL/'assets/burst-sms-logo.png').convert('RGB')
-        for motif in ('mystery-sender','message-pop','spotlight'):
+        for motif in ('mystery-sender','message-pop','spotlight','phone-chat'):
             for fmt in ('square','portrait'):
                 for backdrop in ('navy','violet'):
                     brief=base.model_copy(update={'social_motif':motif,'format':fmt,'social_backdrop':backdrop})
@@ -151,6 +207,18 @@ class RendererTests(unittest.TestCase):
                     self.assertGreaterEqual(r['social_art']['minimum_type_size'],19)
                     self.assertIn(brief.message,[v['text'] for v in r['text_checks']])
                     self.assertIn(brief.sender_name,[v['text'] for v in r['text_checks']])
+                    self.assertEqual(r['social_art']['sender_header_count'],1)
+                    self.assertEqual(r['social_art']['message_bubble_count'],1)
+                    self.assertFalse(r['social_art']['stacked_same_fill_cards'])
+                    self.assertEqual(r['social_art']['message_bubble_outline'],'navy')
+                    if motif=='phone-chat':
+                        self.assertEqual(r['social_art']['device'],'complete-native-phone')
+                        self.assertIn('phone',r['social_art']['alt'])
+                        self.assertGreaterEqual(r['social_art']['minimum_type_size'],19)
+                        self.assertAlmostEqual(r['social_art']['frame'][2] / r['social_art']['frame'][3],340/564,places=2)
+                    else:
+                        self.assertIsNone(r['social_art'].get('device'))
+                    self.assertEqual(sum(v['text']==brief.sender_name for v in r['text_checks']),1)
                     x,y,w,h=r['logo_box']
                     self.assertIsNone(ImageChops.difference(image.crop((x,y,x+w,y+h)),master.resize((w,h),Image.Resampling.LANCZOS)).getbbox())
                     self.assertEqual(r['destination'],'https://burstsms.com.ph/')
@@ -581,6 +649,8 @@ class RendererTests(unittest.TestCase):
                     self.assertEqual(r['phone_message'],'Your order is ready to collect.')
                     x,y,w,h=r['message_card'];px,py,pw,ph=r['photo_checks'][0]['frame']
                     self.assertFalse(x<px+pw and x+w>px and y<py+ph and y+h>py)
+                    image=Image.open(io.BytesIO(png)).convert('RGB')
+                    self.assertEqual(image.getpixel((x+w//2,y)),(0,42,102))
                     self.assertLessEqual(y+h,r['cta_region'][1])
         brief=campaign('person-plus-message')
         png,r=render(brief.model_copy(update={'phone_view':'full','accent':'','supporting':''}))
@@ -948,7 +1018,7 @@ class StandaloneTests(unittest.TestCase):
 
     def test_copied_skill_runs_independently_and_delivers_only_after_inspection(self):
         result = self.run_cli('preflight'); self.assertEqual(result.returncode,0,result.stderr)
-        self.assertEqual(json.loads(result.stdout)['version'], '0.4.18')
+        self.assertEqual(json.loads(result.stdout)['version'], '0.4.20')
         self.assertNotIn(str(ROOT),result.stdout)
         self.prepare(); self.assertFalse((self.output/'delivery-validation.json').exists())
         result = self.validate(); self.assertEqual(result.returncode,0,result.stderr)
