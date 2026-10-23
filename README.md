@@ -135,3 +135,7 @@ Release 0.4.21 adds a native phone-chat social motif that creates a complete pho
 
 
 Release 0.4.23 adds a campaign-local ImageGen source workflow for scenes the approved asset library cannot provide, while the renderer continues to own Burst branding, headlines, CTA and final artwork. Source origin is recorded for reproducibility, generated screens are inspected before use, and the default social motifs no longer add decorative impact strokes.
+
+## Requested image overlays (0.4.25)
+
+Explicitly requested image-overlay composition keeps the original top brand bar and fills the entire body with one reviewed source, with headline and CTA overlaid. Defaults are unchanged. Exact source aspect ratio, reviewed subject regions, original logo pixels, actual-background text contrast and normal delivery validation are enforced. No campaign-local source imagery is included in the release.
