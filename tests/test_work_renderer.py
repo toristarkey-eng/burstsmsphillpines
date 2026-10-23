@@ -46,7 +46,7 @@ def inspection(report):
 
 
 class RendererTests(unittest.TestCase):
-    def upload_fixture(self, directory, alpha=False, channel='sms', kind='phone'):
+    def upload_fixture(self, directory, alpha=False, channel='sms', kind='phone', source_origin='user-supplied'):
         from runtime.uploads import prepare, CHECKS
         image=Image.new('RGBA' if alpha else 'RGB',(1200,1800),(0,0,0,0) if alpha else 'white')
         from PIL import ImageDraw
@@ -63,6 +63,7 @@ class RendererTests(unittest.TestCase):
             d.rectangle((0,1240,1199,1799),fill='#002A66')
         source=directory/'supplied.png';image.save(source)
         review={'source_sha256':hashlib.sha256(source.read_bytes()).hexdigest(),
+                'source_origin':source_origin,
                 'description':'User-supplied illustrative subject or continuous scene for campaign layout testing.',
                 'kind':kind,'channel':channel,'framing':'continuous-scene' if kind=='photo' and not alpha else 'complete-subject',
                 'checks':{k:True for k in CHECKS},
@@ -92,6 +93,16 @@ class RendererTests(unittest.TestCase):
                 self.assertIsNone(ImageChops.difference(image.crop((x,y,x+w,y+h)),logo).getbbox())
                 self.assertEqual(png,render(brief,upload_dir=bundle)[0])
                 self.assertEqual(load(bundle)['channel'],'sms')
+
+    def test_imagegen_origin_is_preserved_through_review_and_render(self):
+        from runtime.uploads import load
+        with tempfile.TemporaryDirectory() as tmp:
+            _,review,bundle,brief=self.upload_fixture(Path(tmp),kind='photo',channel='none',
+                                                       source_origin='imagegen-generated')
+            self.assertEqual(review['source_origin'],'imagegen-generated')
+            self.assertEqual(load(bundle)['source_origin'],'imagegen-generated')
+            _,report=render(brief,upload_dir=bundle)
+            self.assertEqual(report['uploaded_image']['review']['source_origin'],'imagegen-generated')
 
     def test_uploaded_photos_can_use_connected_background_or_shaped_layouts(self):
         for composition, treatment, fit in (('photo-background','panel','cover'),('image-first','rounded','contain'),('side-by-side','circle','contain')):
@@ -1018,7 +1029,7 @@ class StandaloneTests(unittest.TestCase):
 
     def test_copied_skill_runs_independently_and_delivers_only_after_inspection(self):
         result = self.run_cli('preflight'); self.assertEqual(result.returncode,0,result.stderr)
-        self.assertEqual(json.loads(result.stdout)['version'], '0.4.21')
+        self.assertEqual(json.loads(result.stdout)['version'], '0.4.23')
         self.assertNotIn(str(ROOT),result.stdout)
         self.prepare(); self.assertFalse((self.output/'delivery-validation.json').exists())
         result = self.validate(); self.assertEqual(result.returncode,0,result.stderr)
