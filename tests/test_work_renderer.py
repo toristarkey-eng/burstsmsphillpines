@@ -21,16 +21,16 @@ from runtime.renderer import Campaign, Hold, Canvas, PALETTE, render, catalog, l
 
 def campaign(template='recognition', fmt='portrait', photo=None):
     if template == 'social-playground':
-        fields=json.loads((SKILL/'references/examples/social-mystery-sender.json').read_text());fields['format']=fmt
+        fields=json.loads((SKILL/'references/examples/social-mystery-sender.json').read_text(encoding="utf-8"));fields['format']=fmt
         return Campaign(**fields)
     if template == 'prop-focus':
-        fields=json.loads((SKILL/'references/examples/prop-parcel.json').read_text());fields['format']=fmt
+        fields=json.loads((SKILL/'references/examples/prop-parcel.json').read_text(encoding="utf-8"));fields['format']=fmt
         return Campaign(**fields)
     if template == 'graphic-focus':
-        fields=json.loads((SKILL/'references/examples/graphic-order-update.json').read_text());fields['format']=fmt
+        fields=json.loads((SKILL/'references/examples/graphic-order-update.json').read_text(encoding="utf-8"));fields['format']=fmt
         return Campaign(**fields)
     if template == 'person-plus-message':
-        fields=json.loads((SKILL/'references/examples/person-plus-message.json').read_text());fields['format']=fmt
+        fields=json.loads((SKILL/'references/examples/person-plus-message.json').read_text(encoding="utf-8"));fields['format']=fmt
         if photo is not None:fields['photo_id']=photo
         if photo=='vhey':fields.update(image_treatment='cutout',image_position='right')
         return Campaign(**fields)
@@ -184,7 +184,7 @@ class RendererTests(unittest.TestCase):
             bp=root/'brief.json';bp.write_text(brief.model_dump_json());candidate=root/'candidate'
             cli.render_candidate(bp,candidate,engine,bundle)
             shutil.rmtree(bundle);source.unlink()
-            r=json.loads((candidate/'render-report.json').read_text());ip=root/'inspection.json'
+            r=json.loads((candidate/'render-report.json').read_text(encoding="utf-8"));ip=root/'inspection.json'
             ip.write_text(json.dumps(inspection(r)))
             self.assertEqual(cli.validate_delivery(candidate,ip,engine)['status'],'PASSED')
             original=(candidate/'user-upload/source.png').read_bytes()
@@ -246,7 +246,7 @@ class RendererTests(unittest.TestCase):
                 Campaign(**{**base,name:value})
 
     def test_enlarged_sms_and_heading_preserve_brand_and_cta(self):
-        base=Campaign(**json.loads((SKILL/'references/examples/photo-background-ping.json').read_text()))
+        base=Campaign(**json.loads((SKILL/'references/examples/photo-background-ping.json').read_text(encoding="utf-8")))
         base=base.model_copy(update={'photo_id':'retail-connection','headline':'Good news deserves','accent':'a little ping.','sms_position':'middle-left','message':'Your order is ready to collect. See you soon!'})
         _,before=render(base)
         _,after=render(base.model_copy(update={'heading_scale':1.35,'message_scale':1.5,'message_width_scale':0.9}))
@@ -278,14 +278,14 @@ class RendererTests(unittest.TestCase):
             with self.assertRaises(Hold):render(base.model_copy(update=update))
         base=campaign('graphic-focus')
         with self.assertRaises(Hold):render(base.model_copy(update={'message_scale':1.2}))
-        base=Campaign(**json.loads((SKILL/'references/examples/photo-background-ping.json').read_text()))
+        base=Campaign(**json.loads((SKILL/'references/examples/photo-background-ping.json').read_text(encoding="utf-8")))
         with self.assertRaises(Hold):render(base.model_copy(update={'image_scale':0.8}))
         canvas=Canvas((1080,1080));canvas.graphic_scale=0.65
         graphic={**catalog()['graphics']['order-details'],'id':'order-details'}
         with self.assertRaises(Hold):canvas.graphic(graphic,(64,300,graphic['min_rendered_width'],450))
 
     def test_campaign_toolkit_assets_are_registered_with_provenance(self):
-        inventory=json.loads((SKILL/'assets/photography/campaign-toolkit-2026-10-12.json').read_text())
+        inventory=json.loads((SKILL/'assets/photography/campaign-toolkit-2026-10-12.json').read_text(encoding="utf-8"))
         self.assertEqual(len(inventory['new_photography']),8)
         self.assertEqual(len(inventory['registered_props']),3)
         self.assertEqual(len(inventory['device_frames']),2)
@@ -299,7 +299,7 @@ class RendererTests(unittest.TestCase):
         for key in inventory['device_frames']:
             asset=cfg['graphics'][key]
             self.assertTrue((SKILL/asset['vector_source']).exists())
-            self.assertNotIn('<text', (SKILL/asset['vector_source']).read_text())
+            self.assertNotIn('<text', (SKILL/asset['vector_source']).read_text(encoding="utf-8"))
             self.assertIn('no product screenshot',asset['alt'])
             source=Image.open(SKILL/asset['file'])
             self.assertEqual(source.getchannel('A').getextrema(),(0,255))
@@ -330,7 +330,7 @@ class RendererTests(unittest.TestCase):
             with self.assertRaises(Hold):render(brief.model_copy(update=update))
 
     def test_eight_approved_image_options_preserve_sources_and_resolve_in_catalogue(self):
-        inventory=json.loads((SKILL/'assets/photography/approved-expansion-2026-10-12.json').read_text())
+        inventory=json.loads((SKILL/'assets/photography/approved-expansion-2026-10-12.json').read_text(encoding="utf-8"))
         self.assertEqual(len(inventory),8)
         cfg=catalog()
         for registered in inventory:
@@ -569,7 +569,7 @@ class RendererTests(unittest.TestCase):
 
     def test_background_registered_subjects_reject_bad_crops_and_overlays(self):
         import json
-        brief=Campaign(**json.loads((SKILL/'references/examples/photo-background-ping.json').read_text()))
+        brief=Campaign(**json.loads((SKILL/'references/examples/photo-background-ping.json').read_text(encoding="utf-8")))
         _,r=render(brief)
         self.assertTrue(r['checks']['registered_subject_preservation'])
         self.assertEqual(len(r['photo_background']['subject_regions']),3)
@@ -584,9 +584,14 @@ class RendererTests(unittest.TestCase):
 
     def test_optional_style_preserves_default_png_and_current_asset_hold(self):
         png,r=render(campaign())
-        self.assertEqual(hashlib.sha256(png).hexdigest(),'c82cf47db92590965f601608a58616a2a5543f049ca07a60bbc1f1f77f04b011')
+        # Preserve platform baselines: native PNG/font libraries can change encoded bytes.
+        # Windows baseline was reproduced from main ff7a69c with only its path-separator fix.
+        expected = ('f58dd618be6fd409c8fcc90ac117a1b124e5fca68fa9835dbf8f1dec12b0c5d8'
+                    if sys.platform == 'win32' else
+                    'c82cf47db92590965f601608a58616a2a5543f049ca07a60bbc1f1f77f04b011')
+        self.assertEqual(hashlib.sha256(png).hexdigest(), expected)
         self.assertEqual(r['creative_style'],'default')
-        brief=Campaign(**json.loads((SKILL/'references/examples/high-energy-coffee.json').read_text()))
+        brief=Campaign(**json.loads((SKILL/'references/examples/high-energy-coffee.json').read_text(encoding="utf-8")))
         with self.assertRaisesRegex(Hold,'professionally prepared transparent'):render(brief)
         with self.assertRaises(Hold):render(campaign().model_copy(update={'prop_id':'coffee-cup'}))
         with tempfile.TemporaryDirectory() as temp:
@@ -607,7 +612,7 @@ class RendererTests(unittest.TestCase):
                 'file':str(subject),'crop':[0,0,300,180],'approved_subject_alpha':True,'identity':'philippines-team'}
             config['props']={'coffee-cup':{'file':str(cup),'crop':[0,0,100,100],'approved_subject_alpha':True,
                 'category':'coffee','templates':['team-coffee']}}
-            brief=Campaign(**json.loads((SKILL/'references/examples/high-energy-coffee.json').read_text()))
+            brief=Campaign(**json.loads((SKILL/'references/examples/high-energy-coffee.json').read_text(encoding="utf-8")))
             with patch('runtime.renderer.catalog',return_value=config):
                 for treatment in ('diagonal','bands','none'):
                     for strip in ('top','bottom'):
@@ -816,7 +821,7 @@ class RendererTests(unittest.TestCase):
         with self.assertRaises(Hold):render(campaign().model_copy(update={'graphic_colour':'cyan'}))
 
     def test_channel_imagery_requires_explicit_request(self):
-        example=json.loads((SKILL/'references/examples/viber-order-update.json').read_text())
+        example=json.loads((SKILL/'references/examples/viber-order-update.json').read_text(encoding="utf-8"))
         for fmt in ('square','portrait'):
             _,report=render(Campaign(**{**example,'format':fmt}))
             self.assertIn('channel artwork identity preserved',report['graphic_check']['palette_mapping'])
@@ -832,14 +837,14 @@ class RendererTests(unittest.TestCase):
         asset=catalog()['photos']['vhey']
         self.assertEqual(hashlib.sha256(Image.open(SKILL/asset['file']).convert('RGB').tobytes()).hexdigest(),asset['original_rgb_sha256'])
         for name in ('vhey-message','vhey-black-friday'):
-            fields=json.loads((SKILL/'references/examples'/f'{name}.json').read_text())
+            fields=json.loads((SKILL/'references/examples'/f'{name}.json').read_text(encoding="utf-8"))
             for fmt in ('square','portrait'):
                 for position in ('right',):
                     _,r=render(Campaign(**{**fields,'format':fmt,'image_position':position}))
                     self.assertEqual(r['photo_checks'][0]['image_treatment'],'cutout')
                     self.assertIsNone(r['photo_checks'][0]['cutout_fallback'])
                     self.assertTrue(all(r['checks'].values()))
-        fields=json.loads((SKILL/'references/examples/vhey-black-friday.json').read_text())
+        fields=json.loads((SKILL/'references/examples/vhey-black-friday.json').read_text(encoding="utf-8"))
         with self.assertRaisesRegex(Hold,'too small'):render(Campaign(**{**fields,'graphic_id':'order-confirmed'}))
         for sender in ('YOUR BRAND','Acme Beauty','BURST SMS'):
             _,r=render(campaign('person-plus-message').model_copy(update={'sender_name':sender}))
@@ -1010,13 +1015,14 @@ class StandaloneTests(unittest.TestCase):
         result = self.run_cli('render','--brief',self.brief,'--output-dir',self.output)
         self.assertEqual(result.returncode,0,result.stderr)
         self.assertFalse(json.loads(result.stdout)['image_ready_for_delivery'])
-        report = json.loads((self.output/'render-report.json').read_text())
+        report = json.loads((self.output/'render-report.json').read_text(encoding="utf-8"))
         self.review = self.base/'inspection.json'; self.review.write_text(json.dumps(inspection(report)))
         return report
 
     def validate(self): return self.run_cli('validate','--directory',self.output,'--inspection',self.review)
 
     def test_copied_skill_runs_independently_and_delivers_only_after_inspection(self):
+        self.brief.write_text(campaign().model_copy(update={"headline": "Let\u2019s stay connected."}).model_dump_json(), encoding="utf-8")
         result = self.run_cli('preflight'); self.assertEqual(result.returncode,0,result.stderr)
         self.assertEqual(json.loads(result.stdout)['version'], '0.4.22')
         self.assertNotIn(str(ROOT),result.stdout)
@@ -1061,7 +1067,7 @@ class StandaloneTests(unittest.TestCase):
         result=self.run_cli('render','--brief',self.brief,'--output-dir',self.output)
         self.assertNotEqual(result.returncode,0); self.assertFalse(self.output.exists())
         shutil.copy2(SKILL/'runtime/fonts/NotoSans-Bold.ttf',path)
-        manifest=self.skill/'brand-integrity.json'; data=json.loads(manifest.read_text()); del data['files']['runtime/renderer.py']; manifest.write_text(json.dumps(data))
+        manifest=self.skill/'brand-integrity.json'; data=json.loads(manifest.read_text(encoding="utf-8")); del data['files']['runtime/renderer.py']; manifest.write_text(json.dumps(data))
         self.assertNotEqual(self.run_cli('preflight').returncode,0)
 
     def test_failed_or_stale_inspection_never_delivers(self):
@@ -1089,7 +1095,7 @@ class StandaloneTests(unittest.TestCase):
 
     def test_visual_edge_balance_or_cta_failure_overrides_technical_pass(self):
         self.prepare()
-        original=json.loads(self.review.read_text())
+        original=json.loads(self.review.read_text(encoding="utf-8"))
         for key in ('photo_edges','body_balance','cta_and_terms','campaign_effectiveness'):
             self.review.write_text(json.dumps(original))
             self.assertEqual(self.validate().returncode,0)
@@ -1117,7 +1123,7 @@ class StandaloneTests(unittest.TestCase):
     def test_renderer_never_overwrites_existing_directories_or_installed_package(self):
         self.output.mkdir(); (self.output/'user-file').write_text('preserve me')
         result=self.run_cli('render','--brief',self.brief,'--output-dir',self.output)
-        self.assertNotEqual(result.returncode,0); self.assertEqual((self.output/'user-file').read_text(),'preserve me')
+        self.assertNotEqual(result.returncode,0); self.assertEqual((self.output/'user-file').read_text(encoding="utf-8"),'preserve me')
         result=self.run_cli('render','--brief',self.brief,'--output-dir',self.skill/'output')
         self.assertNotEqual(result.returncode,0); self.assertFalse((self.skill/'output').exists())
 

@@ -36,7 +36,7 @@ def check_dependencies():
     if sys.version_info < (3, 11):
         raise ValueError("Python 3.11 or newer is required")
     versions = {}
-    for line in (SKILL / "runtime/requirements.txt").read_text().splitlines():
+    for line in (SKILL / "runtime/requirements.txt").read_text(encoding="utf-8").splitlines():
         name, expected = line.split("==")
         version = importlib.metadata.version(name)
         if version != expected:
@@ -89,7 +89,7 @@ def validate_delivery(directory, inspection_path, engine):
         png = stream.read(8 * 1024 * 1024 + 1)
     if png != expected_png or report != expected_report:
         raise ValueError("Candidate image or record differs from the locked deterministic render")
-    if candidate_file(directory, "recommended-copy.md").read_text() != report["channel_copy"] + "\n":
+    if candidate_file(directory, "recommended-copy.md").read_text(encoding="utf-8") != report["channel_copy"] + "\n":
         raise ValueError("Recommended copy changed after rendering")
     inspection = read_json(inspection_path, 16384)
     if not isinstance(inspection, dict) or set(inspection) != {"png_sha256", "campaign_sha256", "checks", "notes"}:
