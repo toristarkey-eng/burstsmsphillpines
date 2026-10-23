@@ -81,10 +81,10 @@
       ]
     },
     "uploaded-image": {
-      "title": "User-supplied image or phone",
+      "title": "Flexible user imagery",
       "layout": "split",
       "photography": true,
-      "reference": "User-authorised image upload support, 22 October 2026",
+      "reference": "Campaign-local reviewed user image, 23 October 2026",
       "formats": [
         "square",
         "portrait"
@@ -459,7 +459,7 @@
       "subject_framing": "full-body",
       "alpha_background": "cloud",
       "approved_subject_alpha": false,
-      "alpha_note": "Original generated alpha ranges 0\u2013254; preserve source bytes and composite onto locked cloud for panel photography. Not registered as a professionally prepared cutout; never infer masks or claim clean-alpha cutout approval."
+      "alpha_note": "Original generated alpha ranges 0–254; preserve source bytes and composite onto locked cloud for panel photography. Not registered as a professionally prepared cutout; never infer masks or claim clean-alpha cutout approval."
     },
     "business-professional-full-body": {
       "file": "assets/photography/business-professional-full-body.png",
@@ -483,7 +483,7 @@
       "subject_framing": "full-body",
       "alpha_background": "cloud",
       "approved_subject_alpha": false,
-      "alpha_note": "Original generated alpha ranges 0\u2013254; preserve source bytes and composite onto locked cloud for panel photography. Not registered as a professionally prepared cutout; never infer masks or claim clean-alpha cutout approval."
+      "alpha_note": "Original generated alpha ranges 0–254; preserve source bytes and composite onto locked cloud for panel photography. Not registered as a professionally prepared cutout; never infer masks or claim clean-alpha cutout approval."
     },
     "multicultural-manila-collaboration": {
       "file": "assets/photography/multicultural-manila-collaboration.png",
@@ -619,7 +619,7 @@
         1254,
         1254
       ],
-      "alt": "Illustrative AI-generated scene: Two unbranded coffee cups on saucers at a caf\u00e9 table.",
+      "alt": "Illustrative AI-generated scene: Two unbranded coffee cups on saucers at a café table.",
       "templates": [
         "people-first",
         "customer-updates",
@@ -782,7 +782,7 @@
         1254,
         1254
       ],
-      "alt": "Illustrative AI-generated scene: Two unbranded coffee cups on saucers at a caf\u00e9 table.",
+      "alt": "Illustrative AI-generated scene: Two unbranded coffee cups on saucers at a café table.",
       "templates": [
         "prop-focus"
       ],
@@ -855,8 +855,8 @@
         1414,
         849
       ],
-      "alt": "Approved illustrative campaign graphic: Order confirmed. Thanks, Mia. We\u2019re getting your order ready.",
-      "embedded_text": "Order confirmed. Thanks, Mia. We\u2019re getting your order ready.",
+      "alt": "Approved illustrative campaign graphic: Order confirmed. Thanks, Mia. We’re getting your order ready.",
+      "embedded_text": "Order confirmed. Thanks, Mia. We’re getting your order ready.",
       "category": "customer-updates",
       "min_rendered_width": 660,
       "templates": [
@@ -975,8 +975,8 @@
         1414,
         870
       ],
-      "alt": "Approved illustrative campaign graphic: Ready when you are. Come back and explore what\u2019s new. Take a look.",
-      "embedded_text": "Ready when you are. Come back and explore what\u2019s new. Take a look.",
+      "alt": "Approved illustrative campaign graphic: Ready when you are. Come back and explore what’s new. Take a look.",
+      "embedded_text": "Ready when you are. Come back and explore what’s new. Take a look.",
       "category": "engagement",
       "min_rendered_width": 700,
       "templates": [
@@ -1391,7 +1391,8 @@
     "motifs": [
       "mystery-sender",
       "message-pop",
-      "spotlight"
+      "spotlight",
+      "phone-chat"
     ],
     "backdrops": [
       "navy",
@@ -1413,6 +1414,25 @@
     "private_campaign_local": true,
     "source_review_required": true,
     "brand_bar_protected": true,
-    "phone_and_screenshot_preservation": "complete device, original pixels and aspect ratio, no UI overlays"
+    "phone_and_screenshot_preservation": "complete device, original pixels and aspect ratio, no UI overlays",
+    "continuous_scene_layouts": [
+      "photo-background",
+      "hero",
+      "side-by-side",
+      "image-first",
+      "text-first"
+    ],
+    "continuous_scene_treatments": [
+      "panel",
+      "rounded",
+      "circle"
+    ],
+    "native_alpha_treatments": [
+      "cutout",
+      "high-energy-casual"
+    ],
+    "phone_screenshot_rule": "contain, complete frame, no masks or UI overlays",
+    "organic_hashtags": "up to 3 contextual tags in recommended caption",
+    "paid_hashtags": "none by default"
   }
 }
