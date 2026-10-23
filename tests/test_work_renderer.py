@@ -46,6 +46,105 @@ def inspection(report):
 
 
 class RendererTests(unittest.TestCase):
+    def overlay_fixture(self, directory, colour='#F4F5FF', protected=None, size=(1080,1200)):
+        from runtime.uploads import prepare, CHECKS
+        source=directory/'overlay-source.png'
+        image=Image.new('RGB',size,colour)
+        from PIL import ImageDraw
+        ImageDraw.Draw(image).rounded_rectangle((370,400,610,620),24,fill='#005677')
+        image.save(source)
+        review={'source_sha256':hashlib.sha256(source.read_bytes()).hexdigest(),
+                'description':'Synthetic complete scene with reviewed central subject and clear text areas.',
+                'kind':'phone','channel':'sms','framing':'complete-subject',
+                'protected_regions':protected if protected is not None else [{'label':'complete phone and hands','box':[300,330,400,600]}],
+                'checks':{k:True for k in CHECKS},
+                'notes':{k:'Synthetic source review fixture only, never publication evidence.' for k in CHECKS}}
+        bundle=directory/'overlay-upload';prepare(source,review,bundle)
+        brief=Campaign(template_id='uploaded-image',format='portrait',photo_id='user-upload',
+                       composition='image-overlay',brand_strip='top',
+                       layout_request='Use a full bleed image below the brand bar with headline and CTA overlaid.',
+                       headline='Sleigh the season.',accent='Unwrap new revenue.',
+                       supporting='Explore SMS reselling before Christmas.',primary_text='Talk to our team about SMS reselling.')
+        return bundle,brief
+
+    def test_requested_image_overlay_covers_body_and_keeps_original_logo(self):
+        for fmt,size in [('portrait',(1080,1200)),('square',(1080,930))]:
+            with self.subTest(fmt=fmt), tempfile.TemporaryDirectory() as tmp:
+                bundle,brief=self.overlay_fixture(Path(tmp),size=size,
+                    protected=[{'label':'complete phone','box':[350,350,300,300]}])
+                brief=brief.model_copy(update={'format':fmt})
+                png,r=render(brief,upload_dir=bundle)
+                self.assertEqual(r['body_layout'],'image-overlay')
+                self.assertEqual(r['body_region'],[0,150,*size])
+                self.assertEqual(r['photo_checks'][0]['frame'],[0,150,*size])
+                self.assertEqual(r['photo_checks'][0]['effective_crop'],[0,0,*size])
+                self.assertEqual(r['brand_region'],[0,0,1080,150])
+                image=Image.open(io.BytesIO(png))
+                # Subject pixels survive unchanged underneath neither title nor CTA.
+                self.assertIsNone(ImageChops.difference(
+                    image.crop((370,550,611,771)),
+                    Image.open(Path(tmp)/'overlay-source.png').crop((370,400,611,621))).getbbox())
+                # Image continues through all four body edges, including CTA area.
+                for point in [(0,150),(1079,150),(0,size[1]+149),(1079,size[1]+149)]:
+                    self.assertEqual(image.getpixel(point),(244,245,255))
+                x,y,w,h=r['logo_box']
+                logo=Image.open(SKILL/'assets/burst-sms-logo.png').convert('RGB').resize((w,h),Image.Resampling.LANCZOS)
+                self.assertIsNone(ImageChops.difference(image.crop((x,y,x+w,y+h)),logo).getbbox())
+                self.assertEqual(png,render(brief,upload_dir=bundle)[0])
+                self.assertEqual(r['delivery_status'],'INSPECTION_REQUIRED')
+
+    def test_image_overlay_is_explicit_and_does_not_change_defaults(self):
+        self.assertEqual(campaign().composition,'auto')
+        with self.assertRaises(ValidationError):
+            Campaign(**{**campaign().model_dump(),'composition':'image-overlay'})
+        with tempfile.TemporaryDirectory() as tmp:
+            bundle,brief=self.overlay_fixture(Path(tmp))
+            for changes in [{'brand_strip':'bottom'},{'photo_fit':'cover'},{'image_scale':0.8},
+                            {'image_treatment':'rounded'},{'message':'Fake message.'}]:
+                with self.subTest(changes=changes),self.assertRaises(Hold):
+                    render(brief.model_copy(update=changes),upload_dir=bundle)
+
+    def test_image_overlay_rejects_crop_missing_regions_overlap_and_low_contrast(self):
+        cases=[{'size':(1200,1200)}, {'protected':[]},
+               {'protected':[{'label':'face behind headline','box':[60,30,600,200]}]},
+               {'protected':[{'label':'device behind CTA','box':[60,1080,400,100]}]},
+               {'colour':'#002A66'}]
+        for case in cases:
+            with self.subTest(case=case),tempfile.TemporaryDirectory() as tmp:
+                bundle,brief=self.overlay_fixture(Path(tmp),**case)
+                with self.assertRaises(Hold):render(brief,upload_dir=bundle)
+
+    def test_image_overlay_rejects_out_of_source_protection(self):
+        with tempfile.TemporaryDirectory() as tmp, self.assertRaises(ValueError):
+            self.overlay_fixture(Path(tmp),protected=[{'label':'invalid region','box':[1000,300,400,600]}])
+
+    def test_image_overlay_can_use_white_and_cyan_on_a_dark_source(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            bundle,brief=self.overlay_fixture(Path(tmp),colour='#002A66')
+            png,report=render(brief.model_copy(update={'heading_style':'navy'}),upload_dir=bundle)
+            self.assertTrue(report['image_overlay']['actual_background_contrast_checked'])
+            self.assertEqual(Image.open(io.BytesIO(png)).getpixel((0,150)),(0,42,102))
+            self.assertEqual(Image.open(io.BytesIO(png)).getpixel((0,1349)),(0,42,102))
+
+    def test_image_overlay_delivery_still_requires_inspection_and_exact_bytes(self):
+        import importlib.util
+        spec=importlib.util.spec_from_file_location('overlay_cli',SKILL/'scripts/render_creative.py')
+        cli=importlib.util.module_from_spec(spec);spec.loader.exec_module(cli)
+        from runtime import renderer as engine
+        with tempfile.TemporaryDirectory() as tmp:
+            directory=Path(tmp);bundle,brief=self.overlay_fixture(directory)
+            brief_path=directory/'brief.json';brief_path.write_text(json.dumps(brief.model_dump()))
+            candidate=directory/'candidate';cli.render_candidate(brief_path,candidate,engine,bundle)
+            report=json.loads((candidate/'render-report.json').read_text())
+            with self.assertRaises(FileNotFoundError):
+                cli.validate_delivery(candidate,directory/'missing-inspection.json',engine)
+            checked=directory/'inspection.json';checked.write_text(json.dumps(inspection(report)))
+            result=cli.validate_delivery(candidate,checked,engine)
+            self.assertTrue(result['image_ready_for_delivery'])
+            image=Image.open(candidate/'artwork.png');image.putpixel((0,151),(0,0,0));image.save(candidate/'artwork.png')
+            with self.assertRaises(ValueError):cli.validate_delivery(candidate,checked,engine)
+            self.assertFalse((candidate/'delivery-validation.json').exists())
+
     def upload_fixture(self, directory, alpha=False, channel='sms', kind='phone', source_origin='user-supplied'):
         from runtime.uploads import prepare, CHECKS
         image=Image.new('RGBA' if alpha else 'RGB',(1200,1800),(0,0,0,0) if alpha else 'white')
@@ -1035,7 +1134,7 @@ class StandaloneTests(unittest.TestCase):
     def test_copied_skill_runs_independently_and_delivers_only_after_inspection(self):
         self.brief.write_text(campaign().model_copy(update={"headline": "Let\u2019s stay connected."}).model_dump_json(), encoding="utf-8")
         result = self.run_cli('preflight'); self.assertEqual(result.returncode,0,result.stderr)
-        self.assertEqual(json.loads(result.stdout)['version'], '0.4.24')
+        self.assertEqual(json.loads(result.stdout)['version'], '0.4.25')
         self.assertNotIn(str(ROOT),result.stdout)
         self.prepare(); self.assertFalse((self.output/'delivery-validation.json').exists())
         result = self.validate(); self.assertEqual(result.returncode,0,result.stderr)

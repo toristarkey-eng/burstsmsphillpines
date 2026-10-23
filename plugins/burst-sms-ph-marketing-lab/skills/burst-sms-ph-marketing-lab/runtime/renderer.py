@@ -66,7 +66,8 @@ class Campaign(BaseModel):
     photo_id: str | None = Field(default=None, max_length=64)
     message: str = Field(default="", max_length=85)
     brand_strip: Literal["top", "bottom"] = "top"
-    composition: Literal["auto", "side-by-side", "text-first", "image-first", "hero", "photo-background", "person-plus-message", "graphic-hero", "prop-hero", "social-hero"] = "auto"
+    composition: Literal["auto", "side-by-side", "text-first", "image-first", "hero", "photo-background", "person-plus-message", "graphic-hero", "prop-hero", "social-hero", "image-overlay"] = "auto"
+    layout_request: str = Field(default="", max_length=500)
     imagery_channel: Literal["sms", "rcs", "whatsapp", "viber"] = "sms"
     channel_request: str = Field(default="", max_length=240)
     graphic_id: str | None = Field(default=None, max_length=64)
@@ -88,6 +89,11 @@ class Campaign(BaseModel):
 
     @model_validator(mode="after")
     def plain_copy(self):
+        if self.composition == "image-overlay":
+            if not re.search(r"full[ -]?bleed|overla(?:y|id)|image.{0,20}hero", self.layout_request, re.I):
+                raise ValueError("Image-overlay requires the user's explicit full-bleed/overlay request excerpt")
+        elif self.layout_request:
+            raise ValueError("Layout request evidence is only used with image-overlay")
         if self.post_type == "paid" and self.hashtags:
             raise ValueError("Paid social copy does not include hashtags")
         if len({tag.casefold() for tag in self.hashtags}) != len(self.hashtags):
@@ -104,7 +110,7 @@ class Campaign(BaseModel):
                 raise ValueError("Custom artwork supports 600–4096px per side and aspect ratios from 2:1 to 1:2")
         elif self.dimensions is not None:
             raise ValueError("Dimensions are only permitted with explicitly requested custom artwork")
-        for name in ["headline", "accent", "supporting", "primary_text", "message", "photo_description", "sender_name", "offer_terms"]:
+        for name in ["headline", "accent", "supporting", "primary_text", "message", "photo_description", "sender_name", "offer_terms", "layout_request"]:
             text = getattr(self, name)
             if text != text.strip():
                 raise ValueError(f"{name}: remove outer whitespace")
@@ -607,6 +613,12 @@ def render(campaign: Campaign, upload_dir=None) -> tuple[bytes, dict]:
     elif campaign.creative_style == "playful-social" or campaign.composition == "social-hero" or campaign.social_motif != "message-pop" or campaign.social_backdrop != "violet":
         raise Hold("Social motif and backdrop controls require social-playground")
     photo = config["photos"].get(campaign.photo_id) if campaign.photo_id else None
+    image_overlay = campaign.composition == "image-overlay"
+    if image_overlay and (campaign.template_id != "uploaded-image" or campaign.brand_strip != "top"
+        or campaign.creative_style != "default" or campaign.image_scale != 1 or campaign.message
+        or campaign.photo_fit != "contain" or campaign.image_treatment != "panel"
+        or campaign.photo_backdrop != "none" or campaign.image_position != "centre"):
+        raise Hold("Image-overlay requires reviewed uploaded imagery, top brand bar, complete contained source and no simulated UI")
     if upload_dir is not None:
         from .uploads import load as load_upload
         if campaign.template_id != "uploaded-image" or campaign.photo_id != "user-upload":
@@ -621,7 +633,7 @@ def render(campaign: Campaign, upload_dir=None) -> tuple[bytes, dict]:
         photo_background=campaign.composition=="photo-background"
         cover_crop=campaign.photo_fit=="cover" or campaign.composition=="hero" or photo_background
         upload_style_ok=campaign.creative_style in ("default","high-energy-casual")
-        if (not upload_style_ok or campaign.composition not in ("auto","text-first","image-first","hero","side-by-side","photo-background")
+        if (not upload_style_ok or campaign.composition not in ("auto","text-first","image-first","hero","side-by-side","photo-background","image-overlay")
             or campaign.format not in ("square","portrait") or campaign.graphic_id or campaign.prop_id
             or campaign.photo_crop is not None or campaign.photo_description or campaign.phone_view != "auto"
             or campaign.message_scale != 1 or campaign.message_width_scale != 1
@@ -629,6 +641,8 @@ def render(campaign: Campaign, upload_dir=None) -> tuple[bytes, dict]:
             raise Hold("Uploaded imagery uses supported social layouts only; keep identity, source image and device pixels intact")
         if cover_crop and not continuous_photo:
             raise Hold("Cover crops and photo-background layouts require a reviewed continuous-scene photo; keep phones and screenshots complete")
+        if image_overlay and (photo["approved_subject_alpha"] or not review.get("protected_regions")):
+            raise Hold("Image-overlay needs an opaque source and reviewed protected regions for every face, hand, device and important content")
         if campaign.photo_fit=="cover" and campaign.composition not in ("hero","photo-background"):
             raise Hold("Choose the hero or photo-background composition when a continuous-scene photo needs a deliberate cover crop")
         if device_or_screen and (campaign.photo_fit!="contain" or campaign.image_treatment!="panel" or campaign.photo_backdrop!="none"):
@@ -777,7 +791,7 @@ def render(campaign: Campaign, upload_dir=None) -> tuple[bytes, dict]:
         raise Hold("Photo-background uses an edge-to-edge panel and controlled overlay, without decorative photo treatments")
     if (not background or not campaign.message) and campaign.sms_position != "lower-left":
         raise Hold("SMS overlay positions require photo-background composition")
-    cta_height = ((150 if campaign.offer_terms else 110) if compact else (180 if campaign.offer_terms else 120)) if background or person_message or graphic_hero or prop_hero else (150 if campaign.offer_terms else 110) if compact else 180
+    cta_height = ((150 if campaign.offer_terms else 110) if compact else (180 if campaign.offer_terms else 120)) if background or image_overlay or person_message or graphic_hero or prop_hero else (150 if campaign.offer_terms else 110) if compact else 180
     brand_y = 0 if campaign.brand_strip == "top" else height-header_height
     footer = height-cta_height if campaign.brand_strip == "top" else brand_y-cta_height
     # Fixed white header, original logo, separate divider and market descriptor.
@@ -801,7 +815,29 @@ def render(campaign: Campaign, upload_dir=None) -> tuple[bytes, dict]:
         raise Hold("Device view requires phone imagery; use auto for a photographic SMS card")
     subject_regions=[]
     grounded_portrait = bool(photo and photo.get("requires_visible_grounding") and campaign.image_treatment == "cutout")
-    if social:
+    if image_overlay:
+        # One complete source fills every pixel below the unchanged identity bar.
+        # Exact aspect matching avoids cropping phones, faces or embedded content.
+        side=False; image_first=False; has_visual=True
+        body_top=header_height; body_height=height-header_height
+        body_bottom=height; copy_x=64; copy_width=952; copy_y=body_top+32
+        source_w,source_h=photo["upload_review"]["dimensions"]
+        if round(source_w*body_height/source_h) != width:
+            raise Hold("Image-overlay source must match the entire region below the brand bar; supply a matching image rather than crop or stretch a device")
+        photo_region=[0,body_top,width,body_height]
+        c.photo(photo,photo_region,"centre","panel","none","contain")
+        if c.photo_checks[-1]["frame"] != photo_region:
+            raise Hold("Image-overlay source does not fill the body exactly")
+        budget=min(300,footer-copy_y-180)
+        copy_height=c.copy_block(campaign,copy_x,copy_y,copy_width,budget,
+                                 dark=campaign.heading_style=="navy",paint=False,heading_sizes=(64,60,56,52))
+        heading_bottom=copy_y+copy_height
+        for region in photo["upload_review"]["review"]["protected_regions"]:
+            x,y,w,h=region["box"]
+            subject_regions.append({"label":region["label"],"box":[x*width/source_w,body_top+y*body_height/source_h,w*width/source_w,h*body_height/source_h]})
+        c.copy_block(campaign,copy_x,copy_y,copy_width,copy_height,
+                     dark=campaign.heading_style=="navy",heading_sizes=(64,60,56,52))
+    elif social:
         from .social_art import paint_social
         side=False;image_first=False;has_visual=True;copy_x=64;copy_width=952;copy_y=32
         c.social_art=paint_social(c, campaign, footer, PALETTE, Hold)
@@ -1013,7 +1049,7 @@ def render(campaign: Campaign, upload_dir=None) -> tuple[bytes, dict]:
         elif layout in ("split", "team"):
             photo_x = 64 if campaign.image_position == "left" else 548
             c.photo(photo, (photo_x if side else 64, visual_y, 468 if side else 952, visual_height), "centre" if side else campaign.image_position, campaign.image_treatment,campaign.photo_backdrop,"cover" if campaign.composition == "hero" else campaign.photo_fit)
-    if campaign.brand_strip == "top":
+    if campaign.brand_strip == "top" and not image_overlay:
         d.rectangle((0,footer,width,height),fill=PALETTE["white"])
     if grounded_portrait or social:
         # A cropped torso must meet a visible structural edge, never an invisible spacing boundary.
@@ -1033,13 +1069,13 @@ def render(campaign: Campaign, upload_dir=None) -> tuple[bytes, dict]:
     website_y = button_y+(16 if compact else 22) if same_line else footer+(80 if compact else 121)
     website_box = [website_x if same_line else 68,website_y,website_width,40]
     c.text("burstsms.com.ph",tuple(website_box),website_size,
-           "white" if grounded_portrait or background or social or layout == "statement" and campaign.brand_strip == "bottom" else "navy",True,1)
+           "white" if grounded_portrait or background or social or image_overlay and campaign.heading_style == "navy" or layout == "statement" and campaign.brand_strip == "bottom" else "navy",True,1)
     terms_box = None
     if campaign.offer_terms:
         terms_y = button_y+button_height+12 if same_line else website_y+36
         terms_box = [64,terms_y,width-128,footer+cta_height-terms_y-12]
         c.text(campaign.offer_terms,tuple(terms_box),22,
-               "white" if grounded_portrait or background or social or layout == "statement" and campaign.brand_strip == "bottom" else "navy",False,4)
+               "white" if grounded_portrait or background or social or image_overlay and campaign.heading_style == "navy" or layout == "statement" and campaign.brand_strip == "bottom" else "navy",False,4)
     # Paint the isolated brand bar last. Its pixels cannot contain CTA/campaign content.
     c.image.paste(brand_canvas,(0,brand_y))
     logo_y += brand_y
@@ -1051,7 +1087,7 @@ def render(campaign: Campaign, upload_dir=None) -> tuple[bytes, dict]:
             raise Hold("Campaign text intrudes into the brand-only bar")
     for check in c.photo_checks:
         px,py,pw,ph = check["frame"]
-        if (py+ph > (brand_y if background else footer) or py < body_top):
+        if (py+ph > (height if image_overlay else brand_y if background else footer) or py < body_top):
             raise Hold("Photography intrudes into protected CTA/brand space")
     if not (footer <= button_y and website_y < footer+cta_height and (campaign.brand_strip != "bottom" or footer+cta_height == brand_y)):
         raise Hold("CTA placement does not follow the brand bar")
@@ -1059,6 +1095,18 @@ def render(campaign: Campaign, upload_dir=None) -> tuple[bytes, dict]:
         terms_check = next(check for check in reversed(c.text_checks) if check["text"] == campaign.offer_terms)
         if not (terms_box[0] >= 64 and terms_box[1] >= button_y+button_height+12 and footer <= terms_box[1] and terms_box[1]+terms_check["used_height"] <= footer+cta_height):
             raise Hold("Terms must fit alongside CTA inside its reserved region")
+    if image_overlay:
+        def overlay_intersects(a,b):
+            return a[0]<b[0]+b[2] and a[0]+a[2]>b[0] and a[1]<b[1]+b[3] and a[1]+a[3]>b[1]
+        overlay_boxes=[button_box,website_box]+([terms_box] if terms_box else [])
+        overlay_boxes += [[*check["box"][:3],check["used_height"]] for check in c.text_checks]
+        for box in overlay_boxes:
+            if box[0]<64 or box[0]+box[2]>width-64 or box[1]<body_top+20 or box[1]+box[3]>height-12:
+                raise Hold("Image-overlay content leaves safe bounds")
+            if any(overlay_intersects(box,r["box"]) for r in subject_regions):
+                raise Hold("Image-overlay content obscures a reviewed face, hand, device or important content")
+        if not same_line or heading_bottom+40>footer:
+            raise Hold("Image-overlay heading and CTA need more separation")
     if person_message:
         graphic_box = c.graphic_check["frame"] if graphic else getattr(c,"message_card",None) or c.phone_check["visible_frame"]
         px,py,pw,ph=c.photo_checks[0]["frame"]
@@ -1164,7 +1212,10 @@ def render(campaign: Campaign, upload_dir=None) -> tuple[bytes, dict]:
         "template_reference": template["reference"], "photography": photo, "prop":prop,
         "logo_source": "assets/burst-sms-logo.png", "logo_sha256": digest((PLUGIN / "assets/burst-sms-logo.png").read_bytes()),
         "palette": PALETTE, "typography": "Bundled Noto Sans Regular, SemiBold and Bold", "text_checks": c.text_checks,
-        "body_region": [round(v*export_scale) for v in ((0,body_top,width,body_height) if background else (64,body_top,952,body_height))],
+        "body_region": [round(v*export_scale) for v in ((0,body_top,width,body_height) if background or image_overlay else (64,body_top,952,body_height))],
+        "image_overlay": {"explicit_request":campaign.layout_request,"coverage":True,"source_uncropped":True,
+                          "protected_regions":[{"label":r["label"],"box":[round(v*export_scale) for v in r["box"]]} for r in subject_regions],
+                          "actual_background_contrast_checked":True,"visual_inspection_required":True} if image_overlay else None,
         "photo_background": {"coverage":True,"sms_position":campaign.sms_position,"readability_treatment":"navy scrim alpha 224/255","subject_regions":[{"label":r["label"],"box":[round(v*export_scale) for v in r["box"]]} for r in subject_regions],"visual_subject_inspection_required":True} if background else None,
         "message_placement": campaign.message_placement,
         "photo_message_group": getattr(c,"photo_message_group",None),
@@ -1184,7 +1235,7 @@ def render(campaign: Campaign, upload_dir=None) -> tuple[bytes, dict]:
                    "policy":"Proportional visuals within allocated regions; protected identity/CTA unchanged; all delivery gates required"},
         "social_art": getattr(c,"social_art",None),
         "uploaded_image": photo["upload_review"] if photo and photo.get("user_supplied") else None,
-        "body_layout": "social-hero" if social else "prop-hero" if prop_hero else "graphic-hero" if graphic_hero else "person-plus-message" if person_message else "high-energy-casual" if energy else "photo-background" if background else "side-by-side" if side else "image-first" if image_first else "stacked" if has_visual else "statement",
+        "body_layout": "image-overlay" if image_overlay else "social-hero" if social else "prop-hero" if prop_hero else "graphic-hero" if graphic_hero else "person-plus-message" if person_message else "high-energy-casual" if energy else "photo-background" if background else "side-by-side" if side else "image-first" if image_first else "stacked" if has_visual else "statement",
         "brand_region": protected_brand, "cta_region": cta_region, "cta_button": button_box,
         "terms_box": terms_box, "website_box": website_box, "cta_alignment": "same-line" if same_line else "stacked", "message_card": getattr(c,"message_card",None),
         "phone_check": getattr(c, "phone_check", None),

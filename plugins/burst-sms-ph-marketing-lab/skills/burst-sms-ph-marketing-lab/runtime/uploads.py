@@ -18,6 +18,12 @@ def sha(data):
     return hashlib.sha256(data).hexdigest()
 
 
+class ProtectedRegion(BaseModel):
+    model_config = ConfigDict(extra="forbid", strict=True)
+    label: str = Field(min_length=3, max_length=100)
+    box: list[int] = Field(min_length=4, max_length=4)
+
+
 class UploadReview(BaseModel):
     model_config = ConfigDict(extra="forbid", strict=True)
     source_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
@@ -26,6 +32,7 @@ class UploadReview(BaseModel):
     kind: Literal["photo", "phone", "screenshot", "illustration"]
     channel: Literal["none", "sms", "rcs", "whatsapp", "viber"] = "none"
     framing: Literal["complete-subject", "continuous-scene"]
+    protected_regions: list[ProtectedRegion] = Field(default_factory=list, max_length=32)
     checks: dict[str, bool]
     notes: dict[str, str]
 
@@ -37,6 +44,13 @@ class UploadReview(BaseModel):
         if any(ord(c) < 32 for c in self.description) or any(c in self.description for c in "<>"):
             raise ValueError("Use a plain-text image description")
         return self
+
+    def check_regions(self, dimensions):
+        width, height = dimensions
+        for region in self.protected_regions:
+            x, y, w, h = region.box
+            if min(x, y) < 0 or min(w, h) <= 0 or x+w > width or y+h > height:
+                raise ValueError("Protected subject region leaves the orientation-correct source")
 
 
 def normalise(raw):
@@ -74,6 +88,7 @@ def prepare(image_path, review_data, directory):
     if sha(raw)!=review.source_sha256:
         raise ValueError("Source review does not match this exact uploaded image")
     png,dimensions,alpha=normalise(raw)
+    review.check_regions(dimensions)
     if alpha and review.framing != "complete-subject":
         raise ValueError("Transparent uploads must preserve a complete subject or device")
     directory=Path(directory)
@@ -105,6 +120,7 @@ def load(directory):
     if sha(raw)!=review.source_sha256:
         raise ValueError("Original upload changed after source review")
     png,dims,alpha=normalise(raw)
+    review.check_regions(dims)
     if png!=(directory/"source.png").read_bytes() or sha(png)!=r['source_sha256'] or dims!=r['dimensions'] or alpha is not r['native_alpha']:
         raise ValueError("Uploaded image or preparation record changed after review")
     if alpha and review.framing!='complete-subject':

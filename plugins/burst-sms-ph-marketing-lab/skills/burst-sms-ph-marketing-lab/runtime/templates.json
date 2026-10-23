@@ -712,7 +712,8 @@
     "photo-background",
     "person-plus-message",
     "graphic-hero",
-    "prop-hero"
+    "prop-hero",
+    "image-overlay"
   ],
   "photo_background": {
     "heading_style": "navy",
@@ -1434,5 +1435,19 @@
     "phone_screenshot_rule": "contain, complete frame, no masks or UI overlays",
     "organic_hashtags": "up to 3 contextual tags in recommended caption",
     "paid_hashtags": "none by default"
+  },
+  "image_overlay": {
+    "explicit_request_only": true,
+    "request_field": "layout_request",
+    "template": "uploaded-image",
+    "brand_strip": "top",
+    "formats": [
+      "square",
+      "portrait"
+    ],
+    "source_fit": "contain, exact body aspect ratio, no cropping or stretching",
+    "source_review": "protected_regions required for all faces, hands, complete devices and important content",
+    "heading_and_cta": "overlaid directly on image; actual pixel contrast and subject-collision checks; no separate panels",
+    "delivery": "all eight exact-PNG inspection checks and reconstruction validation still required"
   }
 }
