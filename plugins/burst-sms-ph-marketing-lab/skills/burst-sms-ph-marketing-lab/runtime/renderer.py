@@ -45,7 +45,7 @@ class Campaign(BaseModel):
     model_config = ConfigDict(extra="forbid", strict=True)
     creative_style: Literal["default", "high-energy-casual", "playful-social"] = "default"
     energy_treatment: Literal["diagonal", "bands", "none"] = "diagonal"
-    social_motif: Literal["mystery-sender", "message-pop", "spotlight"] = "message-pop"
+    social_motif: Literal["mystery-sender", "message-pop", "spotlight", "phone-chat"] = "message-pop"
     social_backdrop: Literal["navy", "violet"] = "violet"
     prop_id: str | None = Field(default=None, max_length=64)
     template_id: Literal["recognition", "customer-updates", "people-first", "team-coffee", "bold-statement", "offer-focus", "person-plus-message", "graphic-focus", "prop-focus", "social-playground", "uploaded-image"]
@@ -60,6 +60,8 @@ class Campaign(BaseModel):
     accent: str = Field(default="", max_length=45)
     supporting: str = Field(default="", max_length=130)
     primary_text: str = Field(min_length=1, max_length=1200)
+    post_type: Literal["organic", "paid"] = "organic"
+    hashtags: list[str] = Field(default_factory=list, max_length=3)
     cta: Literal["Talk to our team", "Explore SMS solutions", "Explore branded Sender IDs", "Book a coffee chat"] = "Talk to our team"
     photo_id: str | None = Field(default=None, max_length=64)
     message: str = Field(default="", max_length=85)
@@ -86,6 +88,12 @@ class Campaign(BaseModel):
 
     @model_validator(mode="after")
     def plain_copy(self):
+        if self.post_type == "paid" and self.hashtags:
+            raise ValueError("Paid social copy does not include hashtags")
+        if len({tag.casefold() for tag in self.hashtags}) != len(self.hashtags):
+            raise ValueError("Hashtags must be unique")
+        if any(not re.fullmatch(r"#[A-Za-z][A-Za-z0-9]{1,39}", tag) for tag in self.hashtags):
+            raise ValueError("Hashtags must be plain #tags with 2–40 letters or numbers")
         if not re.fullmatch(r"[A-Za-z][A-Za-z0-9 ]{0,10}", self.sender_name) or self.sender_name != self.sender_name.strip():
             raise ValueError("Illustrative sender names require 1–11 plain alphanumeric characters/spaces")
         if self.format == "custom":
@@ -152,6 +160,22 @@ def load_locks() -> dict:
 def catalog() -> dict:
     load_locks()
     return json.loads((SERVICE / "templates.json").read_text())
+
+
+def recommended_hashtags(campaign: Campaign) -> list[str]:
+    """Return the organic tags chosen for this brief; paid copy stays tag-free."""
+    if campaign.post_type == "paid":
+        return []
+    if campaign.hashtags:
+        return campaign.hashtags
+    copy = " ".join((campaign.headline, campaign.accent, campaign.supporting, campaign.primary_text)).casefold()
+    if "sender id" in copy:
+        topic = "#SenderID"
+    elif any(word in copy for word in ("appointment", "booking", "collection", "order update", "customer update")):
+        topic = "#CustomerUpdates"
+    else:
+        topic = "#BusinessMessaging"
+    return ["#BurstSMS", topic, "#PhilippinesBusiness"]
 
 
 def font(size: int, bold: bool = False):
@@ -479,8 +503,8 @@ class Canvas:
         used = probe.text(text or "Your order is ready for collection. Thank you!",(x+inset,y+message_y,w-2*inset,h-message_y-18),round((22 if self.compact else 29)*self.message_scale),max_lines=4)
         card_height = message_y+used+18
         if paint:
-            self.draw.rounded_rectangle((x,y,x+w-1,y+card_height-1),24,fill=PALETTE["white"])
-            self.draw.rounded_rectangle((x+12,y+message_y-12,x+w-13,y+message_y+used+12),16,fill=PALETTE["cloud"])
+            self.draw.rounded_rectangle((x,y,x+w-1,y+card_height-1),24,fill=PALETTE["white"],outline=PALETTE["navy"],width=2)
+            self.draw.rounded_rectangle((x+12,y+message_y-12,x+w-13,y+message_y+used+12),16,fill=PALETTE["cloud"],outline=PALETTE["navy"],width=2)
             self.pending_text.extend(probe.pending_text)
             self.text_checks.extend(probe.text_checks)
             self.message_card = [x,y,w,card_height]
@@ -495,8 +519,8 @@ class Canvas:
         used=probe.text(campaign.message,(x+20,y+message_y,w-40,h-message_y-14),round(22*campaign.message_scale),max_lines=4)
         card_height=message_y+used+14
         if paint:
-            self.draw.rounded_rectangle((x,y,x+w-1,y+card_height-1),18,fill=PALETTE["white"])
-            self.draw.rounded_rectangle((x+10,y+message_y-6,x+w-11,y+message_y+used+7),12,fill=PALETTE["cloud"])
+            self.draw.rounded_rectangle((x,y,x+w-1,y+card_height-1),18,fill=PALETTE["white"],outline=PALETTE["navy"],width=2)
+            self.draw.rounded_rectangle((x+10,y+message_y-6,x+w-11,y+message_y+used+7),12,fill=PALETTE["cloud"],outline=PALETTE["navy"],width=2)
             self.pending_text.extend(probe.pending_text); self.text_checks.extend(probe.text_checks)
             self.message_card=[x,y,w,card_height]
         return card_height
@@ -591,16 +615,38 @@ def render(campaign: Campaign, upload_dir=None) -> tuple[bytes, dict]:
     elif campaign.template_id == "uploaded-image" or campaign.photo_id == "user-upload":
         raise Hold("Prepare and review the uploaded image, then supply its campaign-local upload bundle")
     if campaign.template_id == "uploaded-image":
-        if (campaign.creative_style != "default" or campaign.composition not in ("auto","text-first","image-first","hero","side-by-side")
-            or campaign.format not in ("square","portrait") or campaign.message or campaign.sender_name != "BURST SMS"
-            or campaign.graphic_id or campaign.prop_id or campaign.photo_crop is not None or campaign.photo_description
-            or campaign.photo_backdrop != "none" or campaign.phone_view != "auto" or campaign.message_scale != 1
-            or campaign.message_width_scale != 1 or campaign.image_treatment not in ("panel","cutout")
-            or campaign.photo_fit != "contain" or campaign.composition == "hero"
+        review=photo["upload_review"]["review"]
+        continuous_photo=(photo["kind"]=="photo" and review["framing"]=="continuous-scene" and photo["channel"]=="none" and not photo["approved_subject_alpha"])
+        device_or_screen=photo["kind"] in ("phone","screenshot") or photo["channel"]!="none"
+        photo_background=campaign.composition=="photo-background"
+        cover_crop=campaign.photo_fit=="cover" or campaign.composition=="hero" or photo_background
+        upload_style_ok=campaign.creative_style in ("default","high-energy-casual")
+        if (not upload_style_ok or campaign.composition not in ("auto","text-first","image-first","hero","side-by-side","photo-background")
+            or campaign.format not in ("square","portrait") or campaign.graphic_id or campaign.prop_id
+            or campaign.photo_crop is not None or campaign.photo_description or campaign.phone_view != "auto"
+            or campaign.message_scale != 1 or campaign.message_width_scale != 1
             or campaign.graphic_placement != "adjacent" or campaign.graphic_decoration != "none"):
-            raise Hold("Uploaded images use square/portrait, original full-image contain, panel or genuine alpha, and no recolouring/cropping/device overlays")
-        if photo["approved_subject_alpha"] != (campaign.image_treatment == "cutout"):
-            raise Hold("Use cutout for a reviewed native-alpha upload, or panel for an opaque source; never infer a background mask")
+            raise Hold("Uploaded imagery uses supported social layouts only; keep identity, source image and device pixels intact")
+        if cover_crop and not continuous_photo:
+            raise Hold("Cover crops and photo-background layouts require a reviewed continuous-scene photo; keep phones and screenshots complete")
+        if campaign.photo_fit=="cover" and campaign.composition not in ("hero","photo-background"):
+            raise Hold("Choose the hero or photo-background composition when a continuous-scene photo needs a deliberate cover crop")
+        if device_or_screen and (campaign.photo_fit!="contain" or campaign.image_treatment!="panel" or campaign.photo_backdrop!="none"):
+            raise Hold("Phone, screenshot and channel artwork must remain complete, proportional and unmasked")
+        if campaign.image_treatment not in ("panel","rounded","circle","cutout"):
+            raise Hold("Choose panel, rounded, circle or reviewed native-alpha cutout for uploaded imagery")
+        if campaign.photo_backdrop!="none" and not (campaign.photo_backdrop=="cyan-ellipse" and campaign.image_treatment=="cutout" and photo["approved_subject_alpha"]):
+            raise Hold("A cyan backdrop shape requires a reviewed native-alpha cutout subject")
+        if campaign.image_treatment=="cutout" and not photo["approved_subject_alpha"]:
+            raise Hold("Cutout requires genuine alpha supplied in the reviewed PNG")
+        if photo_background and (campaign.brand_strip!="bottom" or campaign.heading_style!="navy" or campaign.photo_fit!="cover" or campaign.image_treatment!="panel" or campaign.photo_backdrop!="none" or campaign.message):
+            raise Hold("Uploaded photo-background uses a continuous-scene photo, navy heading, full-bleed panel, bottom brand bar, and no simulated message overlay")
+        if campaign.creative_style=="high-energy-casual" and (photo["kind"] not in ("photo","illustration") or photo["channel"]!="none" or not photo["approved_subject_alpha"] or review["framing"]!="complete-subject"):
+            raise Hold("High-energy uploads require a complete reviewed people/illustration cutout with genuine alpha; keep phones and screenshots in their original frame")
+        if campaign.image_treatment == "cutout" and not photo["approved_subject_alpha"]:
+            raise Hold("Cutout requires genuine alpha supplied in the reviewed PNG")
+        if photo["approved_subject_alpha"] and not device_or_screen and campaign.image_treatment != "cutout":
+            raise Hold("Use cutout for a reviewed native-alpha subject, or preserve opaque photography in a panel; never infer a background mask")
         if photo["channel"] not in ("none",campaign.imagery_channel):
             raise Hold("Uploaded phone/channel imagery does not match this campaign's requested channel")
     graphic=config.get("graphics",{}).get(campaign.graphic_id) if campaign.graphic_id else None
@@ -678,7 +724,8 @@ def render(campaign: Campaign, upload_dir=None) -> tuple[bytes, dict]:
         if len(campaign.headline.split()) > 8:
             raise Hold("High-energy-casual requires a short headline of up to eight words")
         def require_prepared_alpha(asset,label):
-            image=Image.open(PLUGIN/asset["file"])
+            asset_path=(Path(upload_dir).resolve()/"source.png") if asset.get("user_supplied") and upload_dir is not None else PLUGIN/asset["file"]
+            image=Image.open(asset_path)
             if asset.get("approved_subject_alpha") is not True or "A" not in image.getbands() or image.getchannel("A").getextrema() != (0,255):
                 raise Hold(label+" requires a registered professionally prepared transparent asset; no white-background removal or invented substitute is allowed")
             if not asset.get("crop"):
@@ -714,7 +761,7 @@ def render(campaign: Campaign, upload_dir=None) -> tuple[bytes, dict]:
         raise Hold("Image sizing requires registered photography or a photographic prop")
     if campaign.graphic_scale != 1.0 and not graphic:
         raise Hold("Graphic sizing requires a registered graphic")
-    if campaign.message_width_scale != 1.0 and campaign.composition != "photo-background":
+    if campaign.message_width_scale != 1.0 and (campaign.composition != "photo-background" or not campaign.message):
         raise Hold("Message width sizing currently requires a photo-background SMS overlay")
     if campaign.message_scale != 1.0 and (graphic or template["layout"] not in ("phone","conversation")):
         raise Hold("Message sizing requires deterministic SMS imagery, not baked raster text")
@@ -723,11 +770,12 @@ def render(campaign: Campaign, upload_dir=None) -> tuple[bytes, dict]:
     compact = c.compact
     header_height = 100 if compact else 150
     background = campaign.composition == "photo-background"
-    if background and (not photo or campaign.brand_strip != "bottom" or campaign.heading_style != "navy" or template["layout"] not in ("phone","conversation") or not campaign.message):
+    uploaded_background = campaign.template_id=="uploaded-image" and photo and photo.get("user_supplied")
+    if background and (not photo or campaign.brand_strip != "bottom" or campaign.heading_style != "navy" or template["layout"] not in ("phone","conversation","split") or (not campaign.message and not uploaded_background)):
         raise Hold("Photo-background requires registered messaging photography, navy heading, bottom brand bar and an explicit SMS")
     if background and (campaign.image_treatment != "panel" or campaign.photo_backdrop != "none" or campaign.message_placement != "below"):
         raise Hold("Photo-background uses an edge-to-edge panel and controlled overlay, without decorative photo treatments")
-    if not background and campaign.sms_position != "lower-left":
+    if (not background or not campaign.message) and campaign.sms_position != "lower-left":
         raise Hold("SMS overlay positions require photo-background composition")
     cta_height = ((150 if campaign.offer_terms else 110) if compact else (180 if campaign.offer_terms else 120)) if background or person_message or graphic_hero or prop_hero else (150 if campaign.offer_terms else 110) if compact else 180
     brand_y = 0 if campaign.brand_strip == "top" else height-header_height
@@ -877,12 +925,13 @@ def render(campaign: Campaign, upload_dir=None) -> tuple[bytes, dict]:
         # Opaque enough for white text against the lightest source pixels, but keeps the photo visible.
         scrim=Image.new("RGBA",(width,cta_height),(*tuple(int(PALETTE["navy"].lstrip('#')[i:i+2],16) for i in (0,2,4)),224))
         c.image.paste(scrim,(0,footer),scrim)
-        card_width=round((480 if not compact else 440)*campaign.message_width_scale)
-        card_height=c.sms_overlay(campaign,(64,body_top+24,card_width,min(250,body_height-cta_height-48)),paint=False)
-        card_x=64 if campaign.sms_position.endswith("left") else width-64-card_width
-        available=footer-body_top
-        card_y=body_top+24 if campaign.sms_position.startswith("upper") else body_top+(available-card_height)//2 if campaign.sms_position.startswith("middle") else footer-8-card_height
-        c.sms_overlay(campaign,(card_x,card_y,card_width,card_height))
+        if campaign.message:
+            card_width=round((480 if not compact else 440)*campaign.message_width_scale)
+            card_height=c.sms_overlay(campaign,(64,body_top+24,card_width,min(250,body_height-cta_height-48)),paint=False)
+            card_x=64 if campaign.sms_position.endswith("left") else width-64-card_width
+            available=footer-body_top
+            card_y=body_top+24 if campaign.sms_position.startswith("upper") else body_top+(available-card_height)//2 if campaign.sms_position.startswith("middle") else footer-8-card_height
+            c.sms_overlay(campaign,(card_x,card_y,card_width,card_height))
         # Protected heading painted after photographic stage, never a floating band with blank margins.
         d.rectangle((0,0,width,heading_bottom-1),fill=PALETTE["navy"])
         c.copy_block(campaign,copy_x,copy_y,copy_width,copy_height,dark=True,heading_sizes=(60,56,52))
@@ -1028,7 +1077,7 @@ def render(campaign: Campaign, upload_dir=None) -> tuple[bytes, dict]:
     if background:
         def overlaps(a,b):
             return a[0]<b[0]+b[2] and a[0]+a[2]>b[0] and a[1]<b[1]+b[3] and a[1]+a[3]>b[1]
-        overlays=[c.message_card,button_box,website_box]+([terms_box] if terms_box else [])
+        overlays=([c.message_card] if hasattr(c,"message_card") else [])+[button_box,website_box]+([terms_box] if terms_box else [])
         for box in overlays:
             if box[0]<64 or box[0]+box[2]>width-64 or box[1]<body_top+20 or box[1]+box[3]>brand_y-12:
                 raise Hold("Photo overlay leaves safe middle-section bounds")
@@ -1143,9 +1192,11 @@ def render(campaign: Campaign, upload_dir=None) -> tuple[bytes, dict]:
         "phone_message": (campaign.message or "Your order is ready for collection. Thank you!") if layout in ("phone", "conversation", "social") and not graphic else None,
         "photo_checks": c.photo_checks, "brand_strip": campaign.brand_strip, "logo_box": [logo_x, logo_y, scaled_logo.width, scaled_logo.height],
         "alt_text": (c.social_art["alt"] + ". " if social else "") + "Burst SMS Philippines: " + ". ".join(part.rstrip(". ") for part in [campaign.headline, campaign.accent, photo["alt"] if photo else prop["alt"] if prop else "", ("Illustrative SMS from "+campaign.sender_name+": "+(campaign.message or "Your order is ready for collection. Thank you!")) if layout in ("phone","conversation","social") and not graphic else "", graphic["alt"] if graphic else ""] if part),
-        "channel_copy": campaign.primary_text + "\n\n" + campaign.cta + ": " + DESTINATION + ("\n\nTerms: "+campaign.offer_terms if campaign.offer_terms else ""),
+        "post_type": campaign.post_type,
+        "hashtags": recommended_hashtags(campaign),
+        "channel_copy": campaign.primary_text + "\n\n" + campaign.cta + ": " + DESTINATION + ("\n\nTerms: "+campaign.offer_terms if campaign.offer_terms else "") + ("\n\n"+" ".join(recommended_hashtags(campaign)) if recommended_hashtags(campaign) else ""),
         "contrast_ratios": contrasts,
-        "checks": {**({"native_social_motif":True,"social_body_bounds":True,"social_text_readability":True} if social else {}),**({"registered_prop_source":True,"prop_background_preserved":True} if prop_hero else {}),**({"visible_portrait_grounding":True} if grounded_portrait else {}),**({"registered_graphic":True,"graphic_readable_size":True,"graphic_palette_only":True,"graphic_bounds":True} if graphic else {}),**({"person_graphic_separation":True,"protected_subject_regions_preserved":True,"readable_graphic":True} if person_message else {}),**({"prepared_subject_alpha":True,"registered_prop":not prop or prop.get("approved_subject_alpha") is True,"decorations_behind_subjects":True} if energy else {}),**({"photo_coverage":True,"overlay_bounds":True,"overlay_collisions":True,"registered_subject_preservation":True} if background else {}),"asset_integrity": True, "logo_pixels": True, "locked_styles": True, "text_fit": True, "fixed_dimensions": True, "fixed_destination": True, "text_contrast": True, "message_visible": bool(graphic) or layout not in ("phone", "conversation", "social") or any(t["text"] == (campaign.message or "Your order is ready for collection. Thank you!") for t in c.text_checks), "cta_placement": True, "brand_bar_separation": True, "terms_placement": True, "text_collisions": True, "mask_bounds": all(p["mask_bounds_match"] for p in c.photo_checks), "photo_frame_fit": all(p["frame_filled"] and p["proportional_scale"] for p in c.photo_checks)},
+        "checks": {**({"native_social_motif":True,"social_body_bounds":True,"social_text_readability":True,"social_conversation_structure":getattr(c,"social_art",{}).get("sender_header_count")==1 and getattr(c,"social_art",{}).get("message_bubble_count")==1 and not getattr(c,"social_art",{}).get("stacked_same_fill_cards") and getattr(c,"social_art",{}).get("message_bubble_outline")=="navy"} if social else {}),**({"registered_prop_source":True,"prop_background_preserved":True} if prop_hero else {}),**({"visible_portrait_grounding":True} if grounded_portrait else {}),**({"registered_graphic":True,"graphic_readable_size":True,"graphic_palette_only":True,"graphic_bounds":True} if graphic else {}),**({"person_graphic_separation":True,"protected_subject_regions_preserved":True,"readable_graphic":True} if person_message else {}),**({"prepared_subject_alpha":True,"registered_prop":not prop or prop.get("approved_subject_alpha") is True,"decorations_behind_subjects":True} if energy else {}),**({"photo_coverage":True,"overlay_bounds":True,"overlay_collisions":True,"registered_subject_preservation":True} if background else {}),"asset_integrity": True, "logo_pixels": True, "locked_styles": True, "text_fit": True, "fixed_dimensions": True, "fixed_destination": True, "text_contrast": True, "message_visible": bool(graphic) or layout not in ("phone", "conversation", "social") or any(t["text"] == (campaign.message or "Your order is ready for collection. Thank you!") for t in c.text_checks), "cta_placement": True, "brand_bar_separation": True, "terms_placement": True, "text_collisions": True, "mask_bounds": all(p["mask_bounds_match"] for p in c.photo_checks), "photo_frame_fit": all(p["frame_filled"] and p["proportional_scale"] for p in c.photo_checks)},
         "inspection_required": ["copy_and_claims", "visual_composition", "local_fit_and_photography", "accessibility", "photo_edges", "body_balance", "cta_and_terms", "campaign_effectiveness"]
     }
     return png, report
